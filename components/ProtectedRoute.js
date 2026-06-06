@@ -2,7 +2,7 @@
 
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../firebase";
-import { useRouter } from "next/navigation"; // For app directory routing
+import { useRouter } from "@/i18n/navigation"; // For app directory routing
 import { useEffect } from "react";
 
 export default function ProtectedRoute({ children }) {

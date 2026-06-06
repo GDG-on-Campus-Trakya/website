@@ -1,20 +1,26 @@
 "use client";
-import React, { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../firebase";
 import { logger } from "@/utils/logger";
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  deleteDoc, 
-  doc, 
-  writeBatch 
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  writeBatch,
 } from "firebase/firestore";
-import { deleteUser, reauthenticateWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
+import {
+  deleteUser,
+  reauthenticateWithPopup,
+  GoogleAuthProvider,
+  signOut,
+} from "firebase/auth";
 import { toast } from "react-toastify";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,149 +32,164 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Trash2, AlertTriangle } from "lucide-react";
 
-const CONFIRMATION_TEXT = "HESABIMI SİLMEK İSTİYORUM";
+const COPY = {
+  tr: {
+    confirmationText: "HESABIMI SİLMEK İSTİYORUM",
+    invalidConfirmation: "Doğrulama metni yanlış girildi!",
+    noSession: "Kullanıcı oturumu bulunamadı!",
+    success: "Hesabınız başarıyla silindi!",
+    reauthInfo: "Güvenlik için tekrar giriş yapmanız gerekiyor...",
+    reauthCancelled:
+      "Tekrar giriş işlemi iptal edildi. Güvenlik nedeniyle çıkış yapılıyor...",
+    reauthFailed:
+      "Tekrar giriş başarısız. Güvenlik nedeniyle çıkış yapılıyor...",
+    genericError: "Hesap silinirken bir hata oluştu. Lütfen tekrar deneyin.",
+    title: "Hesabı Kalıcı Olarak Sil",
+    irreversible: "⚠️ Bu işlem GERİ ALINAMAZ!",
+    description:
+      "Hesabınızı sildiğinizde aşağıdaki verileriniz kalıcı olarak silinecektir:",
+    items: [
+      "Profil bilgileriniz ve profil fotoğrafınız",
+      "Tüm etkinlik kayıtlarınız ve QR kodlarınız",
+      "Paylaştığınız tüm gönderiler ve fotoğraflar",
+      "Yaptığınız tüm yorumlar ve beğeniler",
+      "Oluşturduğunuz destek biletleri",
+    ],
+    prompt: "Devam etmek için aşağıdaki metni tam olarak yazın:",
+    inputPlaceholder: "Doğrulama metnini buraya yazın...",
+    cancel: "İptal",
+    deleting: "Siliniyor...",
+    delete: "Hesabı Sil",
+  },
+  en: {
+    confirmationText: "I WANT TO DELETE MY ACCOUNT",
+    invalidConfirmation: "The confirmation text does not match.",
+    noSession: "No active user session was found.",
+    success: "Your account has been deleted successfully.",
+    reauthInfo: "For security, you need to sign in again...",
+    reauthCancelled:
+      "Reauthentication was cancelled. You will be signed out for security reasons...",
+    reauthFailed:
+      "Reauthentication failed. You will be signed out for security reasons...",
+    genericError: "An error occurred while deleting the account. Please try again.",
+    title: "Permanently Delete Account",
+    irreversible: "⚠️ This action CANNOT be undone!",
+    description:
+      "If you delete your account, the following data will be removed permanently:",
+    items: [
+      "Your profile information and profile photo",
+      "All event registrations and QR codes",
+      "All posts and photos you shared",
+      "All comments and likes you made",
+      "Support tickets you created",
+    ],
+    prompt: "To continue, type the following text exactly:",
+    inputPlaceholder: "Type the confirmation text here...",
+    cancel: "Cancel",
+    deleting: "Deleting...",
+    delete: "Delete Account",
+  },
+};
 
 const DeleteAccountModal = ({ isOpen, onClose }) => {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
   const [user] = useAuthState(auth);
   const [confirmationText, setConfirmationText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.body.classList.add('modal-open');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add("modal-open");
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = 'unset';
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "unset";
     }
 
-    // Cleanup on unmount
     return () => {
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = 'unset';
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "unset";
     };
   }, [isOpen]);
 
   const handleDeleteAccount = async () => {
-    if (confirmationText !== CONFIRMATION_TEXT) {
-      toast.error("Doğrulama metni yanlış girildi!");
+    if (confirmationText !== copy.confirmationText) {
+      toast.error(copy.invalidConfirmation);
       return;
     }
 
     if (!user) {
-      toast.error("Kullanıcı oturumu bulunamadı!");
+      toast.error(copy.noSession);
       return;
     }
 
     setIsDeleting(true);
-    
+
     try {
       const batch = writeBatch(db);
+      batch.delete(doc(db, "users", user.uid));
 
-      // 1. Delete user document from 'users' collection
-      const userRef = doc(db, 'users', user.uid);
-      batch.delete(userRef);
-
-      // 2. Delete all registrations
-      const registrationsQuery = query(
-        collection(db, 'registrations'), 
-        where('userId', '==', user.uid)
+      const registrationsSnapshot = await getDocs(
+        query(collection(db, "registrations"), where("userId", "==", user.uid))
       );
-      const registrationsSnapshot = await getDocs(registrationsQuery);
-      
+
       const qrCodeIds = [];
-      registrationsSnapshot.forEach(doc => {
-        const data = doc.data();
+      registrationsSnapshot.forEach((entry) => {
+        const data = entry.data();
         if (data.qrCodeId) {
           qrCodeIds.push(data.qrCodeId);
         }
-        batch.delete(doc.ref);
+        batch.delete(entry.ref);
       });
 
-      // 3. Delete associated QR codes
       for (const qrCodeId of qrCodeIds) {
-        const qrCodeRef = doc(db, 'qrCodes', qrCodeId);
-        batch.delete(qrCodeRef);
+        batch.delete(doc(db, "qrCodes", qrCodeId));
       }
 
-      // 4. Delete all posts by the user
-      const postsQuery = query(
-        collection(db, 'posts'), 
-        where('authorId', '==', user.uid)
-      );
-      const postsSnapshot = await getDocs(postsQuery);
-      
-      postsSnapshot.forEach(doc => {
-        batch.delete(doc.ref);
-      });
+      const collectionsToDelete = [
+        ["posts", "authorId"],
+        ["comments", "authorId"],
+        ["likes", "userId"],
+        ["tickets", "authorId"],
+      ];
 
-      // 5. Delete all comments by the user
-      const commentsQuery = query(
-        collection(db, 'comments'), 
-        where('authorId', '==', user.uid)
-      );
-      const commentsSnapshot = await getDocs(commentsQuery);
-      
-      commentsSnapshot.forEach(doc => {
-        batch.delete(doc.ref);
-      });
+      for (const [collectionName, fieldName] of collectionsToDelete) {
+        const snapshot = await getDocs(
+          query(collection(db, collectionName), where(fieldName, "==", user.uid))
+        );
+        snapshot.forEach((entry) => {
+          batch.delete(entry.ref);
+        });
+      }
 
-      // 6. Delete all likes by the user
-      const likesQuery = query(
-        collection(db, 'likes'), 
-        where('userId', '==', user.uid)
-      );
-      const likesSnapshot = await getDocs(likesQuery);
-      
-      likesSnapshot.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-
-      // 7. Delete all tickets by the user
-      const ticketsQuery = query(
-        collection(db, 'tickets'), 
-        where('authorId', '==', user.uid)
-      );
-      const ticketsSnapshot = await getDocs(ticketsQuery);
-      
-      ticketsSnapshot.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-
-      // Commit all Firestore operations
       await batch.commit();
 
-      // 8. Finally, delete the user from Firebase Auth
       try {
         await deleteUser(user);
-        toast.success("Hesabınız başarıyla silindi!");
+        toast.success(copy.success);
         router.push("/");
         onClose();
       } catch (authError) {
-        if (authError.code === 'auth/requires-recent-login') {
-          // Try to reauthenticate
+        if (authError.code === "auth/requires-recent-login") {
           try {
-            toast.info("Güvenlik için tekrar giriş yapmanız gerekiyor...");
+            toast.info(copy.reauthInfo);
             const provider = new GoogleAuthProvider();
             await reauthenticateWithPopup(user, provider);
-            
-            // Try deleting again after reauthentication
             await deleteUser(user);
-            toast.success("Hesabınız başarıyla silindi!");
+            toast.success(copy.success);
             router.push("/");
             onClose();
           } catch (reauthError) {
             logger.error("Reauthentication error:", reauthError);
-            if (reauthError.code === 'auth/popup-closed-by-user') {
-              toast.error("Tekrar giriş işlemi iptal edildi. Güvenlik nedeniyle çıkış yapılıyor...");
-            } else {
-              toast.error("Tekrar giriş başarısız. Güvenlik nedeniyle çıkış yapılıyor...");
-            }
+            toast.error(
+              reauthError.code === "auth/popup-closed-by-user"
+                ? copy.reauthCancelled
+                : copy.reauthFailed
+            );
             await signOut(auth);
             router.push("/");
             onClose();
@@ -177,16 +198,15 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
           throw authError;
         }
       }
-
-    } catch (error) {
-      logger.error("Error deleting account:", error);
-      toast.error("Hesap silinirken bir hata oluştu. Lütfen tekrar deneyin.");
+    } catch (deleteError) {
+      logger.error("Error deleting account:", deleteError);
+      toast.error(copy.genericError);
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const isConfirmationValid = confirmationText === CONFIRMATION_TEXT;
+  const isConfirmationValid = confirmationText === copy.confirmationText;
 
   const handleClose = () => {
     if (!isDeleting) {
@@ -197,37 +217,31 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
 
   return (
     <AlertDialog open={isOpen} onOpenChange={handleClose}>
-      <AlertDialogContent className="bg-gray-800 text-white border-red-500 border-2 max-w-md">
+      <AlertDialogContent className="max-w-md border-2 border-red-500 bg-gray-800 text-white">
         <AlertDialogHeader className="space-y-4">
-          <div className="flex items-center justify-center w-16 h-16 mx-auto bg-red-100 rounded-full">
-            <AlertTriangle className="w-8 h-8 text-red-600" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+            <AlertTriangle className="h-8 w-8 text-red-600" />
           </div>
-          
+
           <AlertDialogTitle className="text-center text-xl font-bold text-red-400">
-            Hesabı Kalıcı Olarak Sil
+            {copy.title}
           </AlertDialogTitle>
-          
-          <AlertDialogDescription className="text-gray-300 space-y-3">
-            <div className="bg-red-900/20 border border-red-500 rounded-lg p-4 space-y-2">
-              <p className="font-semibold text-red-300">⚠️ Bu işlem GERİ ALINAMAZ!</p>
-              <p className="text-sm">
-                Hesabınızı sildiğinizde aşağıdaki tüm verileriniz kalıcı olarak silinecektir:
-              </p>
-              <ul className="text-sm space-y-1 ml-4">
-                <li>• Profil bilgileriniz ve profil fotoğrafınız</li>
-                <li>• Tüm etkinlik kayıtlarınız ve QR kodlarınız</li>
-                <li>• Paylaştığınız tüm gönderiler ve fotoğraflar</li>
-                <li>• Yaptığınız tüm yorumlar ve beğeniler</li>
-                <li>• Oluşturduğunuz destek biletleri</li>
+
+          <AlertDialogDescription className="space-y-3 text-gray-300">
+            <div className="space-y-2 rounded-lg border border-red-500 bg-red-900/20 p-4">
+              <p className="font-semibold text-red-300">{copy.irreversible}</p>
+              <p className="text-sm">{copy.description}</p>
+              <ul className="ml-4 space-y-1 text-sm">
+                {copy.items.map((item) => (
+                  <li key={item}>• {item}</li>
+                ))}
               </ul>
             </div>
-            
+
             <div className="pt-4">
-              <p className="font-medium mb-2">
-                Devam etmek için aşağıdaki metni tam olarak yazın:
-              </p>
-              <p className="text-red-300 font-mono text-center bg-red-900/30 p-2 rounded">
-                {CONFIRMATION_TEXT}
+              <p className="mb-2 font-medium">{copy.prompt}</p>
+              <p className="rounded bg-red-900/30 p-2 text-center font-mono text-red-300">
+                {copy.confirmationText}
               </p>
             </div>
           </AlertDialogDescription>
@@ -235,11 +249,11 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
 
         <div className="space-y-4">
           <Input
-            placeholder="Doğrulama metnini buraya yazın..."
+            placeholder={copy.inputPlaceholder}
             value={confirmationText}
-            onChange={(e) => setConfirmationText(e.target.value)}
+            onChange={(event) => setConfirmationText(event.target.value)}
             disabled={isDeleting}
-            className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 font-mono"
+            className="border-gray-600 bg-gray-700 font-mono text-white placeholder-gray-400"
             autoComplete="off"
           />
         </div>
@@ -248,24 +262,22 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
           <AlertDialogCancel
             onClick={handleClose}
             disabled={isDeleting}
-            className="bg-gray-700 hover:bg-gray-600 text-white border-0"
+            className="border-0 bg-gray-700 text-white hover:bg-gray-600"
           >
-            İptal
+            {copy.cancel}
           </AlertDialogCancel>
-          
+
           <AlertDialogAction
             onClick={handleDeleteAccount}
             disabled={!isConfirmationValid || isDeleting}
-            className={`
-              border-0 text-white flex items-center gap-2
-              ${isConfirmationValid 
-                ? 'bg-red-600 hover:bg-red-700' 
-                : 'bg-gray-600 cursor-not-allowed'
-              }
-            `}
+            className={`flex items-center gap-2 border-0 text-white ${
+              isConfirmationValid
+                ? "bg-red-600 hover:bg-red-700"
+                : "cursor-not-allowed bg-gray-600"
+            }`}
           >
-            <Trash2 className="w-4 h-4" />
-            {isDeleting ? "Siliniyor..." : "Hesabı Sil"}
+            <Trash2 className="h-4 w-4" />
+            {isDeleting ? copy.deleting : copy.delete}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

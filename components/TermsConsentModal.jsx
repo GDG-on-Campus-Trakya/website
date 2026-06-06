@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -12,143 +13,167 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+
+const COPY = {
+  tr: {
+    title: "Hoş Geldiniz! 👋",
+    description:
+      "GDG on Campus Trakya platformuna hoş geldiniz. Devam etmeden önce lütfen aşağıdaki şartları okuyup kabul edin.",
+    privacyPrefix: "Gizlilik Politikasını",
+    privacySuffix: "okudum ve kabul ediyorum.",
+    privacyHelp:
+      "Kişisel verilerinizin nasıl toplandığını, kullanıldığını ve korunduğunu öğrenin.",
+    termsPrefix: "Kullanım Şartlarını",
+    termsSuffix: "okudum ve kabul ediyorum.",
+    termsHelp:
+      "Platform kullanımı, hesap sorumluluklarınız ve topluluk kurallarını inceleyin.",
+    kvkkTitle: "KVKK Bilgilendirmesi:",
+    kvkkBody:
+      "Bu platform KVKK uyarınca kişisel verilerinizi açık rızanızla işlemektedir. Verileriniz yalnızca etkinlik organizasyonu, istatistiksel analiz ve destek hizmetleri için kullanılacaktır.",
+    decline: "Reddet ve Çıkış Yap",
+    accept: "Kabul Et ve Devam Et",
+  },
+  en: {
+    title: "Welcome! 👋",
+    description:
+      "Welcome to the GDG on Campus Trakya platform. Before continuing, please read and accept the terms below.",
+    privacyPrefix: "I have read and accept the",
+    privacySuffix: "Privacy Policy.",
+    privacyHelp:
+      "Learn how your personal data is collected, used, and protected.",
+    termsPrefix: "I have read and accept the",
+    termsSuffix: "Terms of Use.",
+    termsHelp:
+      "Review platform usage rules, your account responsibilities, and the community guidelines.",
+    kvkkTitle: "Privacy Notice:",
+    kvkkBody:
+      "This platform processes your personal data for community operations, statistical analysis, and support services in line with applicable privacy obligations.",
+    decline: "Decline and Sign Out",
+    accept: "Accept and Continue",
+  },
+};
 
 export default function TermsConsentModal({ isOpen, onAccept, onDecline }) {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.body.classList.add('modal-open');
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add("modal-open");
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = 'unset';
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "unset";
     }
 
-    // Cleanup on unmount
     return () => {
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = 'unset';
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "unset";
     };
   }, [isOpen]);
-
-  const handleAccept = () => {
-    if (privacyAccepted && termsAccepted) {
-      onAccept();
-    }
-  };
 
   const bothAccepted = privacyAccepted && termsAccepted;
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent
-        className="bg-gray-800 text-white border-gray-700 max-w-2xl max-h-[90vh] overflow-y-auto"
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        className="max-h-[90vh] max-w-2xl overflow-y-auto border-gray-700 bg-gray-800 text-white"
+        onInteractOutside={(event) => event.preventDefault()}
+        onEscapeKeyDown={(event) => event.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-blue-400">
-            Hoş Geldiniz! 👋
+            {copy.title}
           </DialogTitle>
-          <DialogDescription className="text-gray-300 text-base mt-4">
-            GDG on Campus Trakya platformuna hoş geldiniz. Devam etmeden önce,
-            lütfen aşağıdaki şartları okuyup kabul edin.
+          <DialogDescription className="mt-4 text-base text-gray-300">
+            {copy.description}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 my-6">
-          {/* Privacy Policy Checkbox */}
-          <div className="flex items-start space-x-3 p-4 rounded-lg bg-gray-700/30 border border-gray-600/50">
+        <div className="my-6 space-y-6">
+          <div className="flex items-start space-x-3 rounded-lg border border-gray-600/50 bg-gray-700/30 p-4">
             <Checkbox
               id="privacy"
               checked={privacyAccepted}
               onCheckedChange={setPrivacyAccepted}
-              className="mt-1 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+              className="mt-1 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
             />
             <div className="flex-1">
               <Label
                 htmlFor="privacy"
-                className="text-sm font-medium text-white cursor-pointer"
+                className="cursor-pointer text-sm font-medium text-white"
               >
+                {locale === "en" ? `${copy.privacyPrefix} ` : ""}
                 <Link
                   href="/privacy"
                   target="_blank"
-                  className="text-blue-400 hover:text-blue-300 underline"
+                  className="text-blue-400 underline hover:text-blue-300"
                 >
-                  Gizlilik Politikasını
+                  {locale === "en" ? "Privacy Policy" : copy.privacyPrefix}
                 </Link>{" "}
-                okudum ve kabul ediyorum.
+                {locale === "en" ? "" : copy.privacySuffix}
+                {locale === "en" ? copy.privacySuffix : ""}
               </Label>
-              <p className="text-xs text-gray-400 mt-1">
-                Kişisel verilerinizin nasıl toplandığını, kullanıldığını ve
-                korunduğunu öğrenin.
-              </p>
+              <p className="mt-1 text-xs text-gray-400">{copy.privacyHelp}</p>
             </div>
           </div>
 
-          {/* Terms of Service Checkbox */}
-          <div className="flex items-start space-x-3 p-4 rounded-lg bg-gray-700/30 border border-gray-600/50">
+          <div className="flex items-start space-x-3 rounded-lg border border-gray-600/50 bg-gray-700/30 p-4">
             <Checkbox
               id="terms"
               checked={termsAccepted}
               onCheckedChange={setTermsAccepted}
-              className="mt-1 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+              className="mt-1 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
             />
             <div className="flex-1">
               <Label
                 htmlFor="terms"
-                className="text-sm font-medium text-white cursor-pointer"
+                className="cursor-pointer text-sm font-medium text-white"
               >
+                {locale === "en" ? `${copy.termsPrefix} ` : ""}
                 <Link
                   href="/terms"
                   target="_blank"
-                  className="text-blue-400 hover:text-blue-300 underline"
+                  className="text-blue-400 underline hover:text-blue-300"
                 >
-                  Kullanım Şartlarını
+                  {locale === "en" ? "Terms of Use" : copy.termsPrefix}
                 </Link>{" "}
-                okudum ve kabul ediyorum.
+                {locale === "en" ? "" : copy.termsSuffix}
+                {locale === "en" ? copy.termsSuffix : ""}
               </Label>
-              <p className="text-xs text-gray-400 mt-1">
-                Platform kullanımı, hesap sorumluluklarınız ve topluluk
-                kurallarını inceleyin.
-              </p>
+              <p className="mt-1 text-xs text-gray-400">{copy.termsHelp}</p>
             </div>
           </div>
 
-          {/* KVKK Information */}
-          <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-500/30">
-            <p className="text-sm text-gray-300 leading-relaxed">
-              <strong className="text-blue-400">KVKK Bilgilendirmesi:</strong>{" "}
-              Bu platform KVKK (Kişisel Verilerin Korunması Kanunu) uyarınca
-              kişisel verilerinizi açık rızanızla işlemektedir. Verileriniz
-              yalnızca etkinlik organizasyonu, istatistiksel analiz ve destek
-              hizmetleri için kullanılacaktır.
+          <div className="rounded-lg border border-blue-500/30 bg-blue-900/20 p-4">
+            <p className="text-sm leading-relaxed text-gray-300">
+              <strong className="text-blue-400">{copy.kvkkTitle}</strong>{" "}
+              {copy.kvkkBody}
             </p>
           </div>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-3">
+        <DialogFooter className="flex-col gap-3 sm:flex-row">
           <Button
             variant="outline"
             onClick={onDecline}
-            className="bg-gray-700 hover:bg-gray-600 text-white border-gray-600 w-full sm:w-auto"
+            className="w-full border-gray-600 bg-gray-700 text-white hover:bg-gray-600 sm:w-auto"
           >
-            Reddet ve Çıkış Yap
+            {copy.decline}
           </Button>
           <Button
-            onClick={handleAccept}
+            onClick={() => bothAccepted && onAccept()}
             disabled={!bothAccepted}
             className={`w-full sm:w-auto ${
               bothAccepted
                 ? "bg-blue-600 hover:bg-blue-700"
-                : "bg-gray-600 cursor-not-allowed"
+                : "cursor-not-allowed bg-gray-600"
             }`}
           >
-            Kabul Et ve Devam Et
+            {copy.accept}
           </Button>
         </DialogFooter>
       </DialogContent>

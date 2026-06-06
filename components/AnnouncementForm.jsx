@@ -8,18 +8,45 @@ import { doc, getDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { logger } from "@/utils/logger";
 import Image from "next/image";
+import { useLocale } from "next-intl";
 
 export default function AnnouncementForm({ announcement = null, onClose, onSuccess }) {
+  const locale = useLocale();
   const [user] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const fileInputRef = useRef(null);
+  const copy =
+    locale === "en"
+      ? {
+          englishTitle: "English Title",
+          englishDescription: "English Short Description",
+          englishContent: "English Content",
+          englishTitlePlaceholder: "Announcement title in English...",
+          englishDescriptionPlaceholder:
+            "A short English description for the announcement...",
+          englishContentPlaceholder:
+            "Write the English announcement content here...",
+        }
+      : {
+          englishTitle: "İngilizce Başlık",
+          englishDescription: "İngilizce Kısa Açıklama",
+          englishContent: "İngilizce İçerik",
+          englishTitlePlaceholder: "Duyurunun İngilizce başlığı...",
+          englishDescriptionPlaceholder:
+            "Duyurunun İngilizce kısa açıklaması...",
+          englishContentPlaceholder:
+            "Duyurunun İngilizce içeriğini buraya yazın...",
+        };
 
   // Form state
   const [formData, setFormData] = useState({
     title: announcement?.title || "",
+    titleEn: announcement?.titleEn || "",
     description: announcement?.description || "",
+    descriptionEn: announcement?.descriptionEn || "",
     content: announcement?.content || "",
+    contentEn: announcement?.contentEn || "",
     isPublished: announcement?.isPublished ?? true,
   });
 
@@ -134,8 +161,11 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
       // Prepare announcement data
       const announcementData = {
         title: formData.title.trim(),
+        titleEn: formData.titleEn.trim(),
         description: formData.description.trim(),
+        descriptionEn: formData.descriptionEn.trim(),
         content: formData.content.trim(),
+        contentEn: formData.contentEn.trim(),
         imageUrl: imageUrl || null,
         imagePath: imagePath || null,
         isPublished: formData.isPublished,
@@ -211,6 +241,21 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
             </p>
           </div>
 
+          <div>
+            <label className="block text-white text-sm font-medium mb-1.5 sm:mb-2">
+              {copy.englishTitle}
+            </label>
+            <input
+              type="text"
+              name="titleEn"
+              value={formData.titleEn}
+              onChange={handleInputChange}
+              placeholder={copy.englishTitlePlaceholder}
+              maxLength={200}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
           {/* Description */}
           <div>
             <label className="block text-white text-sm font-medium mb-1.5 sm:mb-2">
@@ -230,6 +275,21 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
             </p>
           </div>
 
+          <div>
+            <label className="block text-white text-sm font-medium mb-1.5 sm:mb-2">
+              {copy.englishDescription}
+            </label>
+            <textarea
+              name="descriptionEn"
+              value={formData.descriptionEn}
+              onChange={handleInputChange}
+              placeholder={copy.englishDescriptionPlaceholder}
+              rows={2}
+              maxLength={300}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
+          </div>
+
           {/* Content */}
           <div>
             <label className="block text-white text-sm font-medium mb-1.5 sm:mb-2">
@@ -247,6 +307,21 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
             <p className="text-gray-400 text-xs mt-1">
               {formData.content.length}/5000 karakter
             </p>
+          </div>
+
+          <div>
+            <label className="block text-white text-sm font-medium mb-1.5 sm:mb-2">
+              {copy.englishContent}
+            </label>
+            <textarea
+              name="contentEn"
+              value={formData.contentEn}
+              onChange={handleInputChange}
+              placeholder={copy.englishContentPlaceholder}
+              rows={5}
+              maxLength={5000}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
           </div>
 
           {/* Image Upload */}

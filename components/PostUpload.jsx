@@ -1,16 +1,74 @@
 "use client";
+
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Upload, X, Calendar, ImageIcon } from "lucide-react";
+import { X, ImageIcon } from "lucide-react";
 import { socialUtils } from "../utils/socialUtils";
-import { uploadImage } from "../utils/storageUtils";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { logger } from "@/utils/logger";
+import { useLocale } from "next-intl";
+import { getLocalizedField } from "@/utils/localeUtils";
 
 export default function PostUpload({ onUploadComplete, onCancel }) {
+  const locale = useLocale();
+  const copy =
+    locale === "en"
+      ? {
+          invalidImage: "Please select a valid image file.",
+          fileTooLarge: "Image size must be smaller than 10MB.",
+          selected: "Image selected.",
+          previewError: "Failed to preview the image.",
+          uploadError: "Failed to upload the image.",
+          signInRequired: "You need to sign in.",
+          selectImage: "Please select an image.",
+          selectEvent: "Please select an event.",
+          createPostError: "Failed to create the post.",
+          success: "Post shared successfully.",
+          unexpectedError: "An unexpected error occurred.",
+          title: "New Post",
+          selectOrDrag: "Select or drag an image",
+          fileHelp: "JPG, PNG, HEIC (Max 10MB - Auto compressed)",
+          eventSelection: "Event Selection *",
+          chooseEvent: "Select an event",
+          expired: "(Expired)",
+          raffleHelp: "This post will automatically enter the raffle.",
+          noActiveEvents:
+            "There are no active events you can share photos for right now.",
+          description: "Description (Optional)",
+          descriptionPlaceholder: "Write something about your post...",
+          sharing: "Sharing...",
+          share: "Share",
+        }
+      : {
+          invalidImage: "Lütfen geçerli bir resim dosyası seçin!",
+          fileTooLarge: "Resim boyutu 10MB'dan küçük olmalıdır!",
+          selected: "Resim seçildi!",
+          previewError: "Resim önizlenirken hata oluştu!",
+          uploadError: "Resim yüklenirken hata oluştu!",
+          signInRequired: "Giriş yapmanız gerekiyor!",
+          selectImage: "Lütfen bir resim seçin!",
+          selectEvent: "Lütfen bir etkinlik seçin!",
+          createPostError: "Post oluşturulurken hata oluştu!",
+          success: "Post başarıyla paylaşıldı!",
+          unexpectedError: "Beklenmeyen bir hata oluştu!",
+          title: "Yeni Post",
+          selectOrDrag: "Resim seç veya sürükle",
+          fileHelp: "JPG, PNG, HEIC (Max 10MB - Otomatik sıkıştırılır)",
+          eventSelection: "Etkinlik Seçimi *",
+          chooseEvent: "Etkinlik seçin",
+          expired: "(Süresi dolmuş)",
+          raffleHelp: "Bu post çekilişe otomatik katılacak!",
+          noActiveEvents:
+            "Şu anda fotoğraf paylaşabileceğiniz aktif etkinlik yok.",
+          description: "Açıklama (İsteğe Bağlı)",
+          descriptionPlaceholder: "Postunuz hakkında bir şeyler yazın...",
+          sharing: "Paylaşılıyor...",
+          share: "Paylaş",
+        };
+
   const [user] = useAuthState(auth);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -50,35 +108,31 @@ export default function PostUpload({ onUploadComplete, onCancel }) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error("Lütfen geçerli bir resim dosyası seçin!");
+      toast.error(copy.invalidImage);
       return;
     }
 
-    // Validate file size (10MB limit - will be compressed)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("Resim boyutu 10MB'dan küçük olmalıdır!");
+      toast.error(copy.fileTooLarge);
       return;
     }
 
     try {
-      // Store the original file - compression will happen during upload
       setSelectedImage(file);
-      
-      // Create preview
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target.result);
-        toast.success("Resim seçildi!");
+        toast.success(copy.selected);
       };
       reader.onerror = () => {
-        toast.error("Resim önizlenirken hata oluştu!");
+        toast.error(copy.previewError);
         setSelectedImage(null);
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      toast.error("Resim yüklenirken hata oluştu!");
+      toast.error(copy.uploadError);
       logger.error("Image select error:", error);
     }
   };
@@ -87,9 +141,7 @@ export default function PostUpload({ onUploadComplete, onCancel }) {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
     if (file) {
-      // Simulate file input change
-      const fakeEvent = { target: { files: [file] } };
-      handleImageSelect(fakeEvent);
+      handleImageSelect({ target: { files: [file] } });
     }
   };
 
@@ -107,36 +159,37 @@ export default function PostUpload({ onUploadComplete, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!user) {
-      toast.error("Giriş yapmanız gerekiyor!");
+      toast.error(copy.signInRequired);
       return;
     }
 
     if (!selectedImage) {
-      toast.error("Lütfen bir resim seçin!");
+      toast.error(copy.selectImage);
       return;
     }
 
     if (!selectedEvent) {
-      toast.error("Lütfen bir etkinlik seçin!");
+      toast.error(copy.selectEvent);
       return;
     }
 
     setIsUploading(true);
 
     try {
-      // Upload image with automatic compression via storageUtils
-      const uploadResult = await socialUtils.uploadPostImage(selectedImage, user.uid);
-      
+      const uploadResult = await socialUtils.uploadPostImage(
+        selectedImage,
+        user.uid
+      );
+
       if (!uploadResult.success) {
-        toast.error("Resim yüklenirken hata oluştu!");
+        toast.error(copy.uploadError);
         setIsUploading(false);
         return;
       }
 
-      // Prepare post data - Always event post now
-      const eventData = activeEvents.find(event => event.id === selectedEvent);
+      const eventData = activeEvents.find((event) => event.id === selectedEvent);
       const postData = {
         userId: user.uid,
         userEmail: user.email,
@@ -146,43 +199,38 @@ export default function PostUpload({ onUploadComplete, onCancel }) {
         description: description.trim(),
         eventId: selectedEvent,
         eventName: eventData?.name,
+        eventNameEn: eventData?.nameEn || "",
       };
 
-      // Create post
       const postResult = await socialUtils.createPost(postData);
-      
+
       if (!postResult.success) {
-        toast.error("Post oluşturulurken hata oluştu!");
+        toast.error(copy.createPostError);
         setIsUploading(false);
         return;
       }
 
-      // Add to raffle - all posts are event posts now
       await socialUtils.addToRaffle(selectedEvent, user.uid, postResult.id);
 
-      toast.success("Post başarıyla paylaşıldı!");
-      
-      // Reset form
+      toast.success(copy.success);
       setSelectedImage(null);
       setImagePreview(null);
       setDescription("");
       setSelectedEvent("");
-      
-      // Call completion callback
+
       onUploadComplete && onUploadComplete();
-      
     } catch (error) {
       logger.error("Upload error:", error);
-      toast.error("Beklenmeyen bir hata oluştu!");
+      toast.error(copy.unexpectedError);
     }
-    
+
     setIsUploading(false);
   };
 
   return (
     <div className="relative mx-auto rounded-xl bg-gray-800/50 backdrop-blur-sm p-6 max-w-lg shadow-xl border border-gray-700/50">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white">Yeni Post</h2>
+        <h2 className="text-xl font-bold text-white">{copy.title}</h2>
         {onCancel && (
           <button
             onClick={onCancel}
@@ -194,7 +242,6 @@ export default function PostUpload({ onUploadComplete, onCancel }) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Image Upload Area */}
         <div className="space-y-4">
           {!imagePreview ? (
             <div
@@ -204,8 +251,8 @@ export default function PostUpload({ onUploadComplete, onCancel }) {
               onClick={() => fileInputRef.current?.click()}
             >
               <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-[#d1d1e0] text-lg mb-2">Resim seç veya sürükle</p>
-              <p className="text-gray-400 text-sm">JPG, PNG, HEIC (Max 10MB - Otomatik sıkıştırılır)</p>
+              <p className="text-[#d1d1e0] text-lg mb-2">{copy.selectOrDrag}</p>
+              <p className="text-gray-400 text-sm">{copy.fileHelp}</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -234,10 +281,9 @@ export default function PostUpload({ onUploadComplete, onCancel }) {
           )}
         </div>
 
-        {/* Event Selection - Required */}
         <div>
           <label className="block text-white text-sm font-medium mb-2">
-            Etkinlik Seçimi *
+            {copy.eventSelection}
           </label>
           <select
             value={selectedEvent}
@@ -245,61 +291,44 @@ export default function PostUpload({ onUploadComplete, onCancel }) {
             className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
-            <option value="">Etkinlik seçin</option>
+            <option value="">{copy.chooseEvent}</option>
             {activeEvents.map((event) => (
               <option key={event.id} value={event.id} disabled={!event.canPost}>
-                {event.name} {!event.canPost && "(Süresi dolmuş)"}
+                {getLocalizedField(event, "name", locale)}{" "}
+                {!event.canPost && copy.expired}
               </option>
             ))}
           </select>
           {selectedEvent && (
             <p className="text-green-400 text-xs mt-1 flex items-center">
-              <Calendar className="w-3 h-3 mr-1" />
-              Bu post çekilişe otomatik katılacak!
+              {copy.raffleHelp}
             </p>
           )}
           {activeEvents.length === 0 && (
-            <p className="text-yellow-400 text-xs mt-1">
-              Şu anda fotoğraf paylaşabileceğiniz aktif etkinlik yok.
-            </p>
+            <p className="text-yellow-400 text-xs mt-2">{copy.noActiveEvents}</p>
           )}
         </div>
 
-        {/* Description */}
         <div>
           <label className="block text-white text-sm font-medium mb-2">
-            Açıklama (İsteğe Bağlı)
+            {copy.description}
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Postunuz hakkında bir şeyler yazın..."
+            placeholder={copy.descriptionPlaceholder}
             rows={3}
             maxLength={500}
             className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />
-          <p className="text-gray-400 text-xs mt-1">
-            {description.length}/500 karakter
-          </p>
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
-          disabled={!selectedImage || isUploading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+          disabled={isUploading}
+          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
-          {isUploading ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-              <span>Paylaşılıyor...</span>
-            </>
-          ) : (
-            <>
-              <Upload className="w-4 h-4" />
-              <span>Paylaş</span>
-            </>
-          )}
+          {isUploading ? copy.sharing : copy.share}
         </button>
       </form>
     </div>
