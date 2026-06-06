@@ -1,0 +1,73 @@
+{
+  "common": {
+    "loading": "Yükleniyor...",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "close": "Kapat",
+    "accept": "Kabul Et",
+    "decline": "Reddet",
+    "continue": "Devam Et"
+  },
+  "nav": {
+    "about": "Hakkımızda",
+    "events": "Etkinlikler",
+    "announcements": "Duyurular",
+    "projects": "Projeler",
+    "personalityTests": "Kişilik Testleri",
+    "joinGame": "Oyuna Katıl",
+    "social": "Sosyal",
+    "support": "Destek",
+    "admin": "Admin Paneli",
+    "login": "Giriş Yap",
+    "viewProfile": "Profili Görüntüle",
+    "logout": "Çıkış Yap",
+    "defaultUser": "Kullanıcı",
+    "homeAlt": "Ana Sayfa",
+    "loading": "Navigasyon yükleniyor...",
+    "languageLabel": "Dil",
+    "switchToTurkish": "Türkçe",
+    "switchToEnglish": "English"
+  },
+  "footer": {
+    "about": "Hakkımızda",
+    "events": "Etkinlikler",
+    "announcements": "Duyurular",
+    "projects": "Projeler",
+    "description": "Teknoloji tutkunlarını bir araya getiren, geleceği şekillendiren topluluk.",
+    "pages": "Sayfalar",
+    "interactive": "İnteraktif",
+    "legal": "Yasal",
+    "followUs": "Bizi Takip Edin",
+    "socialMedia": "Sosyal Medya",
+    "faq": "S.S.S.",
+    "game": "Oyun",
+    "typingTest": "Yazma Hızı Testi",
+    "personalityTest": "Kişilik Testi",
+    "privacy": "Gizlilik Politikası",
+    "terms": "Kullanım Şartları",
+    "cookiePolicy": "Çerez Politikası",
+    "support": "Destek",
+    "rights": "© 2025 GDG On Campus Trakya Üniversitesi. Her hakkı saklıdır."
+  },
+  "cookieConsent": {
+    "title": "Çerez Kullanımı",
+    "description": "Web sitemiz, size en iyi deneyimi sunmak için çerezler ve yerel depolama kullanmaktadır.",
+    "policy": "Çerez Politikası",
+    "manage": "Tercihlerini yönet →",
+    "acceptAll": "Tümünü Kabul Et",
+    "acceptNecessary": "Sadece Gerekli Çerezler",
+    "necessaryTitle": "Zorunlu Çerezler",
+    "necessaryDescription": "Kimlik doğrulama ve temel site işlevleri için gereklidir.",
+    "analyticsTitle": "Analitik Çerezler",
+    "analyticsDescription": "Site performansını iyileştirmemize yardımcı olur.",
+    "functionalTitle": "Fonksiyonel Çerezler",
+    "functionalDescription": "Oturum takibi ve kullanıcı deneyimi için kullanılır.",
+    "savePreferences": "Tercihleri Kaydet",
+    "cancel": "İptal"
+  },
+  "notFound": {
+    "title": "Oops! Uzayda kaybolmuş gibisin.",
+    "description": "Aradığın sayfayı bulamadık. Ama endişelenme, geri dönüş yolunu biliyoruz.",
+    "backHome": "Ana Sayfaya Dön"
+  }
+}

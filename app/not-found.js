@@ -1,6 +1,7 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-
+// Global, non-localized fallback. Locale-aware 404s are handled by
+// app/[locale]/not-found.js (which renders inside NextIntlClientProvider).
+// This root fallback must stay self-contained — no next-intl hooks/Link —
+// because the root layout no longer provides the i18n context.
 export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-black via-gray-900 to-slate-900 text-white">
@@ -9,20 +10,15 @@ export default function NotFound() {
           404
         </h1>
         <p className="mt-4 text-xl md:text-2xl font-semibold">
-          Oops! Uzayda kaybolmuş gibisin.
-        </p>
-        <p className="mt-2 text-gray-400">
-          Aradığın sayfayı bulamadık. Ama endişelenme, geri dönüş yolunu biliyoruz.
+          Sayfa bulunamadı / Page not found
         </p>
         <div className="mt-8">
-          <Link href="/">
-            <Button
-              variant="secondary"
-              className="rounded-full px-8 py-3 text-lg font-bold transition-transform hover:scale-105"
-            >
-              Ana Sayfaya Dön
-            </Button>
-          </Link>
+          <a
+            href="/"
+            className="inline-block rounded-full bg-white/10 px-8 py-3 text-lg font-bold transition-transform hover:scale-105 hover:bg-white/20"
+          >
+            Ana sayfa / Home
+          </a>
         </div>
       </div>
     </div>

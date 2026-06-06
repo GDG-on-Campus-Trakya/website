@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Trophy,
   Gift,
@@ -6,14 +7,29 @@ import {
   Clock,
   Sparkles,
   Crown,
-  Users,
 } from "lucide-react";
+import { useLocale } from "next-intl";
+import { formatLocalizedDate, getLocalizedField } from "@/utils/localeUtils";
 
 export default function AnnouncementCard({ announcement }) {
+  const locale = useLocale();
+  const copy =
+    locale === "en"
+      ? {
+          winner: "WINNER",
+          raffleResult: "Raffle Result",
+          announcement: "Announcement",
+        }
+      : {
+          winner: "KAZANAN",
+          raffleResult: "Çekiliş Sonucu",
+          announcement: "Duyuru",
+        };
+
   const formatDate = (timestamp) => {
     if (!timestamp) return "";
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString("tr-TR", {
+    return formatLocalizedDate(date, locale, {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -22,15 +38,18 @@ export default function AnnouncementCard({ announcement }) {
     });
   };
 
+  const title = getLocalizedField(announcement, "title", locale);
+  const content = getLocalizedField(announcement, "content", locale);
+  const eventName =
+    getLocalizedField(announcement, "eventName", locale) ||
+    getLocalizedField(announcement, "name", locale);
+
   if (announcement.type === "raffle_result") {
     return (
       <div className="relative overflow-hidden max-w-full">
-        {/* Animated background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-orange-500/10 to-red-500/10 animate-pulse"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-orange-500/10 to-red-500/10 animate-pulse" />
 
-        {/* Golden border with glow effect */}
         <div className="relative bg-gray-900/80 backdrop-blur-sm border-2 border-yellow-400/50 rounded-2xl shadow-2xl hover:shadow-yellow-400/20 transition-all duration-300 group">
-          {/* Decorative corner sparkles */}
           <div className="absolute top-2 right-2 text-yellow-400 opacity-70 group-hover:opacity-100 transition-opacity">
             <Sparkles className="w-6 h-6 animate-pulse" />
           </div>
@@ -42,7 +61,6 @@ export default function AnnouncementCard({ announcement }) {
           </div>
 
           <div className="p-6">
-            {/* Celebration header */}
             <div className="text-center mb-6">
               <div className="flex items-center justify-center mb-3">
                 <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-3 rounded-full shadow-lg">
@@ -50,19 +68,16 @@ export default function AnnouncementCard({ announcement }) {
                 </div>
               </div>
               <h3 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent mb-1">
-                {announcement.title} 🎉
+                {title} {"\u{1F389}"}
               </h3>
-              <p className="text-yellow-300/80 font-medium">
-                {announcement.eventName}
-              </p>
+              <p className="text-yellow-300/80 font-medium">{eventName}</p>
             </div>
 
-            {/* Winner spotlight */}
             <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30 rounded-xl p-6 mb-6 text-center">
               <div className="flex items-center justify-center mb-3">
                 <Trophy className="w-8 h-8 text-yellow-400 mr-2" />
                 <span className="text-yellow-300 font-semibold text-lg">
-                  KAZANAN
+                  {copy.winner}
                 </span>
                 <Trophy className="w-8 h-8 text-yellow-400 ml-2" />
               </div>
@@ -79,25 +94,22 @@ export default function AnnouncementCard({ announcement }) {
                 </div>
               </div>
 
-              {/* Celebration emojis */}
               <div
                 className="text-4xl animate-bounce"
                 style={{ animationDelay: "0.2s" }}
               >
-                🏆🎊🥳🎈✨
+                {"\u{1F3C6}\u{1F38A}\u{1F973}\u{1F388}\u2728"}
               </div>
             </div>
 
-            {/* Content */}
-            {announcement.content && (
+            {content && (
               <div className="bg-gray-800/30 rounded-lg p-4 mb-4">
                 <div className="whitespace-pre-line text-gray-200 leading-relaxed text-center">
-                  {announcement.content}
+                  {content}
                 </div>
               </div>
             )}
 
-            {/* Footer with improved styling */}
             <div className="flex items-center justify-between pt-4 border-t border-yellow-400/20">
               <div className="flex items-center space-x-2 text-yellow-300/80">
                 <Clock className="w-4 h-4" />
@@ -108,9 +120,9 @@ export default function AnnouncementCard({ announcement }) {
 
               <div className="flex items-center space-x-1">
                 <span className="text-yellow-400 text-sm font-medium">
-                  Çekiliş Sonucu
+                  {copy.raffleResult}
                 </span>
-                <div className="text-2xl animate-pulse">🎯</div>
+                <div className="text-2xl animate-pulse">{"\u{1F3AF}"}</div>
               </div>
             </div>
           </div>
@@ -119,22 +131,16 @@ export default function AnnouncementCard({ announcement }) {
     );
   }
 
-  // Generic announcement card for other types
   return (
     <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-500/30 rounded-xl p-6 shadow-lg">
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="bg-blue-500 p-2 rounded-full">
             <Calendar className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-blue-400">
-              {announcement.title}
-            </h3>
-            {announcement.eventName && (
-              <p className="text-sm text-gray-400">{announcement.eventName}</p>
-            )}
+            <h3 className="text-lg font-bold text-blue-400">{title}</h3>
+            {eventName && <p className="text-sm text-gray-400">{eventName}</p>}
           </div>
         </div>
 
@@ -144,19 +150,17 @@ export default function AnnouncementCard({ announcement }) {
         </div>
       </div>
 
-      {/* Content */}
       <div className="whitespace-pre-line text-gray-300 leading-relaxed mb-4">
-        {announcement.content}
+        {content}
       </div>
 
-      {/* Footer */}
       <div className="flex items-center justify-between pt-4 border-t border-gray-700">
         <div className="flex items-center space-x-2 text-sm text-gray-400">
           <Calendar className="w-4 h-4" />
-          <span>Duyuru</span>
+          <span>{copy.announcement}</span>
         </div>
 
-        <div className="text-2xl">📢</div>
+        <div className="text-2xl">{"\u{1F4E2}"}</div>
       </div>
     </div>
   );

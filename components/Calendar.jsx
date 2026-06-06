@@ -1,5 +1,11 @@
 import React from "react";
-// components/Calendar.jsx
+import { useLocale } from "next-intl";
+import { getLocaleCode } from "@/utils/localeUtils";
+
+const DAY_LABELS = {
+  tr: ["Pzr", "Pzt", "Sal", "Çrş", "Prş", "Cum", "Cmt"],
+  en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+};
 
 const formatDate = (date) => {
   const d = new Date(date);
@@ -16,6 +22,7 @@ const Calendar = ({
   handleDateClick,
   eventDates,
 }) => {
+  const locale = useLocale() === "en" ? "en" : "tr";
   const month = currentMonth.getMonth();
   const year = currentMonth.getFullYear();
 
@@ -26,14 +33,14 @@ const Calendar = ({
   const weeks = [];
   let week = [];
 
-  for (let i = 0; i < firstDay; i++) {
+  for (let i = 0; i < firstDay; i += 1) {
     week.push({
       day: daysInPrevMonth - firstDay + i + 1,
       isCurrentMonth: false,
     });
   }
 
-  for (let day = 1; day <= daysInMonth; day++) {
+  for (let day = 1; day <= daysInMonth; day += 1) {
     week.push({ day, isCurrentMonth: true });
     if (week.length === 7) {
       weeks.push(week);
@@ -43,69 +50,65 @@ const Calendar = ({
 
   let nextMonthDay = 1;
   while (week.length < 7) {
-    week.push({ day: nextMonthDay++, isCurrentMonth: false });
+    week.push({ day: nextMonthDay, isCurrentMonth: false });
+    nextMonthDay += 1;
   }
+
   weeks.push(week);
 
   while (weeks.length < 6) {
     const extraWeek = [];
-    for (let i = 0; i < 7; i++) {
-      extraWeek.push({ day: nextMonthDay++, isCurrentMonth: false });
+    for (let i = 0; i < 7; i += 1) {
+      extraWeek.push({ day: nextMonthDay, isCurrentMonth: false });
+      nextMonthDay += 1;
     }
     weeks.push(extraWeek);
   }
 
-  const handlePrevMonth = () => {
-    setCurrentMonth(new Date(year, month - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentMonth(new Date(year, month + 1, 1));
-  };
-
   return (
-    <div className="bg-gray-800 rounded-lg p-4 shadow-lg">
-      <div className="flex justify-between items-center mb-3">
+    <div className="rounded-lg bg-gray-800 p-4 shadow-lg">
+      <div className="mb-3 flex items-center justify-between">
         <button
-          className="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-600 transition-colors"
-          onClick={handlePrevMonth}
+          className="rounded bg-gray-700 px-3 py-1 text-white transition-colors hover:bg-gray-600"
+          onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}
         >
           &lt;
         </button>
         <h3 className="text-lg text-white">
-          {currentMonth.toLocaleString("tr-TR", { month: "long" })} {year}
+          {currentMonth.toLocaleString(getLocaleCode(locale), { month: "long" })}{" "}
+          {year}
         </h3>
         <button
-          className="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-600 transition-colors"
-          onClick={handleNextMonth}
+          className="rounded bg-gray-700 px-3 py-1 text-white transition-colors hover:bg-gray-600"
+          onClick={() => setCurrentMonth(new Date(year, month + 1, 1))}
         >
           &gt;
         </button>
       </div>
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {["Pzr", "Pzt", "Sal", "Çrş", "Prş", "Cum", "Cmt"].map((day) => (
+      <div className="mb-2 grid grid-cols-7 gap-1">
+        {DAY_LABELS[locale].map((day) => (
           <div key={day} className="text-center text-sm text-gray-400">
             {day}
           </div>
         ))}
       </div>
       <div className="grid grid-cols-7 gap-1">
-        {weeks.map((week, weekIndex) => (
-          <React.Fragment key={weekIndex}>
-            {week.map((dateObj, dayIndex) => {
+        {weeks.map((weekRow, weekIndex) => (
+          <React.Fragment key={`week-${weekIndex}`}>
+            {weekRow.map((dateObj, dayIndex) => {
               const { day, isCurrentMonth } = dateObj;
 
               const displayMonth = isCurrentMonth
                 ? month
                 : day < 15
-                ? month + 1
-                : month - 1;
+                  ? month + 1
+                  : month - 1;
               const displayYear =
                 displayMonth < 0
                   ? year - 1
                   : displayMonth > 11
-                  ? year + 1
-                  : year;
+                    ? year + 1
+                    : year;
 
               const adjustedMonth = (displayMonth + 12) % 12;
               const date = new Date(displayYear, adjustedMonth, day);
@@ -119,14 +122,12 @@ const Calendar = ({
 
               return (
                 <div
-                  key={dayIndex}
-                  className={`flex items-center justify-center w-10 h-10 rounded cursor-pointer text-sm ${
+                  key={`day-${weekIndex}-${dayIndex}`}
+                  className={`flex h-10 w-10 items-center justify-center rounded text-sm ${
                     hasEvent && isCurrentMonth ? "bg-blue-500 text-white" : ""
                   } ${isSelected ? "border-2 border-white" : ""} ${
-                    !isCurrentMonth
-                      ? "text-gray-500  cursor-default"
-                      : "text-white"
-                  } ${isClickable ? "hover:bg-blue-600" : "cursor-default"}`}
+                    !isCurrentMonth ? "cursor-default text-gray-500" : "text-white"
+                  } ${isClickable ? "cursor-pointer hover:bg-blue-600" : "cursor-default"}`}
                   onClick={() => isClickable && handleDateClick(day)}
                 >
                   {day}

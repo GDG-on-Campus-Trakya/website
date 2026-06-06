@@ -1,0 +1,73 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "accept": "Accept",
+    "decline": "Decline",
+    "continue": "Continue"
+  },
+  "nav": {
+    "about": "About",
+    "events": "Events",
+    "announcements": "Announcements",
+    "projects": "Projects",
+    "personalityTests": "Personality Tests",
+    "joinGame": "Join the Game",
+    "social": "Social",
+    "support": "Support",
+    "admin": "Admin Panel",
+    "login": "Sign In",
+    "viewProfile": "View Profile",
+    "logout": "Sign Out",
+    "defaultUser": "User",
+    "homeAlt": "Home",
+    "loading": "Loading navigation...",
+    "languageLabel": "Language",
+    "switchToTurkish": "Türkçe",
+    "switchToEnglish": "English"
+  },
+  "footer": {
+    "about": "About",
+    "events": "Events",
+    "announcements": "Announcements",
+    "projects": "Projects",
+    "description": "A community that brings technology enthusiasts together and helps shape the future.",
+    "pages": "Pages",
+    "interactive": "Interactive",
+    "legal": "Legal",
+    "followUs": "Follow Us",
+    "socialMedia": "Social Media",
+    "faq": "FAQ",
+    "game": "Game",
+    "typingTest": "Typing Speed Test",
+    "personalityTest": "Personality Test",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "cookiePolicy": "Cookie Policy",
+    "support": "Support",
+    "rights": "© 2025 GDG On Campus Trakya University. All rights reserved."
+  },
+  "cookieConsent": {
+    "title": "Cookie Usage",
+    "description": "Our website uses cookies and local storage to provide the best possible experience.",
+    "policy": "Cookie Policy",
+    "manage": "Manage your preferences →",
+    "acceptAll": "Accept All",
+    "acceptNecessary": "Necessary Only",
+    "necessaryTitle": "Necessary Cookies",
+    "necessaryDescription": "Required for authentication and core site functionality.",
+    "analyticsTitle": "Analytics Cookies",
+    "analyticsDescription": "Help us improve site performance.",
+    "functionalTitle": "Functional Cookies",
+    "functionalDescription": "Used for session tracking and user experience features.",
+    "savePreferences": "Save Preferences",
+    "cancel": "Cancel"
+  },
+  "notFound": {
+    "title": "Oops! You seem lost in space.",
+    "description": "We couldn't find the page you were looking for, but we know the way back.",
+    "backHome": "Back to Home"
+  }
+}
