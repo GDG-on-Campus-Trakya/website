@@ -16,8 +16,74 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { checkUserRole, ROLES } from "@/utils/roleUtils";
 import { Link } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    fetchError: "Oyun geçmişi yüklenirken hata oluştu!",
+    durationFormat: (m, s) => `${m}dk ${s}sn`,
+    unknown: "Bilinmiyor",
+    dateLocale: "tr-TR",
+    pageTitle: "Oyun Geçmişi",
+    pageSubtitle: "Tamamlanan Quiz oyunlarının detaylı sonuçları",
+    backToManage: "← Quiz Yönetimine Dön",
+    totalGames: "Toplam Oyun",
+    totalPlayers: "Toplam Oyuncu",
+    avgPlayers: "Ort. Oyuncu",
+    myGames: "Benim Oyunlarım",
+    allGames: "Tüm Oyunlar",
+    myGamesFilter: "Benim Oyunlarım",
+    noCompletedGames: "Henüz tamamlanmış oyun yok",
+    winnerScoreInfo: (score, correct) => `${score} puan • ${correct} doğru`,
+    topThree: "🏅 İlk 3",
+    allPlayers: (n) => `👥 Tüm Oyuncular (${n})`,
+    colRank: "Sıra",
+    colName: "İsim",
+    colDepartment: "Bölüm",
+    colCorrect: "Doğru",
+    colAvgTime: "Ort. Süre",
+    colScore: "Puan",
+    highest: "En Yüksek",
+    lowest: "En Düşük",
+    average: "Ortalama",
+    avgCorrect: "Ort. Doğru",
+  },
+  en: {
+    fetchError: "An error occurred while loading the game history!",
+    durationFormat: (m, s) => `${m}m ${s}s`,
+    unknown: "Unknown",
+    dateLocale: "en-US",
+    pageTitle: "Game History",
+    pageSubtitle: "Detailed results of completed quiz games",
+    backToManage: "← Back to Quiz Management",
+    totalGames: "Total Games",
+    totalPlayers: "Total Players",
+    avgPlayers: "Avg. Players",
+    myGames: "My Games",
+    allGames: "All Games",
+    myGamesFilter: "My Games",
+    noCompletedGames: "No completed games yet",
+    winnerScoreInfo: (score, correct) => `${score} points • ${correct} correct`,
+    topThree: "🏅 Top 3",
+    allPlayers: (n) => `👥 All Players (${n})`,
+    colRank: "Rank",
+    colName: "Name",
+    colDepartment: "Department",
+    colCorrect: "Correct",
+    colAvgTime: "Avg. Time",
+    colScore: "Score",
+    highest: "Highest",
+    lowest: "Lowest",
+    average: "Average",
+    avgCorrect: "Avg. Correct",
+  },
+};
 
 export default function GameHistoryPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [userRole, setUserRole] = useState(null);
   const [gameResults, setGameResults] = useState([]);
@@ -35,7 +101,7 @@ export default function GameHistoryPage() {
 
       const role = await checkUserRole(user.email);
       if (role !== ROLES.ADMIN) {
-        toast.error("Bu sayfaya erişim yetkiniz yok!");
+        toast.error(a.accessDeniedToast);
         router.push("/admin");
         return;
       }
@@ -64,7 +130,7 @@ export default function GameHistoryPage() {
       setGameResults(results);
     } catch (error) {
       logger.error("Error fetching game results:", error);
-      toast.error("Oyun geçmişi yüklenirken hata oluştu!");
+      toast.error(copy.fetchError);
     } finally {
       setLoadingResults(false);
     }
@@ -73,13 +139,13 @@ export default function GameHistoryPage() {
   const formatDuration = (milliseconds) => {
     const minutes = Math.floor(milliseconds / 60000);
     const seconds = Math.floor((milliseconds % 60000) / 1000);
-    return `${minutes}dk ${seconds}sn`;
+    return copy.durationFormat(minutes, seconds);
   };
 
   const formatDate = (timestamp) => {
-    if (!timestamp) return "Bilinmiyor";
+    if (!timestamp) return copy.unknown;
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleString("tr-TR", {
+    return date.toLocaleString(copy.dateLocale, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -103,7 +169,7 @@ export default function GameHistoryPage() {
   if (loading || loadingResults) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-white">Yükleniyor...</p>
+        <p className="text-lg text-white">{a.loading}</p>
       </div>
     );
   }
@@ -111,7 +177,7 @@ export default function GameHistoryPage() {
   if (!userRole) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Erişim Reddedildi</p>
+        <p className="text-lg text-red-500">{a.accessDenied}</p>
       </div>
     );
   }
@@ -121,33 +187,33 @@ export default function GameHistoryPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2">Oyun Geçmişi</h1>
-            <p className="text-sm sm:text-base text-gray-300">Tamamlanan Quiz oyunlarının detaylı sonuçları</p>
+            <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2">{copy.pageTitle}</h1>
+            <p className="text-sm sm:text-base text-gray-300">{copy.pageSubtitle}</p>
           </div>
           <Link
             href="/admin/quiz/manage"
             className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-center text-sm sm:text-base"
           >
-            ← Quiz Yönetimine Dön
+            {copy.backToManage}
           </Link>
         </div>
 
         {/* Statistics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/20">
-            <div className="text-gray-400 text-xs sm:text-sm mb-1">Toplam Oyun</div>
+            <div className="text-gray-400 text-xs sm:text-sm mb-1">{copy.totalGames}</div>
             <div className="text-xl sm:text-3xl font-bold text-white">{totalGames}</div>
           </div>
           <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/20">
-            <div className="text-gray-400 text-xs sm:text-sm mb-1">Toplam Oyuncu</div>
+            <div className="text-gray-400 text-xs sm:text-sm mb-1">{copy.totalPlayers}</div>
             <div className="text-xl sm:text-3xl font-bold text-purple-400">{totalPlayers}</div>
           </div>
           <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/20">
-            <div className="text-gray-400 text-xs sm:text-sm mb-1">Ort. Oyuncu</div>
+            <div className="text-gray-400 text-xs sm:text-sm mb-1">{copy.avgPlayers}</div>
             <div className="text-xl sm:text-3xl font-bold text-blue-400">{averagePlayersPerGame}</div>
           </div>
           <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/20">
-            <div className="text-gray-400 text-xs sm:text-sm mb-1">Benim Oyunlarım</div>
+            <div className="text-gray-400 text-xs sm:text-sm mb-1">{copy.myGames}</div>
             <div className="text-xl sm:text-3xl font-bold text-green-400">{myGames}</div>
           </div>
         </div>
@@ -163,7 +229,7 @@ export default function GameHistoryPage() {
                   : "bg-white/5 text-gray-400 hover:bg-white/10"
               }`}
             >
-              Tüm Oyunlar
+              {copy.allGames}
             </button>
             <button
               onClick={() => setFilterHost("me")}
@@ -173,7 +239,7 @@ export default function GameHistoryPage() {
                   : "bg-white/5 text-gray-400 hover:bg-white/10"
               }`}
             >
-              Benim Oyunlarım
+              {copy.myGamesFilter}
             </button>
           </div>
         </div>
@@ -181,7 +247,7 @@ export default function GameHistoryPage() {
         {/* Results List */}
         {filteredResults.length === 0 ? (
           <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-8 sm:p-12 border border-white/20 text-center">
-            <p className="text-gray-400 text-base sm:text-lg">Henüz tamamlanmış oyun yok</p>
+            <p className="text-gray-400 text-base sm:text-lg">{copy.noCompletedGames}</p>
           </div>
         ) : (
           <div className="space-y-3 sm:space-y-4">
@@ -215,7 +281,7 @@ export default function GameHistoryPage() {
                         <div>
                           <div className="text-yellow-400 font-bold text-sm sm:text-base">{result.winner.name}</div>
                           <div className="text-yellow-200 text-xs sm:text-sm">
-                            {result.winner.score} puan • {result.winner.correctAnswers} doğru
+                            {copy.winnerScoreInfo(result.winner.score, result.winner.correctAnswers)}
                           </div>
                         </div>
                       </div>
@@ -239,7 +305,7 @@ export default function GameHistoryPage() {
                     {/* Top 3 */}
                     {result.topThree && result.topThree.length > 0 && (
                       <div className="mb-4 sm:mb-6">
-                        <h4 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">🏅 İlk 3</h4>
+                        <h4 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">{copy.topThree}</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                           {result.topThree.map((player, index) => (
                             <div
@@ -270,18 +336,18 @@ export default function GameHistoryPage() {
                     {/* All Players */}
                     <div>
                       <h4 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">
-                        👥 Tüm Oyuncular ({result.players?.length || 0})
+                        {copy.allPlayers(result.players?.length || 0)}
                       </h4>
                       <div className="bg-white/5 rounded-xl overflow-x-auto">
                         <table className="w-full min-w-[500px]">
                           <thead className="bg-white/10">
                             <tr>
-                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-gray-300 text-xs sm:text-sm">Sıra</th>
-                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-gray-300 text-xs sm:text-sm">İsim</th>
-                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-gray-300 text-xs sm:text-sm hidden sm:table-cell">Bölüm</th>
-                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-center text-gray-300 text-xs sm:text-sm">Doğru</th>
-                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-center text-gray-300 text-xs sm:text-sm hidden sm:table-cell">Ort. Süre</th>
-                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-300 text-xs sm:text-sm">Puan</th>
+                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-gray-300 text-xs sm:text-sm">{copy.colRank}</th>
+                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-gray-300 text-xs sm:text-sm">{copy.colName}</th>
+                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-gray-300 text-xs sm:text-sm hidden sm:table-cell">{copy.colDepartment}</th>
+                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-center text-gray-300 text-xs sm:text-sm">{copy.colCorrect}</th>
+                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-center text-gray-300 text-xs sm:text-sm hidden sm:table-cell">{copy.colAvgTime}</th>
+                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-300 text-xs sm:text-sm">{copy.colScore}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -316,25 +382,25 @@ export default function GameHistoryPage() {
                     {/* Stats Summary */}
                     <div className="mt-4 sm:mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                       <div className="bg-white/5 p-3 sm:p-4 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">En Yüksek</div>
+                        <div className="text-gray-400 text-xs mb-1">{copy.highest}</div>
                         <div className="text-lg sm:text-2xl font-bold text-white">
                           {result.stats?.highestScore || 0}
                         </div>
                       </div>
                       <div className="bg-white/5 p-3 sm:p-4 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">En Düşük</div>
+                        <div className="text-gray-400 text-xs mb-1">{copy.lowest}</div>
                         <div className="text-lg sm:text-2xl font-bold text-white">
                           {result.stats?.lowestScore || 0}
                         </div>
                       </div>
                       <div className="bg-white/5 p-3 sm:p-4 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Ortalama</div>
+                        <div className="text-gray-400 text-xs mb-1">{copy.average}</div>
                         <div className="text-lg sm:text-2xl font-bold text-white">
                           {result.stats?.averageScore || 0}
                         </div>
                       </div>
                       <div className="bg-white/5 p-3 sm:p-4 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Ort. Doğru</div>
+                        <div className="text-gray-400 text-xs mb-1">{copy.avgCorrect}</div>
                         <div className="text-lg sm:text-2xl font-bold text-white">
                           {result.stats?.averageCorrectAnswers || 0}
                         </div>

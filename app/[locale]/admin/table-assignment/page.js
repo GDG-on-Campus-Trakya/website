@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/firebase";
 import {
@@ -31,8 +32,205 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { checkUserRole, ROLES } from "@/utils/roleUtils";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    adminPanel: "Admin Panel",
+    pageTitle: "Masa Yerleştirme Çarkı",
+    pageSubtitle: "Katılımcıları masalara rastgele veya manuel yerleştirin",
+    totalTables: "Toplam Masa",
+    totalParticipants: "Toplam Katılımcı",
+    assigned: "Atanan",
+    pending: "Bekleyen",
+    searchPlaceholder: "Katılımcı ara (sadece atananlar)...",
+    addTable: "Masa Ekle",
+    addParticipant: "Katılımcı Ekle",
+    randomAssign: "Rastgele Ata",
+    reset: "Sıfırla",
+    unassignedParticipants: (n) => `Atanmamış Katılımcılar (${n})`,
+    manualHint:
+      'Katılımcıya tıklayın ve istediğiniz masayı seçin, ya da "Rastgele Ata" butonunu kullanın',
+    searchResult: (q, n) => `Arama: "${q}" - ${n} sonuç bulundu`,
+    noTables: "Henüz masa yok",
+    noTablesHint:
+      "İlk masayı ekleyin ve katılımcıları yerleştirmeye başlayın!",
+    // Toasts
+    loadTablesError: "Masalar yüklenirken hata oluştu!",
+    loadParticipantsError: "Katılımcılar yüklenirken hata oluştu!",
+    tableAdded: (name) => `${name} eklendi!`,
+    addTableError: "Masa eklenirken hata oluştu!",
+    tableUpdated: (name) => `${name} güncellendi!`,
+    updateTableError: "Masa güncellenirken hata oluştu!",
+    confirmRemoveTableWithParticipants:
+      "Bu masada katılımcılar var. Masayı kaldırırsanız, katılımcılar atanmamış duruma gelecek. Devam etmek istiyor musunuz?",
+    tableRemoved: (name) => `${name} kaldırıldı`,
+    removeTableError: "Masa kaldırılırken hata oluştu!",
+    enterParticipantName: "En az bir katılımcı adı girin!",
+    participantAdded: (name) => `${name} eklendi!`,
+    participantsAdded: (n) => `${n} katılımcı eklendi!`,
+    addParticipantsError: "Katılımcılar eklenirken hata oluştu!",
+    noParticipantsToAssign: "Atanacak katılımcı yok!",
+    noTablesAddFirst: "Masa yok! Lütfen önce masa ekleyin.",
+    allTablesFull: "Tüm masalar dolu!",
+    notEnoughCapacity:
+      "Tüm katılımcılar için yeterli kapasite yok! Mevcut kapasiteye göre atama yapılacak.",
+    assignedToTable: (name, table) => `${name} ${table}'e atandı!`,
+    assignError: "Atama sırasında hata oluştu!",
+    tableMarkedFull: (name) => `${name} dolu olarak işaretlenmiş!`,
+    tableFull: (name) => `${name} dolu!`,
+    participantUnassigned: "Katılımcı masadan çıkarıldı",
+    unassignError: "Katılımcı çıkarılırken hata oluştu!",
+    confirmRemoveParticipant: (name) =>
+      `${name} katılımcısını silmek istediğinizden emin misiniz?`,
+    participantDeleted: (name) => `${name} silindi`,
+    deleteParticipantError: "Katılımcı silinirken hata oluştu!",
+    confirmReset: "Tüm atamaları sıfırlamak istediğinizden emin misiniz?",
+    allReset: "Tüm atamalar sıfırlandı!",
+    resetError: "Sıfırlama sırasında hata oluştu!",
+    tableMarkedFullInfo: (name) => `${name} dolu olarak işaretlendi`,
+    tableAvailableAgain: (name) => `${name} tekrar müsait`,
+    toggleTableError: "Masa durumu güncellenirken hata oluştu!",
+    // ManualAssignmentRow
+    assignToTable: "Masaya Ata",
+    fullSuffix: "(Dolu)",
+    noTable: "Masa yok",
+    deleteParticipantTitle: "Katılımcıyı sil",
+    // TableCard
+    makeTableAvailable: "Masayı müsait yap",
+    markTableFull: "Masayı dolu işaretle",
+    editTableTitle: "Masayı düzenle",
+    removeTableTitle: "Masayı kaldır",
+    occupancy: "Doluluk",
+    markedFull: "(Dolu işaretli)",
+    showingInSearch: (n, total) =>
+      `Aramada ${n} kişi gösteriliyor (toplam ${total})`,
+    removeFromTable: "Masadan çıkar",
+    noOneYet: "Henüz kimse yok",
+    tableMarkedFullBtn: "Masa Dolu İşaretli",
+    capacityFull: "Kontenjan Doldu",
+    place: "Yerleştir",
+    morePeople: (n) => `+${n} kişi daha`,
+    // AddTableModal / EditTableModal
+    addNewTable: "Yeni Masa Ekle",
+    tableName: "Masa Adı",
+    tableNamePlaceholder: "Örn: Masa 3",
+    capacity: "Kapasite",
+    cancel: "İptal",
+    add: "Ekle",
+    tableNameRequired: "Masa adı gerekli!",
+    validCapacity: "Geçerli bir kapasite girin!",
+    editTable: "Masayı Düzenle",
+    update: "Güncelle",
+    // AddParticipantModal
+    addParticipantTitle: "Katılımcı Ekle",
+    participantNames: "Katılımcı İsimleri",
+    participantNamesPlaceholder:
+      "Her satıra bir isim yazın:\nAhmet Yılmaz\nAyşe Demir\nMehmet Kaya",
+    participantNamesHint:
+      "Her satıra bir isim yazın. Birden fazla katılımcı ekleyebilirsiniz.",
+  },
+  en: {
+    adminPanel: "Admin Panel",
+    pageTitle: "Table Assignment Wheel",
+    pageSubtitle: "Assign participants to tables randomly or manually",
+    totalTables: "Total Tables",
+    totalParticipants: "Total Participants",
+    assigned: "Assigned",
+    pending: "Pending",
+    searchPlaceholder: "Search participant (assigned only)...",
+    addTable: "Add Table",
+    addParticipant: "Add Participant",
+    randomAssign: "Random Assign",
+    reset: "Reset",
+    unassignedParticipants: (n) => `Unassigned Participants (${n})`,
+    manualHint:
+      'Click a participant and select the table you want, or use the "Random Assign" button',
+    searchResult: (q, n) => `Search: "${q}" - ${n} results found`,
+    noTables: "No tables yet",
+    noTablesHint:
+      "Add the first table and start assigning participants!",
+    // Toasts
+    loadTablesError: "An error occurred while loading tables!",
+    loadParticipantsError: "An error occurred while loading participants!",
+    tableAdded: (name) => `${name} added!`,
+    addTableError: "An error occurred while adding the table!",
+    tableUpdated: (name) => `${name} updated!`,
+    updateTableError: "An error occurred while updating the table!",
+    confirmRemoveTableWithParticipants:
+      "This table has participants. If you remove the table, the participants will become unassigned. Do you want to continue?",
+    tableRemoved: (name) => `${name} removed`,
+    removeTableError: "An error occurred while removing the table!",
+    enterParticipantName: "Enter at least one participant name!",
+    participantAdded: (name) => `${name} added!`,
+    participantsAdded: (n) => `${n} participants added!`,
+    addParticipantsError: "An error occurred while adding participants!",
+    noParticipantsToAssign: "No participants to assign!",
+    noTablesAddFirst: "No tables! Please add a table first.",
+    allTablesFull: "All tables are full!",
+    notEnoughCapacity:
+      "Not enough capacity for all participants! Assignment will be made based on available capacity.",
+    assignedToTable: (name, table) => `${name} assigned to ${table}!`,
+    assignError: "An error occurred during assignment!",
+    tableMarkedFull: (name) => `${name} is marked as full!`,
+    tableFull: (name) => `${name} is full!`,
+    participantUnassigned: "Participant removed from table",
+    unassignError: "An error occurred while removing the participant!",
+    confirmRemoveParticipant: (name) =>
+      `Are you sure you want to delete the participant ${name}?`,
+    participantDeleted: (name) => `${name} deleted`,
+    deleteParticipantError: "An error occurred while deleting the participant!",
+    confirmReset: "Are you sure you want to reset all assignments?",
+    allReset: "All assignments have been reset!",
+    resetError: "An error occurred during reset!",
+    tableMarkedFullInfo: (name) => `${name} marked as full`,
+    tableAvailableAgain: (name) => `${name} is available again`,
+    toggleTableError: "An error occurred while updating the table status!",
+    // ManualAssignmentRow
+    assignToTable: "Assign to Table",
+    fullSuffix: "(Full)",
+    noTable: "No tables",
+    deleteParticipantTitle: "Delete participant",
+    // TableCard
+    makeTableAvailable: "Make table available",
+    markTableFull: "Mark table as full",
+    editTableTitle: "Edit table",
+    removeTableTitle: "Remove table",
+    occupancy: "Occupancy",
+    markedFull: "(Marked full)",
+    showingInSearch: (n, total) =>
+      `Showing ${n} people in search (total ${total})`,
+    removeFromTable: "Remove from table",
+    noOneYet: "No one yet",
+    tableMarkedFullBtn: "Table Marked Full",
+    capacityFull: "Capacity Full",
+    place: "Place",
+    morePeople: (n) => `+${n} more people`,
+    // AddTableModal / EditTableModal
+    addNewTable: "Add New Table",
+    tableName: "Table Name",
+    tableNamePlaceholder: "e.g. Table 3",
+    capacity: "Capacity",
+    cancel: "Cancel",
+    add: "Add",
+    tableNameRequired: "Table name is required!",
+    validCapacity: "Enter a valid capacity!",
+    editTable: "Edit Table",
+    update: "Update",
+    // AddParticipantModal
+    addParticipantTitle: "Add Participant",
+    participantNames: "Participant Names",
+    participantNamesPlaceholder:
+      "Write one name per line:\nJohn Smith\nJane Doe\nMike Johnson",
+    participantNamesHint:
+      "Write one name per line. You can add multiple participants.",
+  },
+};
 
 export default function TableAssignmentPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [userRole, setUserRole] = useState(null);
   const [tables, setTables] = useState([]);
@@ -78,7 +276,7 @@ export default function TableAssignmentPage() {
       },
       (error) => {
         console.error("Error loading tables:", error);
-        toast.error("Masalar yüklenirken hata oluştu!");
+        toast.error(copy.loadTablesError);
       }
     );
 
@@ -100,7 +298,7 @@ export default function TableAssignmentPage() {
       },
       (error) => {
         console.error("Error loading participants:", error);
-        toast.error("Katılımcılar yüklenirken hata oluştu!");
+        toast.error(copy.loadParticipantsError);
       }
     );
 
@@ -128,10 +326,10 @@ export default function TableAssignmentPage() {
         createdBy: user.uid
       });
       setShowAddTableModal(false);
-      toast.success(`${tableName} eklendi!`);
+      toast.success(copy.tableAdded(tableName));
     } catch (error) {
       console.error("Error adding table:", error);
-      toast.error("Masa eklenirken hata oluştu!");
+      toast.error(copy.addTableError);
     }
   };
 
@@ -144,10 +342,10 @@ export default function TableAssignmentPage() {
       });
       setShowEditTableModal(false);
       setEditingTable(null);
-      toast.success(`${tableName} güncellendi!`);
+      toast.success(copy.tableUpdated(tableName));
     } catch (error) {
       console.error("Error updating table:", error);
-      toast.error("Masa güncellenirken hata oluştu!");
+      toast.error(copy.updateTableError);
     }
   };
 
@@ -156,7 +354,7 @@ export default function TableAssignmentPage() {
     const assignedToTable = participants.filter(p => p.assignedTableId === tableId);
 
     if (assignedToTable.length > 0) {
-      if (!confirm("Bu masada katılımcılar var. Masayı kaldırırsanız, katılımcılar atanmamış duruma gelecek. Devam etmek istiyor musunuz?")) {
+      if (!confirm(copy.confirmRemoveTableWithParticipants)) {
         return;
       }
     }
@@ -176,10 +374,10 @@ export default function TableAssignmentPage() {
       });
 
       await batch.commit();
-      toast.info(`${table.name} kaldırıldı`);
+      toast.info(copy.tableRemoved(table.name));
     } catch (error) {
       console.error("Error removing table:", error);
-      toast.error("Masa kaldırılırken hata oluştu!");
+      toast.error(copy.removeTableError);
     }
   };
 
@@ -190,7 +388,7 @@ export default function TableAssignmentPage() {
       .filter(name => name.length > 0);
 
     if (names.length === 0) {
-      toast.error("En az bir katılımcı adı girin!");
+      toast.error(copy.enterParticipantName);
       return;
     }
 
@@ -211,24 +409,24 @@ export default function TableAssignmentPage() {
       setShowAddParticipantModal(false);
 
       if (names.length === 1) {
-        toast.success(`${names[0]} eklendi!`);
+        toast.success(copy.participantAdded(names[0]));
       } else {
-        toast.success(`${names.length} katılımcı eklendi!`);
+        toast.success(copy.participantsAdded(names.length));
       }
     } catch (error) {
       console.error("Error adding participants:", error);
-      toast.error("Katılımcılar eklenirken hata oluştu!");
+      toast.error(copy.addParticipantsError);
     }
   };
 
   const handleRandomAssignment = async () => {
     if (unassignedParticipants.length === 0) {
-      toast.warning("Atanacak katılımcı yok!");
+      toast.warning(copy.noParticipantsToAssign);
       return;
     }
 
     if (tables.length === 0) {
-      toast.error("Masa yok! Lütfen önce masa ekleyin.");
+      toast.error(copy.noTablesAddFirst);
       return;
     }
 
@@ -243,13 +441,13 @@ export default function TableAssignmentPage() {
       .filter(t => t.available > 0);
 
     if (tableCapacities.length === 0) {
-      toast.error("Tüm masalar dolu!");
+      toast.error(copy.allTablesFull);
       return;
     }
 
     const totalCapacity = tableCapacities.reduce((sum, t) => sum + t.available, 0);
     if (totalCapacity < unassignedParticipants.length) {
-      toast.warning("Tüm katılımcılar için yeterli kapasite yok! Mevcut kapasiteye göre atama yapılacak.");
+      toast.warning(copy.notEnoughCapacity);
     }
 
     try {
@@ -287,11 +485,11 @@ export default function TableAssignmentPage() {
 
       // Show individual assignments
       assignments.forEach(({ participantName, tableName }) => {
-        toast.success(`${participantName} ${tableName}'e atandı!`);
+        toast.success(copy.assignedToTable(participantName, tableName));
       });
     } catch (error) {
       console.error("Error during random assignment:", error);
-      toast.error("Atama sırasında hata oluştu!");
+      toast.error(copy.assignError);
     }
   };
 
@@ -301,12 +499,12 @@ export default function TableAssignmentPage() {
     const assignedToTable = participants.filter(p => p.assignedTableId === tableId);
 
     if (table.isFull) {
-      toast.error(`${table.name} dolu olarak işaretlenmiş!`);
+      toast.error(copy.tableMarkedFull(table.name));
       return;
     }
 
     if (assignedToTable.length >= table.capacity) {
-      toast.error(`${table.name} dolu!`);
+      toast.error(copy.tableFull(table.name));
       return;
     }
 
@@ -315,10 +513,10 @@ export default function TableAssignmentPage() {
         assignedTableId: tableId,
         updatedAt: serverTimestamp()
       });
-      toast.success(`${participant.name} ${table.name}'e atandı!`);
+      toast.success(copy.assignedToTable(participant.name, table.name));
     } catch (error) {
       console.error("Error assigning participant:", error);
-      toast.error("Atama sırasında hata oluştu!");
+      toast.error(copy.assignError);
     }
   };
 
@@ -328,30 +526,30 @@ export default function TableAssignmentPage() {
         assignedTableId: null,
         updatedAt: serverTimestamp()
       });
-      toast.info("Katılımcı masadan çıkarıldı");
+      toast.info(copy.participantUnassigned);
     } catch (error) {
       console.error("Error unassigning participant:", error);
-      toast.error("Katılımcı çıkarılırken hata oluştu!");
+      toast.error(copy.unassignError);
     }
   };
 
   const handleRemoveParticipant = async (participantId) => {
     const participant = participants.find(p => p.id === participantId);
-    if (!confirm(`${participant.name} katılımcısını silmek istediğinizden emin misiniz?`)) {
+    if (!confirm(copy.confirmRemoveParticipant(participant.name))) {
       return;
     }
 
     try {
       await deleteDoc(doc(db, "tableAssignmentParticipants", participantId));
-      toast.info(`${participant.name} silindi`);
+      toast.info(copy.participantDeleted(participant.name));
     } catch (error) {
       console.error("Error deleting participant:", error);
-      toast.error("Katılımcı silinirken hata oluştu!");
+      toast.error(copy.deleteParticipantError);
     }
   };
 
   const handleReset = async () => {
-    if (!confirm("Tüm atamaları sıfırlamak istediğinizden emin misiniz?")) return;
+    if (!confirm(copy.confirmReset)) return;
 
     try {
       const batch = writeBatch(db);
@@ -366,10 +564,10 @@ export default function TableAssignmentPage() {
       });
 
       await batch.commit();
-      toast.success("Tüm atamalar sıfırlandı!");
+      toast.success(copy.allReset);
     } catch (error) {
       console.error("Error resetting assignments:", error);
-      toast.error("Sıfırlama sırasında hata oluştu!");
+      toast.error(copy.resetError);
     }
   };
 
@@ -381,20 +579,20 @@ export default function TableAssignmentPage() {
       });
       const table = tables.find(t => t.id === tableId);
       if (!currentIsFullStatus) {
-        toast.info(`${table.name} dolu olarak işaretlendi`);
+        toast.info(copy.tableMarkedFullInfo(table.name));
       } else {
-        toast.info(`${table.name} tekrar müsait`);
+        toast.info(copy.tableAvailableAgain(table.name));
       }
     } catch (error) {
       console.error("Error toggling table full status:", error);
-      toast.error("Masa durumu güncellenirken hata oluştu!");
+      toast.error(copy.toggleTableError);
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-gray-200">Yükleniyor...</p>
+        <p className="text-lg text-gray-200">{a.loading}</p>
       </div>
     );
   }
@@ -402,7 +600,7 @@ export default function TableAssignmentPage() {
   if (!userRole) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Erişim Reddedildi</p>
+        <p className="text-lg text-red-500">{a.accessDenied}</p>
       </div>
     );
   }
@@ -418,15 +616,15 @@ export default function TableAssignmentPage() {
               className="flex items-center space-x-2 text-gray-400 hover:text-gray-100 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Admin Panel</span>
+              <span>{copy.adminPanel}</span>
             </button>
             <div className="border-l border-gray-500 h-8"></div>
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                Masa Yerleştirme Çarkı
+                {copy.pageTitle}
               </h1>
               <p className="text-gray-300">
-                Katılımcıları masalara rastgele veya manuel yerleştirin
+                {copy.pageSubtitle}
               </p>
             </div>
           </div>
@@ -438,7 +636,7 @@ export default function TableAssignmentPage() {
             <div className="flex items-center">
               <Table className="w-8 h-8 text-blue-400" />
               <div className="ml-3">
-                <p className="text-sm text-gray-400">Toplam Masa</p>
+                <p className="text-sm text-gray-400">{copy.totalTables}</p>
                 <p className="text-2xl font-bold text-gray-100">{tables.length}</p>
               </div>
             </div>
@@ -448,7 +646,7 @@ export default function TableAssignmentPage() {
             <div className="flex items-center">
               <Users className="w-8 h-8 text-green-400" />
               <div className="ml-3">
-                <p className="text-sm text-gray-400">Toplam Katılımcı</p>
+                <p className="text-sm text-gray-400">{copy.totalParticipants}</p>
                 <p className="text-2xl font-bold text-gray-100">{participants.length}</p>
               </div>
             </div>
@@ -458,7 +656,7 @@ export default function TableAssignmentPage() {
             <div className="flex items-center">
               <Users className="w-8 h-8 text-purple-400" />
               <div className="ml-3">
-                <p className="text-sm text-gray-400">Atanan</p>
+                <p className="text-sm text-gray-400">{copy.assigned}</p>
                 <p className="text-2xl font-bold text-gray-100">{assignedCount}</p>
               </div>
             </div>
@@ -468,7 +666,7 @@ export default function TableAssignmentPage() {
             <div className="flex items-center">
               <UserPlus className="w-8 h-8 text-yellow-400" />
               <div className="ml-3">
-                <p className="text-sm text-gray-400">Bekleyen</p>
+                <p className="text-sm text-gray-400">{copy.pending}</p>
                 <p className="text-2xl font-bold text-gray-100">{unassignedParticipants.length}</p>
               </div>
             </div>
@@ -484,7 +682,7 @@ export default function TableAssignmentPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Katılımcı ara (sadece atananlar)..."
+              placeholder={copy.searchPlaceholder}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {searchQuery && (
@@ -504,7 +702,7 @@ export default function TableAssignmentPage() {
               className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-5 h-5" />
-              <span>Masa Ekle</span>
+              <span>{copy.addTable}</span>
             </button>
 
             <button
@@ -512,7 +710,7 @@ export default function TableAssignmentPage() {
               className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
             >
               <UserPlus className="w-5 h-5" />
-              <span>Katılımcı Ekle</span>
+              <span>{copy.addParticipant}</span>
             </button>
 
             <button
@@ -525,7 +723,7 @@ export default function TableAssignmentPage() {
               }`}
             >
               <Shuffle className="w-5 h-5" />
-              <span>Rastgele Ata</span>
+              <span>{copy.randomAssign}</span>
             </button>
 
             <button
@@ -538,7 +736,7 @@ export default function TableAssignmentPage() {
               }`}
             >
               <RefreshCw className="w-5 h-5" />
-              <span>Sıfırla</span>
+              <span>{copy.reset}</span>
             </button>
           </div>
         </div>
@@ -548,10 +746,10 @@ export default function TableAssignmentPage() {
           <div className="bg-yellow-900/20 rounded-lg p-4 border border-yellow-600/40 mb-6">
             <h3 className="text-lg font-semibold text-yellow-400 mb-3 flex items-center">
               <UserPlus className="w-5 h-5 mr-2" />
-              Atanmamış Katılımcılar ({unassignedParticipants.length})
+              {copy.unassignedParticipants(unassignedParticipants.length)}
             </h3>
             <p className="text-sm text-gray-400 mb-3">
-              Katılımcıya tıklayın ve istediğiniz masayı seçin, ya da "Rastgele Ata" butonunu kullanın
+              {copy.manualHint}
             </p>
 
             {/* Manual Assignment Interface */}
@@ -575,7 +773,7 @@ export default function TableAssignmentPage() {
           <div className="mb-4 bg-blue-900/20 border border-blue-600/40 rounded-lg p-3">
             <p className="text-sm text-blue-300">
               <Search className="w-4 h-4 inline mr-2" />
-              Arama: "{searchQuery}" - {filteredParticipants.filter(p => p.assignedTableId).length} sonuç bulundu
+              {copy.searchResult(searchQuery, filteredParticipants.filter(p => p.assignedTableId).length)}
             </p>
           </div>
         )}
@@ -613,16 +811,16 @@ export default function TableAssignmentPage() {
               <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
                 <Table className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-100 mb-2">
-                  Henüz masa yok
+                  {copy.noTables}
                 </h3>
                 <p className="text-gray-400 mb-4">
-                  İlk masayı ekleyin ve katılımcıları yerleştirmeye başlayın!
+                  {copy.noTablesHint}
                 </p>
                 <button
                   onClick={() => setShowAddTableModal(true)}
                   className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Masa Ekle
+                  {copy.addTable}
                 </button>
               </div>
             </div>
@@ -674,6 +872,8 @@ export default function TableAssignmentPage() {
 
 // Manual Assignment Row Component
 function ManualAssignmentRow({ participant, tables, participants, onAssign, onRemove }) {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
   const [showTableDropdown, setShowTableDropdown] = useState(false);
 
   const availableTables = tables.map(table => {
@@ -697,7 +897,7 @@ function ManualAssignmentRow({ participant, tables, participants, onAssign, onRe
             className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Masaya Ata</span>
+            <span>{copy.assignToTable}</span>
           </button>
 
           {showTableDropdown && (
@@ -726,7 +926,7 @@ function ManualAssignmentRow({ participant, tables, participants, onAssign, onRe
                             : 'text-gray-200 hover:bg-gray-800'
                         }`}
                       >
-                        <span>{table.name} {table.isMarkedFull ? '(Dolu)' : ''}</span>
+                        <span>{table.name} {table.isMarkedFull ? copy.fullSuffix : ''}</span>
                         <span className={`text-xs ${isDisabled ? 'text-red-400' : 'text-gray-400'}`}>
                           {table.available}/{table.capacity}
                         </span>
@@ -735,7 +935,7 @@ function ManualAssignmentRow({ participant, tables, participants, onAssign, onRe
                   })
                 ) : (
                   <div className="px-4 py-2 text-sm text-gray-500">
-                    Masa yok
+                    {copy.noTable}
                   </div>
                 )}
               </div>
@@ -747,7 +947,7 @@ function ManualAssignmentRow({ participant, tables, participants, onAssign, onRe
       <button
         onClick={() => onRemove(participant.id)}
         className="text-red-400 hover:text-red-300 transition-colors p-2"
-        title="Katılımcıyı sil"
+        title={copy.deleteParticipantTitle}
       >
         <Trash2 className="w-4 h-4" />
       </button>
@@ -757,6 +957,8 @@ function ManualAssignmentRow({ participant, tables, participants, onAssign, onRe
 
 // Table Card Component
 function TableCard({ table, participants, allParticipants, unassignedParticipants, onRemove, onEdit, onUnassignParticipant, onAssignParticipant, onToggleFull, searchQuery }) {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
   const [showAssignDropdown, setShowAssignDropdown] = useState(false);
   // Use all participants for capacity calculation, but filtered participants for display
   const totalAssigned = allParticipants ? allParticipants.filter(p => p.assignedTableId === table.id).length : participants.length;
@@ -779,21 +981,21 @@ function TableCard({ table, participants, allParticipants, unassignedParticipant
                 ? 'text-orange-400 hover:bg-orange-600/20'
                 : 'text-gray-400 hover:bg-gray-600/20'
             }`}
-            title={isMarkedFull ? "Masayı müsait yap" : "Masayı dolu işaretle"}
+            title={isMarkedFull ? copy.makeTableAvailable : copy.markTableFull}
           >
             {isMarkedFull ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
           </button>
           <button
             onClick={() => onEdit(table)}
             className="p-2 text-blue-400 hover:bg-blue-600/20 rounded-lg transition-colors"
-            title="Masayı düzenle"
+            title={copy.editTableTitle}
           >
             <Edit2 className="w-4 h-4" />
           </button>
           <button
             onClick={() => onRemove(table.id)}
             className="p-2 text-red-400 hover:bg-red-600/20 rounded-lg transition-colors"
-            title="Masayı kaldır"
+            title={copy.removeTableTitle}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -802,7 +1004,7 @@ function TableCard({ table, participants, allParticipants, unassignedParticipant
 
       <div className="mb-3">
         <div className="flex justify-between text-sm text-gray-400 mb-1">
-          <span>Doluluk {isMarkedFull && <span className="text-orange-400">(Dolu işaretli)</span>}</span>
+          <span>{copy.occupancy} {isMarkedFull && <span className="text-orange-400">{copy.markedFull}</span>}</span>
           <span>
             {searchQuery && participants.length !== totalAssigned ? (
               <>
@@ -825,7 +1027,7 @@ function TableCard({ table, participants, allParticipants, unassignedParticipant
         </div>
         {searchQuery && participants.length !== totalAssigned && (
           <p className="text-xs text-blue-300 mt-1">
-            Aramada {participants.length} kişi gösteriliyor (toplam {totalAssigned})
+            {copy.showingInSearch(participants.length, totalAssigned)}
           </p>
         )}
       </div>
@@ -842,14 +1044,14 @@ function TableCard({ table, participants, allParticipants, unassignedParticipant
               <button
                 onClick={() => onUnassignParticipant(participant.id)}
                 className="text-red-400 hover:text-red-300 transition-colors"
-                title="Masadan çıkar"
+                title={copy.removeFromTable}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
           ))
         ) : (
-          <p className="text-gray-500 text-center py-4 text-sm">Henüz kimse yok</p>
+          <p className="text-gray-500 text-center py-4 text-sm">{copy.noOneYet}</p>
         )}
       </div>
 
@@ -860,14 +1062,14 @@ function TableCard({ table, participants, allParticipants, unassignedParticipant
           className="w-full bg-orange-600/50 text-orange-200 px-3 py-2 rounded-lg cursor-not-allowed text-sm flex items-center justify-center space-x-2"
         >
           <Lock className="w-4 h-4" />
-          <span>Masa Dolu İşaretli</span>
+          <span>{copy.tableMarkedFullBtn}</span>
         </button>
       ) : isFullCapacity ? (
         <button
           disabled
           className="w-full bg-gray-600 text-gray-400 px-3 py-2 rounded-lg cursor-not-allowed text-sm flex items-center justify-center space-x-2"
         >
-          <span>Kontenjan Doldu</span>
+          <span>{copy.capacityFull}</span>
         </button>
       ) : unassignedParticipants.length > 0 ? (
         <div className="relative">
@@ -876,7 +1078,7 @@ function TableCard({ table, participants, allParticipants, unassignedParticipant
             className="w-full bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center justify-center space-x-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Yerleştir</span>
+            <span>{copy.place}</span>
           </button>
 
           {showAssignDropdown && (
@@ -895,7 +1097,7 @@ function TableCard({ table, participants, allParticipants, unassignedParticipant
               ))}
               {unassignedParticipants.length > 10 && (
                 <div className="px-3 py-2 text-gray-500 text-xs text-center">
-                  +{unassignedParticipants.length - 10} kişi daha
+                  {copy.morePeople(unassignedParticipants.length - 10)}
                 </div>
               )}
             </div>
@@ -908,17 +1110,19 @@ function TableCard({ table, participants, allParticipants, unassignedParticipant
 
 // Add Table Modal
 function AddTableModal({ onClose, onAdd }) {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
   const [tableName, setTableName] = useState("");
   const [capacity, setCapacity] = useState("6");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!tableName.trim()) {
-      toast.error("Masa adı gerekli!");
+      toast.error(copy.tableNameRequired);
       return;
     }
     if (!capacity || parseInt(capacity) < 1) {
-      toast.error("Geçerli bir kapasite girin!");
+      toast.error(copy.validCapacity);
       return;
     }
     onAdd(tableName, capacity);
@@ -935,25 +1139,25 @@ function AddTableModal({ onClose, onAdd }) {
         className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold text-gray-100 mb-4">Yeni Masa Ekle</h2>
+        <h2 className="text-xl font-bold text-gray-100 mb-4">{copy.addNewTable}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
-              Masa Adı
+              {copy.tableName}
             </label>
             <input
               type="text"
               value={tableName}
               onChange={(e) => setTableName(e.target.value)}
-              placeholder="Örn: Masa 3"
+              placeholder={copy.tableNamePlaceholder}
               className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
-              Kapasite
+              {copy.capacity}
             </label>
             <input
               type="number"
@@ -970,13 +1174,13 @@ function AddTableModal({ onClose, onAdd }) {
               onClick={onClose}
               className="flex-1 bg-gray-700 text-gray-200 py-2 rounded-lg hover:bg-gray-600 transition-colors"
             >
-              İptal
+              {copy.cancel}
             </button>
             <button
               type="submit"
               className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Ekle
+              {copy.add}
             </button>
           </div>
         </form>
@@ -987,12 +1191,14 @@ function AddTableModal({ onClose, onAdd }) {
 
 // Add Participant Modal
 function AddParticipantModal({ onClose, onAdd }) {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
   const [participantNames, setParticipantNames] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!participantNames.trim()) {
-      toast.error("En az bir katılımcı adı girin!");
+      toast.error(copy.enterParticipantName);
       return;
     }
     onAdd(participantNames);
@@ -1008,22 +1214,22 @@ function AddParticipantModal({ onClose, onAdd }) {
         className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold text-gray-100 mb-4">Katılımcı Ekle</h2>
+        <h2 className="text-xl font-bold text-gray-100 mb-4">{copy.addParticipantTitle}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
-              Katılımcı İsimleri
+              {copy.participantNames}
             </label>
             <textarea
               value={participantNames}
               onChange={(e) => setParticipantNames(e.target.value)}
-              placeholder="Her satıra bir isim yazın:&#10;Ahmet Yılmaz&#10;Ayşe Demir&#10;Mehmet Kaya"
+              placeholder={copy.participantNamesPlaceholder}
               rows={6}
               className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
             />
             <p className="text-xs text-gray-400 mt-1">
-              Her satıra bir isim yazın. Birden fazla katılımcı ekleyebilirsiniz.
+              {copy.participantNamesHint}
             </p>
           </div>
 
@@ -1033,13 +1239,13 @@ function AddParticipantModal({ onClose, onAdd }) {
               onClick={onClose}
               className="flex-1 bg-gray-700 text-gray-200 py-2 rounded-lg hover:bg-gray-600 transition-colors"
             >
-              İptal
+              {copy.cancel}
             </button>
             <button
               type="submit"
               className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
             >
-              Ekle
+              {copy.add}
             </button>
           </div>
         </form>
@@ -1050,17 +1256,19 @@ function AddParticipantModal({ onClose, onAdd }) {
 
 // Edit Table Modal
 function EditTableModal({ table, onClose, onEdit }) {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
   const [tableName, setTableName] = useState(table.name);
   const [capacity, setCapacity] = useState(table.capacity.toString());
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!tableName.trim()) {
-      toast.error("Masa adı gerekli!");
+      toast.error(copy.tableNameRequired);
       return;
     }
     if (!capacity || parseInt(capacity) < 1) {
-      toast.error("Geçerli bir kapasite girin!");
+      toast.error(copy.validCapacity);
       return;
     }
     onEdit(tableName, capacity);
@@ -1075,25 +1283,25 @@ function EditTableModal({ table, onClose, onEdit }) {
         className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold text-gray-100 mb-4">Masayı Düzenle</h2>
+        <h2 className="text-xl font-bold text-gray-100 mb-4">{copy.editTable}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
-              Masa Adı
+              {copy.tableName}
             </label>
             <input
               type="text"
               value={tableName}
               onChange={(e) => setTableName(e.target.value)}
-              placeholder="Örn: Masa 3"
+              placeholder={copy.tableNamePlaceholder}
               className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
-              Kapasite
+              {copy.capacity}
             </label>
             <input
               type="number"
@@ -1110,13 +1318,13 @@ function EditTableModal({ table, onClose, onEdit }) {
               onClick={onClose}
               className="flex-1 bg-gray-700 text-gray-200 py-2 rounded-lg hover:bg-gray-600 transition-colors"
             >
-              İptal
+              {copy.cancel}
             </button>
             <button
               type="submit"
               className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Güncelle
+              {copy.update}
             </button>
           </div>
         </form>

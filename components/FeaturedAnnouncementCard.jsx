@@ -1,22 +1,38 @@
 'use client';
 import { useState } from 'react';
+import { useLocale } from 'next-intl';
 import Image from 'next/image';
 import { useRouter } from "@/i18n/navigation";
 import { Calendar, User, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 
+const COPY = {
+  tr: {
+    noDate: 'Tarih yok',
+    featured: 'Öne Çıkan Duyuru',
+    readMore: 'Devamını Oku',
+  },
+  en: {
+    noDate: 'No date',
+    featured: 'Featured Announcement',
+    readMore: 'Read More',
+  },
+};
+
 export default function FeaturedAnnouncementCard({ announcement }) {
+  const locale = useLocale() === 'en' ? 'en' : 'tr';
+  const copy = COPY[locale];
   const [imageError, setImageError] = useState(false);
   const router = useRouter();
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Tarih yok';
+    if (!dateString) return copy.noDate;
     try {
       const date = new Date(dateString);
       return format(date, 'dd MMMM yyyy, HH:mm');
     } catch (error) {
-      return 'Tarih yok';
+      return copy.noDate;
     }
   };
 
@@ -48,7 +64,7 @@ export default function FeaturedAnnouncementCard({ announcement }) {
       {/* Content Section */}
       <div className="p-6 md:p-8 flex flex-col justify-center">
         <div>
-          <span className="text-sm font-bold text-blue-400 mb-2 inline-block">Öne Çıkan Duyuru</span>
+          <span className="text-sm font-bold text-blue-400 mb-2 inline-block">{copy.featured}</span>
           {/* Title */}
           <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4 line-clamp-3 group-hover:text-blue-300 transition-colors duration-300">
             {announcement.title}
@@ -76,7 +92,7 @@ export default function FeaturedAnnouncementCard({ announcement }) {
           {/* Footer */}
           <div className="mt-auto">
             <div className="text-blue-400 group-hover:text-blue-300 text-md font-semibold flex items-center gap-2">
-              Devamını Oku
+              {copy.readMore}
               <ArrowRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300" />
             </div>
           </div>

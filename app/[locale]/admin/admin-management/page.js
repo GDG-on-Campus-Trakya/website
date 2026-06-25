@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { auth } from "@/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter } from "@/i18n/navigation";
@@ -8,8 +9,75 @@ import "react-toastify/dist/ReactToastify.css";
 import { ROLES } from "@/utils/roleUtils";
 import { logger } from "@/utils/logger";
 import AdminProtection from "@/components/AdminProtection";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    pageTitle: "Yönetici Yetkilendirme",
+    pageSubtitle: "Admin ve Etkinlik Sorumlusu rollerini yönetin",
+    totalAdmins: "Toplam Admin",
+    eventManagers: "Etkinlik Sorumlusu",
+    addNewAdmin: "Yeni Yönetici Ekle",
+    searchPlaceholder: "Kullanıcı aramaya başlayın...",
+    unnamed: "İsimsiz",
+    roleEventManager: "Etkinlik Sorumlusu",
+    roleAdmin: "Admin",
+    addAdminBtn: "Yönetici Ekle",
+    adminsTitle: "Yöneticiler",
+    you: "Siz",
+    backToAdmin: "Admin Paneline Dön",
+    roleAdminText: "Admin",
+    roleEventManagerText: "Etkinlik Sorumlusu",
+    roleUnknownText: "Bilinmeyen",
+    adminsLoadFailed: "Yöneticiler yüklenemedi!",
+    adminsLoadError: "Yöneticiler yüklenirken hata oluştu!",
+    usersLoadFailed: "Kullanıcılar yüklenemedi!",
+    usersLoadError: "Kullanıcılar yüklenirken hata oluştu!",
+    adminAdded: "Yönetici başarıyla eklendi!",
+    adminAddError: "Yönetici eklenirken bir hata oluştu!",
+    cannotRemoveSelf: "Kendinizi yönetici listesinden çıkaramazsınız!",
+    adminRemoved: "Yönetici başarıyla silindi!",
+    adminRemoveError: "Yönetici silinirken bir hata oluştu!",
+    cannotChangeOwnRole: "Kendi rolünüzü değiştiremezsiniz!",
+    roleUpdated: "Rol başarıyla güncellendi!",
+    roleUpdateError: "Rol güncellenirken bir hata oluştu!",
+  },
+  en: {
+    pageTitle: "Admin Authorization",
+    pageSubtitle: "Manage Admin and Event Manager roles",
+    totalAdmins: "Total Admins",
+    eventManagers: "Event Managers",
+    addNewAdmin: "Add New Admin",
+    searchPlaceholder: "Start searching for a user...",
+    unnamed: "Unnamed",
+    roleEventManager: "Event Manager",
+    roleAdmin: "Admin",
+    addAdminBtn: "Add Admin",
+    adminsTitle: "Admins",
+    you: "You",
+    backToAdmin: "Back to Admin Panel",
+    roleAdminText: "Admin",
+    roleEventManagerText: "Event Manager",
+    roleUnknownText: "Unknown",
+    adminsLoadFailed: "Failed to load admins!",
+    adminsLoadError: "An error occurred while loading admins!",
+    usersLoadFailed: "Failed to load users!",
+    usersLoadError: "An error occurred while loading users!",
+    adminAdded: "Admin added successfully!",
+    adminAddError: "An error occurred while adding the admin!",
+    cannotRemoveSelf: "You cannot remove yourself from the admin list!",
+    adminRemoved: "Admin removed successfully!",
+    adminRemoveError: "An error occurred while removing the admin!",
+    cannotChangeOwnRole: "You cannot change your own role!",
+    roleUpdated: "Role updated successfully!",
+    roleUpdateError: "An error occurred while updating the role!",
+  },
+};
 
 export default function AdminManagementPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [admins, setAdmins] = useState([]);
   const [users, setUsers] = useState([]);
@@ -35,11 +103,11 @@ export default function AdminManagementPage() {
         setAdmins(data.admins);
       } else {
         logger.error('Failed to fetch admins');
-        toast.error('Yöneticiler yüklenemedi!');
+        toast.error(copy.adminsLoadFailed);
       }
     } catch (error) {
       logger.error("Error fetching admins:", error);
-      toast.error('Yöneticiler yüklenirken hata oluştu!');
+      toast.error(copy.adminsLoadError);
     }
   };
 
@@ -57,11 +125,11 @@ export default function AdminManagementPage() {
         setUsers(data.users);
       } else {
         logger.error('Failed to fetch users');
-        toast.error('Kullanıcılar yüklenemedi!');
+        toast.error(copy.usersLoadFailed);
       }
     } catch (error) {
       logger.error("Error fetching users:", error);
-      toast.error('Kullanıcılar yüklenirken hata oluştu!');
+      toast.error(copy.usersLoadError);
     }
   };
 
@@ -106,20 +174,20 @@ export default function AdminManagementPage() {
         setNewAdminEmail("");
         setNewAdminRole(ROLES.EVENT_MANAGER);
         setShowSuggestions(false);
-        toast.success("Yönetici başarıyla eklendi!");
+        toast.success(copy.adminAdded);
       } else {
         const error = await response.json();
-        toast.error(error.error || "Yönetici eklenirken bir hata oluştu!");
+        toast.error(error.error || copy.adminAddError);
       }
     } catch (error) {
       logger.error("Error adding admin:", error);
-      toast.error("Yönetici eklenirken bir hata oluştu!");
+      toast.error(copy.adminAddError);
     }
   };
 
   const handleRemoveAdmin = async (id) => {
     if (id === user.email) {
-      toast.error("Kendinizi yönetici listesinden çıkaramazsınız!");
+      toast.error(copy.cannotRemoveSelf);
       return;
     }
 
@@ -134,20 +202,20 @@ export default function AdminManagementPage() {
 
       if (response.ok) {
         setAdmins((prev) => prev.filter((admin) => admin.id !== id));
-        toast.success("Yönetici başarıyla silindi!");
+        toast.success(copy.adminRemoved);
       } else {
         const error = await response.json();
-        toast.error(error.error || "Yönetici silinirken bir hata oluştu!");
+        toast.error(error.error || copy.adminRemoveError);
       }
     } catch (error) {
       logger.error("Error removing admin:", error);
-      toast.error("Yönetici silinirken bir hata oluştu!");
+      toast.error(copy.adminRemoveError);
     }
   };
 
   const handleUpdateRole = async (adminId, newRole) => {
     if (adminId === user.email) {
-      toast.error("Kendi rolünüzü değiştiremezsiniz!");
+      toast.error(copy.cannotChangeOwnRole);
       return;
     }
 
@@ -171,14 +239,14 @@ export default function AdminManagementPage() {
             admin.id === adminId ? { ...admin, role: newRole } : admin
           )
         );
-        toast.success("Rol başarıyla güncellendi!");
+        toast.success(copy.roleUpdated);
       } else {
         const error = await response.json();
-        toast.error(error.error || "Rol güncellenirken bir hata oluştu!");
+        toast.error(error.error || copy.roleUpdateError);
       }
     } catch (error) {
       logger.error("Error updating role:", error);
-      toast.error("Rol güncellenirken bir hata oluştu!");
+      toast.error(copy.roleUpdateError);
     }
   };
 
@@ -196,11 +264,11 @@ export default function AdminManagementPage() {
   const getRoleText = (role) => {
     switch (role) {
       case ROLES.ADMIN:
-        return "Admin";
+        return copy.roleAdminText;
       case ROLES.EVENT_MANAGER:
-        return "Etkinlik Sorumlusu";
+        return copy.roleEventManagerText;
       default:
-        return "Bilinmeyen";
+        return copy.roleUnknownText;
     }
   };
 
@@ -251,18 +319,18 @@ export default function AdminManagementPage() {
       <div className="text-center mb-8 sm:mb-12">
         <div className="inline-block">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-            Yönetici Yetkilendirme
+            {copy.pageTitle}
           </h1>
           <div className="h-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-full"></div>
         </div>
-        <p className="text-gray-300 mt-4 text-lg">Admin ve Etkinlik Sorumlusu rollerini yönetin</p>
+        <p className="text-gray-300 mt-4 text-lg">{copy.pageSubtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
         <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-300">Toplam Admin</p>
+              <p className="text-sm font-medium text-gray-300">{copy.totalAdmins}</p>
               <p className="text-3xl font-bold text-red-400">
                 {admins.filter(admin => admin.role === ROLES.ADMIN || !admin.role).length}
               </p>
@@ -278,7 +346,7 @@ export default function AdminManagementPage() {
         <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-300">Etkinlik Sorumlusu</p>
+              <p className="text-sm font-medium text-gray-300">{copy.eventManagers}</p>
               <p className="text-3xl font-bold text-blue-400">
                 {admins.filter(admin => admin.role === ROLES.EVENT_MANAGER).length}
               </p>
@@ -300,7 +368,7 @@ export default function AdminManagementPage() {
             </svg>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-100">
-            Yeni Yönetici Ekle
+            {copy.addNewAdmin}
           </h2>
         </div>
         
@@ -309,7 +377,7 @@ export default function AdminManagementPage() {
             <div className="relative autocomplete-container">
               <input
                 type="email"
-                placeholder="Kullanıcı aramaya başlayın..."
+                placeholder={copy.searchPlaceholder}
                 value={newAdminEmail}
                 onChange={handleEmailInputChange}
                 onFocus={() => {
@@ -334,7 +402,7 @@ export default function AdminManagementPage() {
                         </span>
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium text-gray-100">{user.name || 'İsimsiz'}</p>
+                        <p className="font-medium text-gray-100">{user.name || copy.unnamed}</p>
                         <p className="text-sm text-gray-300">{user.email}</p>
                       </div>
                     </div>
@@ -348,8 +416,8 @@ export default function AdminManagementPage() {
                 onChange={(e) => setNewAdminRole(e.target.value)}
                 className="w-full px-6 py-4 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300 text-gray-200 [&>option]:text-gray-200 [&>option]:bg-gray-800"
               >
-                <option value={ROLES.EVENT_MANAGER}>Etkinlik Sorumlusu</option>
-                <option value={ROLES.ADMIN}>Admin</option>
+                <option value={ROLES.EVENT_MANAGER}>{copy.roleEventManager}</option>
+                <option value={ROLES.ADMIN}>{copy.roleAdmin}</option>
               </select>
             </div>
           </div>
@@ -357,7 +425,7 @@ export default function AdminManagementPage() {
             type="submit"
             className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white py-4 rounded-2xl font-semibold text-lg hover:from-green-600 hover:to-blue-600 transform hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl"
           >
-            Yönetici Ekle
+            {copy.addAdminBtn}
           </button>
         </form>
       </section>
@@ -370,7 +438,7 @@ export default function AdminManagementPage() {
             </svg>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-100">
-            Yöneticiler
+            {copy.adminsTitle}
           </h2>
         </div>
         
@@ -396,7 +464,7 @@ export default function AdminManagementPage() {
                     </span>
                     {admin.id === user.email && (
                       <span className="px-2 py-1 bg-yellow-500/20 text-yellow-800 rounded-full text-xs font-medium">
-                        Siz
+                        {copy.you}
                       </span>
                     )}
                   </div>
@@ -410,14 +478,14 @@ export default function AdminManagementPage() {
                     onChange={(e) => handleUpdateRole(admin.id, e.target.value)}
                     className="px-4 py-2 bg-gray-700/70 border border-gray-500 rounded-xl focus:outline-none focus:border-blue-400 transition-all duration-300 text-gray-200 [&>option]:text-gray-200 [&>option]:bg-gray-800"
                   >
-                    <option value={ROLES.ADMIN}>Admin</option>
-                    <option value={ROLES.EVENT_MANAGER}>Etkinlik Sorumlusu</option>
+                    <option value={ROLES.ADMIN}>{copy.roleAdmin}</option>
+                    <option value={ROLES.EVENT_MANAGER}>{copy.roleEventManager}</option>
                   </select>
                   <button
                     onClick={() => handleRemoveAdmin(admin.id)}
                     className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2 rounded-xl hover:from-red-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
                   >
-                    Sil
+                    {a.delete}
                   </button>
                 </div>
               )}
@@ -431,7 +499,7 @@ export default function AdminManagementPage() {
           onClick={() => router.push("/admin")}
           className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-8 py-3 rounded-2xl font-semibold hover:from-gray-600 hover:to-gray-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
         >
-          Admin Paneline Dön
+          {a.backToAdmin}
         </button>
       </div>
 

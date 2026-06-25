@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { useParams } from "next/navigation";
@@ -7,6 +8,7 @@ import { useRouter } from "@/i18n/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { logger } from "@/utils/logger";
+import { adminCopy } from "@/utils/adminCopy";
 import {
   uploadDatasetImage,
   updateDataset
@@ -14,7 +16,79 @@ import {
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 
+const COPY = {
+  tr: {
+    datasetNotFound: "Veri seti bulunamadı!",
+    datasetLoadError: "Veri seti yüklenirken hata oluştu!",
+    onlyImages: "Sadece resim dosyaları yüklenebilir!",
+    itemNameRequired: "Öğe adı gerekli!",
+    imageRequired: "Resim gerekli!",
+    itemAdded: "Öğe eklendi!",
+    itemRemoved: "Öğe kaldırıldı",
+    itemUpdated: "Öğe güncellendi!",
+    datasetNameRequired: "Veri seti adı gerekli!",
+    minItems: "En az 8 öğe olmalı!",
+    uploadingImage: (i, total) => `Resim yükleniyor ${i}/${total}...`,
+    datasetUpdated: "Veri seti güncellendi!",
+    datasetUpdateError: "Veri seti güncellenirken hata oluştu!",
+    pageTitle: "Veri Seti Düzenle",
+    pageSubtitle: "Veri setini düzenleyin ve güncelleyin",
+    datasets: "Veri Setleri",
+    datasetNameLabel: "Veri Seti Adı *",
+    datasetNamePlaceholder: "Örn: En İyi Futbolcular",
+    descriptionLabel: "Açıklama",
+    descriptionPlaceholder: "Veri seti hakkında kısa açıklama",
+    addItemHeading: "Yeni Öğe Ekle",
+    itemNameLabel: "Öğe Adı *",
+    itemNamePlaceholder: "Örn: Lionel Messi",
+    itemDescriptionPlaceholder: "Örn: 8 Ballon d'Or",
+    imageLabel: "Resim *",
+    addItemButton: "Öğe Ekle",
+    currentItemsHeading: (n) => `Mevcut Öğeler (${n})`,
+    noItemsYet: "Henüz öğe yok. En az 8 öğe olmalı.",
+    itemNameInputPlaceholder: "Öğe adı",
+    updating: "Güncelleniyor...",
+    updateDatasetButton: "Veri Setini Güncelle",
+  },
+  en: {
+    datasetNotFound: "Dataset not found!",
+    datasetLoadError: "An error occurred while loading the dataset!",
+    onlyImages: "Only image files can be uploaded!",
+    itemNameRequired: "Item name is required!",
+    imageRequired: "Image is required!",
+    itemAdded: "Item added!",
+    itemRemoved: "Item removed",
+    itemUpdated: "Item updated!",
+    datasetNameRequired: "Dataset name is required!",
+    minItems: "There must be at least 8 items!",
+    uploadingImage: (i, total) => `Uploading image ${i}/${total}...`,
+    datasetUpdated: "Dataset updated!",
+    datasetUpdateError: "An error occurred while updating the dataset!",
+    pageTitle: "Edit Dataset",
+    pageSubtitle: "Edit and update the dataset",
+    datasets: "Datasets",
+    datasetNameLabel: "Dataset Name *",
+    datasetNamePlaceholder: "e.g.: Best Footballers",
+    descriptionLabel: "Description",
+    descriptionPlaceholder: "A short description of the dataset",
+    addItemHeading: "Add New Item",
+    itemNameLabel: "Item Name *",
+    itemNamePlaceholder: "e.g.: Lionel Messi",
+    itemDescriptionPlaceholder: "e.g.: 8 Ballon d'Or",
+    imageLabel: "Image *",
+    addItemButton: "Add Item",
+    currentItemsHeading: (n) => `Current Items (${n})`,
+    noItemsYet: "No items yet. There must be at least 8 items.",
+    itemNameInputPlaceholder: "Item name",
+    updating: "Updating...",
+    updateDatasetButton: "Update Dataset",
+  },
+};
+
 export default function EditDatasetPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
   const params = useParams();
@@ -57,7 +131,7 @@ export default function EditDatasetPage() {
       const datasetDoc = await getDoc(datasetRef);
 
       if (!datasetDoc.exists()) {
-        toast.error("Veri seti bulunamadı!");
+        toast.error(copy.datasetNotFound);
         router.push("/admin/poll/datasets");
         return;
       }
@@ -68,7 +142,7 @@ export default function EditDatasetPage() {
       setItems(data.items || []);
     } catch (error) {
       logger.error("Error loading dataset:", error);
-      toast.error("Veri seti yüklenirken hata oluştu!");
+      toast.error(copy.datasetLoadError);
     }
     setLoadingDataset(false);
   };
@@ -78,7 +152,7 @@ export default function EditDatasetPage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Sadece resim dosyaları yüklenebilir!");
+      toast.error(copy.onlyImages);
       return;
     }
 
@@ -90,7 +164,7 @@ export default function EditDatasetPage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Sadece resim dosyaları yüklenebilir!");
+      toast.error(copy.onlyImages);
       return;
     }
 
@@ -99,12 +173,12 @@ export default function EditDatasetPage() {
 
   const handleAddItem = () => {
     if (!currentItemName.trim()) {
-      toast.error("Öğe adı gerekli!");
+      toast.error(copy.itemNameRequired);
       return;
     }
 
     if (!currentItemImage) {
-      toast.error("Resim gerekli!");
+      toast.error(copy.imageRequired);
       return;
     }
 
@@ -125,12 +199,12 @@ export default function EditDatasetPage() {
     const fileInput = document.getElementById("item-image-input");
     if (fileInput) fileInput.value = "";
 
-    toast.success("Öğe eklendi!");
+    toast.success(copy.itemAdded);
   };
 
   const handleRemoveItem = (itemId) => {
     setItems(items.filter(item => item.id !== itemId));
-    toast.info("Öğe kaldırıldı");
+    toast.info(copy.itemRemoved);
   };
 
   const handleStartEdit = (item) => {
@@ -149,7 +223,7 @@ export default function EditDatasetPage() {
 
   const handleSaveEdit = () => {
     if (!editItemName.trim()) {
-      toast.error("Öğe adı gerekli!");
+      toast.error(copy.itemNameRequired);
       return;
     }
 
@@ -167,18 +241,18 @@ export default function EditDatasetPage() {
       return item;
     }));
 
-    toast.success("Öğe güncellendi!");
+    toast.success(copy.itemUpdated);
     handleCancelEdit();
   };
 
   const handleUpdateDataset = async () => {
     if (!datasetName.trim()) {
-      toast.error("Veri seti adı gerekli!");
+      toast.error(copy.datasetNameRequired);
       return;
     }
 
     if (items.length < 8) {
-      toast.error("En az 8 öğe olmalı!");
+      toast.error(copy.minItems);
       return;
     }
 
@@ -193,7 +267,7 @@ export default function EditDatasetPage() {
 
         // If there's a new image file, upload it
         if (item.imageFile && !item.imageUrl) {
-          toast.info(`Resim yükleniyor ${i + 1}/${items.length}...`);
+          toast.info(copy.uploadingImage(i + 1, items.length));
           imageUrl = await uploadDatasetImage(item.imageFile, datasetId);
         }
 
@@ -212,13 +286,13 @@ export default function EditDatasetPage() {
         items: itemsWithUrls
       });
 
-      toast.success("Veri seti güncellendi!");
+      toast.success(copy.datasetUpdated);
       setTimeout(() => {
         router.push("/admin/poll/datasets");
       }, 1500);
     } catch (error) {
       logger.error("Error updating dataset:", error);
-      toast.error("Veri seti güncellenirken hata oluştu!");
+      toast.error(copy.datasetUpdateError);
     }
 
     setUpdatingDataset(false);
@@ -227,7 +301,7 @@ export default function EditDatasetPage() {
   if (loading || loadingDataset) {
     return (
       <div className={`flex items-center justify-center min-h-screen ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}>
-        <p className={`text-lg ${darkMode ? "text-white" : "text-gray-900"}`}>Yükleniyor...</p>
+        <p className={`text-lg ${darkMode ? "text-white" : "text-gray-900"}`}>{a.loading}</p>
       </div>
     );
   }
@@ -249,9 +323,9 @@ export default function EditDatasetPage() {
         <div className="max-w-7xl mx-auto p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <h1 className={`text-2xl sm:text-3xl font-bold ${textClass}`}>Veri Seti Düzenle</h1>
+              <h1 className={`text-2xl sm:text-3xl font-bold ${textClass}`}>{copy.pageTitle}</h1>
               <p className={`${textSecondaryClass} text-sm sm:text-base mt-1`}>
-                Veri setini düzenleyin ve güncelleyin
+                {copy.pageSubtitle}
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -265,7 +339,7 @@ export default function EditDatasetPage() {
                 onClick={() => router.push("/admin/poll/datasets")}
                 className={`px-4 py-2 rounded-lg ${cardBgClass} border ${borderClass} ${textClass} hover:opacity-80 text-sm sm:text-base`}
               >
-                ← Veri Setleri
+                ← {copy.datasets}
               </button>
             </div>
           </div>
@@ -279,61 +353,61 @@ export default function EditDatasetPage() {
           <div className="space-y-4 mb-6">
             <div>
               <label className={`block ${textClass} mb-2 font-semibold`}>
-                Veri Seti Adı *
+                {copy.datasetNameLabel}
               </label>
               <input
                 type="text"
                 value={datasetName}
                 onChange={(e) => setDatasetName(e.target.value)}
                 className={`w-full px-4 py-2 rounded-lg border ${borderClass} ${cardBgClass} ${textClass}`}
-                placeholder="Örn: En İyi Futbolcular"
+                placeholder={copy.datasetNamePlaceholder}
               />
             </div>
 
             <div>
               <label className={`block ${textClass} mb-2 font-semibold`}>
-                Açıklama
+                {copy.descriptionLabel}
               </label>
               <textarea
                 value={datasetDescription}
                 onChange={(e) => setDatasetDescription(e.target.value)}
                 className={`w-full px-4 py-2 rounded-lg border ${borderClass} ${cardBgClass} ${textClass}`}
                 rows={3}
-                placeholder="Veri seti hakkında kısa açıklama"
+                placeholder={copy.descriptionPlaceholder}
               />
             </div>
           </div>
 
           {/* Add Item Section */}
           <div className={`border ${borderClass} rounded-xl p-4 mb-6`}>
-            <h3 className={`text-lg font-bold ${textClass} mb-4`}>Yeni Öğe Ekle</h3>
+            <h3 className={`text-lg font-bold ${textClass} mb-4`}>{copy.addItemHeading}</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className={`block ${textClass} mb-2`}>Öğe Adı *</label>
+                <label className={`block ${textClass} mb-2`}>{copy.itemNameLabel}</label>
                 <input
                   type="text"
                   value={currentItemName}
                   onChange={(e) => setCurrentItemName(e.target.value)}
                   className={`w-full px-4 py-2 rounded-lg border ${borderClass} ${cardBgClass} ${textClass}`}
-                  placeholder="Örn: Lionel Messi"
+                  placeholder={copy.itemNamePlaceholder}
                 />
               </div>
 
               <div>
-                <label className={`block ${textClass} mb-2`}>Açıklama</label>
+                <label className={`block ${textClass} mb-2`}>{copy.descriptionLabel}</label>
                 <input
                   type="text"
                   value={currentItemDescription}
                   onChange={(e) => setCurrentItemDescription(e.target.value)}
                   className={`w-full px-4 py-2 rounded-lg border ${borderClass} ${cardBgClass} ${textClass}`}
-                  placeholder="Örn: 8 Ballon d'Or"
+                  placeholder={copy.itemDescriptionPlaceholder}
                 />
               </div>
             </div>
 
             <div className="mb-4">
-              <label className={`block ${textClass} mb-2`}>Resim *</label>
+              <label className={`block ${textClass} mb-2`}>{copy.imageLabel}</label>
               <input
                 id="item-image-input"
                 type="file"
@@ -352,19 +426,19 @@ export default function EditDatasetPage() {
               onClick={handleAddItem}
               className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold"
             >
-              Öğe Ekle
+              {copy.addItemButton}
             </button>
           </div>
 
           {/* Items List */}
           <div className="mb-6">
             <h3 className={`text-lg font-bold ${textClass} mb-4`}>
-              Mevcut Öğeler ({items.length})
+              {copy.currentItemsHeading(items.length)}
             </h3>
 
             {items.length === 0 ? (
               <p className={`${textSecondaryClass} text-sm text-center py-8`}>
-                Henüz öğe yok. En az 8 öğe olmalı.
+                {copy.noItemsYet}
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -388,14 +462,14 @@ export default function EditDatasetPage() {
                           value={editItemName}
                           onChange={(e) => setEditItemName(e.target.value)}
                           className={`w-full px-2 py-1 rounded border ${borderClass} ${cardBgClass} ${textClass} text-sm`}
-                          placeholder="Öğe adı"
+                          placeholder={copy.itemNameInputPlaceholder}
                         />
                         <input
                           type="text"
                           value={editItemDescription}
                           onChange={(e) => setEditItemDescription(e.target.value)}
                           className={`w-full px-2 py-1 rounded border ${borderClass} ${cardBgClass} ${textClass} text-sm`}
-                          placeholder="Açıklama"
+                          placeholder={copy.descriptionLabel}
                         />
                         <input
                           type="file"
@@ -408,13 +482,13 @@ export default function EditDatasetPage() {
                             onClick={handleSaveEdit}
                             className="flex-1 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
                           >
-                            Kaydet
+                            {a.save}
                           </button>
                           <button
                             onClick={handleCancelEdit}
                             className="flex-1 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm"
                           >
-                            İptal
+                            {a.cancel}
                           </button>
                         </div>
                       </div>
@@ -441,13 +515,13 @@ export default function EditDatasetPage() {
                             onClick={() => handleStartEdit(item)}
                             className="flex-1 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
                           >
-                            Düzenle
+                            {a.edit}
                           </button>
                           <button
                             onClick={() => handleRemoveItem(item.id)}
                             className="flex-1 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
                           >
-                            Sil
+                            {a.delete}
                           </button>
                         </div>
                       </>
@@ -464,14 +538,14 @@ export default function EditDatasetPage() {
               onClick={() => router.push("/admin/poll/datasets")}
               className={`flex-1 py-3 rounded-lg border ${borderClass} ${textClass} hover:opacity-80 font-semibold`}
             >
-              İptal
+              {a.cancel}
             </button>
             <button
               onClick={handleUpdateDataset}
               disabled={items.length < 8 || updatingDataset}
               className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {updatingDataset ? "Güncelleniyor..." : "Veri Setini Güncelle"}
+              {updatingDataset ? copy.updating : copy.updateDatasetButton}
             </button>
           </div>
         </div>

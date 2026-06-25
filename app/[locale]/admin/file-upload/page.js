@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter } from "@/i18n/navigation";
 import { auth, storage } from "@/firebase";
@@ -10,8 +11,67 @@ import { Upload, FileIcon, X, Copy, Check, ArrowLeft, Trash2 } from "lucide-reac
 import { Link } from "@/i18n/navigation";
 import "react-toastify/dist/ReactToastify.css";
 import { useEffect } from "react";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    backToAdmin: "Admin Paneline Dön",
+    pageTitle: "Dosya Yükleme",
+    pageSubtitle: "PDF, görsel ve diğer dosyaları yükleyin ve herkese açık URL alın",
+    uploadFile: "Dosya Yükle",
+    dropOrSelect: "Dosya seç veya sürükle",
+    fileTypesHint: "PDF, görsel, video vb. (Max 50MB)",
+    uploading: "Yükleniyor...",
+    upload: "Yükle",
+    uploadedFiles: (n) => `Yüklenen Dosyalar (${n})`,
+    removeFromList: "Listeden kaldır",
+    open: "Aç",
+    info: "Bilgi",
+    infoItem1: "Yüklenen dosyalar herkese açık URL ile erişilebilir olacaktır",
+    infoItem2: "PDF dosyaları tarayıcıda doğrudan görüntülenebilir",
+    infoItem3: "URL'yi kopyalayıp web sitesinde kullanabilirsiniz",
+    infoItem4: "Dosyalar Firebase Storage'da saklanır",
+    fileSizeError: "Dosya boyutu 50MB'dan küçük olmalıdır!",
+    fileSelected: (name) => `Dosya seçildi: ${name}`,
+    uploadError: "Dosya yüklenirken hata oluştu!",
+    uploadSuccess: "Dosya başarıyla yüklendi!",
+    getUrlError: "URL alınırken hata oluştu!",
+    unexpectedError: "Beklenmeyen bir hata oluştu!",
+    urlCopied: "URL kopyalandı!",
+    urlCopyError: "URL kopyalanamadı!",
+  },
+  en: {
+    backToAdmin: "Back to Admin Panel",
+    pageTitle: "File Upload",
+    pageSubtitle: "Upload PDFs, images and other files and get a public URL",
+    uploadFile: "Upload File",
+    dropOrSelect: "Select or drag a file",
+    fileTypesHint: "PDF, image, video, etc. (Max 50MB)",
+    uploading: "Uploading...",
+    upload: "Upload",
+    uploadedFiles: (n) => `Uploaded Files (${n})`,
+    removeFromList: "Remove from list",
+    open: "Open",
+    info: "Info",
+    infoItem1: "Uploaded files will be accessible via a public URL",
+    infoItem2: "PDF files can be viewed directly in the browser",
+    infoItem3: "You can copy the URL and use it on the website",
+    infoItem4: "Files are stored in Firebase Storage",
+    fileSizeError: "File size must be smaller than 50MB!",
+    fileSelected: (name) => `File selected: ${name}`,
+    uploadError: "An error occurred while uploading the file!",
+    uploadSuccess: "File uploaded successfully!",
+    getUrlError: "An error occurred while getting the URL!",
+    unexpectedError: "An unexpected error occurred!",
+    urlCopied: "URL copied!",
+    urlCopyError: "Could not copy URL!",
+  },
+};
 
 export default function FileUploadPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [userRole, setUserRole] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -46,12 +106,12 @@ export default function FileUploadPage() {
 
     // 50MB limit for general files
     if (file.size > 50 * 1024 * 1024) {
-      toast.error("Dosya boyutu 50MB'dan küçük olmalıdır!");
+      toast.error(copy.fileSizeError);
       return;
     }
 
     setSelectedFile(file);
-    toast.success(`Dosya seçildi: ${file.name}`);
+    toast.success(copy.fileSelected(file.name));
   };
 
   const handleDrop = (event) => {
@@ -109,7 +169,7 @@ export default function FileUploadPage() {
         },
         (error) => {
           console.error("Upload error:", error);
-          toast.error("Dosya yüklenirken hata oluştu!");
+          toast.error(copy.uploadError);
           setIsUploading(false);
         },
         async () => {
@@ -135,11 +195,11 @@ export default function FileUploadPage() {
             };
 
             setUploadedFiles(prev => [newFile, ...prev]);
-            toast.success("Dosya başarıyla yüklendi!");
+            toast.success(copy.uploadSuccess);
             clearFile();
           } catch (error) {
             console.error("Get URL error:", error);
-            toast.error("URL alınırken hata oluştu!");
+            toast.error(copy.getUrlError);
           }
           setIsUploading(false);
           setUploadProgress(0);
@@ -147,7 +207,7 @@ export default function FileUploadPage() {
       );
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Beklenmeyen bir hata oluştu!");
+      toast.error(copy.unexpectedError);
       setIsUploading(false);
     }
   };
@@ -156,10 +216,10 @@ export default function FileUploadPage() {
     try {
       await navigator.clipboard.writeText(url);
       setCopiedUrl(id);
-      toast.success("URL kopyalandı!");
+      toast.success(copy.urlCopied);
       setTimeout(() => setCopiedUrl(null), 2000);
     } catch (error) {
-      toast.error("URL kopyalanamadı!");
+      toast.error(copy.urlCopyError);
     }
   };
 
@@ -178,7 +238,7 @@ export default function FileUploadPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <p className="text-lg text-gray-300">Yükleniyor...</p>
+        <p className="text-lg text-gray-300">{a.loading}</p>
       </div>
     );
   }
@@ -186,7 +246,7 @@ export default function FileUploadPage() {
   if (!userRole) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <p className="text-lg text-red-500">Erişim Reddedildi</p>
+        <p className="text-lg text-red-500">{a.accessDenied}</p>
       </div>
     );
   }
@@ -200,21 +260,21 @@ export default function FileUploadPage() {
           className="inline-flex items-center text-gray-400 hover:text-white transition-colors mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Admin Paneline Dön
+          {copy.backToAdmin}
         </Link>
 
         <div className="text-center">
           <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-            Dosya Yükleme
+            {copy.pageTitle}
           </h1>
-          <p className="text-gray-300">PDF, görsel ve diğer dosyaları yükleyin ve herkese açık URL alın</p>
+          <p className="text-gray-300">{copy.pageSubtitle}</p>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Upload Section */}
         <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
-          <h2 className="text-xl font-semibold text-white mb-4">Dosya Yükle</h2>
+          <h2 className="text-xl font-semibold text-white mb-4">{copy.uploadFile}</h2>
 
           {!selectedFile ? (
             <div
@@ -224,8 +284,8 @@ export default function FileUploadPage() {
               onClick={() => fileInputRef.current?.click()}
             >
               <FileIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-300 text-lg mb-2">Dosya seç veya sürükle</p>
-              <p className="text-gray-400 text-sm">PDF, görsel, video vb. (Max 50MB)</p>
+              <p className="text-gray-300 text-lg mb-2">{copy.dropOrSelect}</p>
+              <p className="text-gray-400 text-sm">{copy.fileTypesHint}</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -255,7 +315,7 @@ export default function FileUploadPage() {
               {isUploading && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm text-gray-400">
-                    <span>Yükleniyor...</span>
+                    <span>{copy.uploading}</span>
                     <span>{uploadProgress}%</span>
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-2">
@@ -275,12 +335,12 @@ export default function FileUploadPage() {
                 {isUploading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                    <span>Yükleniyor...</span>
+                    <span>{copy.uploading}</span>
                   </>
                 ) : (
                   <>
                     <Upload className="w-4 h-4" />
-                    <span>Yükle</span>
+                    <span>{copy.upload}</span>
                   </>
                 )}
               </button>
@@ -292,7 +352,7 @@ export default function FileUploadPage() {
         {uploadedFiles.length > 0 && (
           <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
             <h2 className="text-xl font-semibold text-white mb-4">
-              Yüklenen Dosyalar ({uploadedFiles.length})
+              {copy.uploadedFiles(uploadedFiles.length)}
             </h2>
 
             <div className="space-y-3">
@@ -312,7 +372,7 @@ export default function FileUploadPage() {
                     <button
                       onClick={() => removeFromList(file.id)}
                       className="text-gray-400 hover:text-red-400 transition-colors"
-                      title="Listeden kaldır"
+                      title={copy.removeFromList}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -341,7 +401,7 @@ export default function FileUploadPage() {
                       rel="noopener noreferrer"
                       className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded transition-colors text-sm"
                     >
-                      Aç
+                      {copy.open}
                     </a>
                   </div>
                 </div>
@@ -352,12 +412,12 @@ export default function FileUploadPage() {
 
         {/* Info Box */}
         <div className="bg-blue-900/30 border border-blue-700/50 rounded-xl p-4">
-          <h3 className="text-blue-400 font-medium mb-2">Bilgi</h3>
+          <h3 className="text-blue-400 font-medium mb-2">{copy.info}</h3>
           <ul className="text-gray-300 text-sm space-y-1">
-            <li>• Yüklenen dosyalar herkese açık URL ile erişilebilir olacaktır</li>
-            <li>• PDF dosyaları tarayıcıda doğrudan görüntülenebilir</li>
-            <li>• URL'yi kopyalayıp web sitesinde kullanabilirsiniz</li>
-            <li>• Dosyalar Firebase Storage'da saklanır</li>
+            <li>• {copy.infoItem1}</li>
+            <li>• {copy.infoItem2}</li>
+            <li>• {copy.infoItem3}</li>
+            <li>• {copy.infoItem4}</li>
           </ul>
         </div>
       </div>

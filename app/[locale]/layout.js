@@ -5,7 +5,6 @@ import { isValidLocale, locales } from '@/i18n/locales';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 import CookieConsent from '@/components/CookieConsent';
-import LegacyI18nBridge from '@/components/LegacyI18nBridge';
 import AuthProvider from '../AuthProvider';
 
 export function generateStaticParams() {
@@ -25,7 +24,6 @@ export default async function LocaleLayout({ children, params }) {
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <AuthProvider>
-        <LegacyI18nBridge />
         <Navbar />
         <main className="flex-1 w-full">{children}</main>
         <Footer />

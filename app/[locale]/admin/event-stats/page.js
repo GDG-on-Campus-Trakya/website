@@ -14,8 +14,68 @@ import {
 } from "firebase/firestore";
 import { useRouter } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    statsLoading: "İstatistikler yükleniyor...",
+    pageTitle: "Etkinlik İstatistikleri",
+    pageSubtitle: "Tüm etkinlik verilerini analiz edin",
+    totalRegistrations: "Toplam Kayıt",
+    totalAttendance: "Toplam Katılım",
+    averageAttendance: "Ortalama Katılım",
+    tabActiveEvents: (n) => `Aktif Etkinlikler (${n})`,
+    tabArchive: (n) => `Arşiv (${n})`,
+    emptyCurrent: "Henüz aktif etkinlik bulunmuyor",
+    emptyArchive: "Arşivlenmiş etkinlik bulunmuyor",
+    dateLabel: "Tarih:",
+    timeLabel: "Saat:",
+    attended: "Katılım Sağlayan",
+    attendanceRate: "Katılım Oranı",
+    colParticipant: "Katılımcı",
+    colEmail: "Email",
+    colStatus: "Durum",
+    colSignupDate: "Kayıt Tarihi",
+    colAttendanceDate: "Katılım Tarihi",
+    colVerifiedBy: "Onaylayan",
+    statusJoined: "Katıldı",
+    statusNotJoined: "Katılmadı",
+    statusRegistered: "Kayıtlı",
+    locale: "tr-TR",
+  },
+  en: {
+    statsLoading: "Loading statistics...",
+    pageTitle: "Event Statistics",
+    pageSubtitle: "Analyze all event data",
+    totalRegistrations: "Total Registrations",
+    totalAttendance: "Total Attendance",
+    averageAttendance: "Average Attendance",
+    tabActiveEvents: (n) => `Active Events (${n})`,
+    tabArchive: (n) => `Archive (${n})`,
+    emptyCurrent: "No active events yet",
+    emptyArchive: "No archived events",
+    dateLabel: "Date:",
+    timeLabel: "Time:",
+    attended: "Attended",
+    attendanceRate: "Attendance Rate",
+    colParticipant: "Participant",
+    colEmail: "Email",
+    colStatus: "Status",
+    colSignupDate: "Registration Date",
+    colAttendanceDate: "Attendance Date",
+    colVerifiedBy: "Verified By",
+    statusJoined: "Attended",
+    statusNotJoined: "Did Not Attend",
+    statusRegistered: "Registered",
+    locale: "en-US",
+  },
+};
 
 export default function AdminEventStatsPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
   const [eventStats, setEventStats] = useState([]);
@@ -278,7 +338,7 @@ export default function AdminEventStatsPage() {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg text-gray-200">İstatistikler yükleniyor...</p>
+          <p className="text-lg text-gray-200">{copy.statsLoading}</p>
         </div>
       </div>
     );
@@ -293,7 +353,7 @@ export default function AdminEventStatsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <p className="text-lg text-red-400 font-semibold">Erişim Reddedildi</p>
+          <p className="text-lg text-red-400 font-semibold">{a.accessDenied}</p>
         </div>
       </div>
     );
@@ -323,7 +383,7 @@ export default function AdminEventStatsPage() {
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Admin Paneline Geri Dön
+          {a.backToAdmin}
         </Link>
       </div>
 
@@ -331,11 +391,11 @@ export default function AdminEventStatsPage() {
       <div className="text-center mb-8 sm:mb-12">
         <div className="inline-block">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-            Etkinlik İstatistikleri
+            {copy.pageTitle}
           </h1>
           <div className="h-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-full"></div>
         </div>
-        <p className="text-gray-300 mt-4 text-lg">Tüm etkinlik verilerini analiz edin</p>
+        <p className="text-gray-300 mt-4 text-lg">{copy.pageSubtitle}</p>
       </div>
       
       {/* Overall Stats Cards */}
@@ -343,7 +403,7 @@ export default function AdminEventStatsPage() {
         <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-300">Toplam Kayıt</p>
+              <p className="text-sm font-medium text-gray-300">{copy.totalRegistrations}</p>
               <p className="text-3xl font-bold text-blue-400">{totalRegistrations}</p>
             </div>
             <div className="p-3 bg-blue-500/20 rounded-xl">
@@ -357,7 +417,7 @@ export default function AdminEventStatsPage() {
         <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-300">Toplam Katılım</p>
+              <p className="text-sm font-medium text-gray-300">{copy.totalAttendance}</p>
               <p className="text-3xl font-bold text-green-400">{totalAttendees}</p>
             </div>
             <div className="p-3 bg-green-500/20 rounded-xl">
@@ -371,7 +431,7 @@ export default function AdminEventStatsPage() {
         <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-300">Ortalama Katılım</p>
+              <p className="text-sm font-medium text-gray-300">{copy.averageAttendance}</p>
               <p className="text-3xl font-bold text-purple-400">{averageAttendance}%</p>
             </div>
             <div className="p-3 bg-purple-500/20 rounded-xl">
@@ -394,7 +454,7 @@ export default function AdminEventStatsPage() {
                 : 'text-gray-300 hover:bg-gray-700/50'
             }`}
           >
-            Aktif Etkinlikler ({currentEvents.length})
+            {copy.tabActiveEvents(currentEvents.length)}
           </button>
           <button
             onClick={() => setActiveTab('archive')}
@@ -404,7 +464,7 @@ export default function AdminEventStatsPage() {
                 : 'text-gray-300 hover:bg-gray-700/50'
             }`}
           >
-            Arşiv ({archivedEvents.length})
+            {copy.tabArchive(archivedEvents.length)}
           </button>
         </div>
       </div>
@@ -418,7 +478,7 @@ export default function AdminEventStatsPage() {
               </svg>
             </div>
             <p className="text-lg text-gray-400 mb-2">
-              {activeTab === 'current' ? 'Henüz aktif etkinlik bulunmuyor' : 'Arşivlenmiş etkinlik bulunmuyor'}
+              {activeTab === 'current' ? copy.emptyCurrent : copy.emptyArchive}
             </p>
           </div>
         ) : (
@@ -448,15 +508,15 @@ export default function AdminEventStatsPage() {
                   </span>
                 </div>
                 <div className="mt-2 sm:mt-0 text-sm sm:text-base text-gray-300">
-                  <span className="font-medium">Tarih:</span>{" "}
-                  {new Date(event.date).toLocaleDateString("tr-TR", {
+                  <span className="font-medium">{copy.dateLabel}</span>{" "}
+                  {new Date(event.date).toLocaleDateString(copy.locale, {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
                   })}
                   {event.time && (
                     <span className="ml-2">
-                      <span className="font-medium">Saat:</span> {event.time}
+                      <span className="font-medium">{copy.timeLabel}</span> {event.time}
                     </span>
                   )}
                 </div>
@@ -475,7 +535,7 @@ export default function AdminEventStatsPage() {
                   <div className="bg-gradient-to-r from-blue-900/50 to-blue-800/50 p-6 rounded-2xl border border-blue-700">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-blue-300 mb-1 font-medium">Toplam Kayıt</p>
+                        <p className="text-sm text-blue-300 mb-1 font-medium">{copy.totalRegistrations}</p>
                         <p className="text-3xl font-bold text-blue-400">
                           {event.totalRegistrations}
                         </p>
@@ -491,7 +551,7 @@ export default function AdminEventStatsPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-green-300 mb-1 font-medium">
-                          Katılım Sağlayan
+                          {copy.attended}
                         </p>
                         <p className="text-3xl font-bold text-green-400">
                           {event.verifiedAttendees}
@@ -508,7 +568,7 @@ export default function AdminEventStatsPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-purple-300 mb-1 font-medium">
-                          Katılım Oranı
+                          {copy.attendanceRate}
                         </p>
                         <p className="text-3xl font-bold text-purple-400">
                           {event.attendanceRate}%
@@ -529,22 +589,22 @@ export default function AdminEventStatsPage() {
                       <thead className="bg-gradient-to-r from-gray-800 to-gray-700">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Katılımcı
+                          {copy.colParticipant}
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Email
+                          {copy.colEmail}
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Durum
+                          {copy.colStatus}
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Kayıt Tarihi
+                          {copy.colSignupDate}
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Katılım Tarihi
+                          {copy.colAttendanceDate}
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Onaylayan
+                          {copy.colVerifiedBy}
                         </th>
                       </tr>
                     </thead>
@@ -572,22 +632,22 @@ export default function AdminEventStatsPage() {
                               }`}
                             >
                               {registrant.didJoinEvent
-                                ? "Katıldı"
+                                ? copy.statusJoined
                                 : new Date(event.date) < new Date()
-                                ? "Katılmadı"
-                                : "Kayıtlı"}
+                                ? copy.statusNotJoined
+                                : copy.statusRegistered}
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">
                             {new Date(
                               registrant.signedUpAt?.seconds * 1000
-                            ).toLocaleString("tr-TR")}
+                            ).toLocaleString(copy.locale)}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">
                             {registrant.didJoinEvent
                               ? new Date(
                                   registrant.verifiedAt?.seconds * 1000
-                                ).toLocaleString("tr-TR")
+                                ).toLocaleString(copy.locale)
                               : "-"}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-400">

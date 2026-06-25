@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { useParams } from "next/navigation";
@@ -7,6 +8,7 @@ import { useRouter } from "@/i18n/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { logger } from "@/utils/logger";
+import { adminCopy } from "@/utils/adminCopy";
 import {
   findPollByCode,
   subscribeToPoll,
@@ -21,7 +23,77 @@ import {
   updatePollStatus
 } from "@/utils/pollUtils";
 
+const COPY = {
+  tr: {
+    pollNotFound: "Poll bulunamadı!",
+    pollStarted: "Poll başlatıldı!",
+    pollStartError: "Poll başlatılırken hata oluştu!",
+    showingResults: "Sonuçlar gösteriliyor!",
+    showResultsError: "Sonuçlar gösterilirken hata oluştu!",
+    pollFinished: "Poll tamamlandı!",
+    roundFinished: "Raund tamamlandı! Sonraki raunda geçiliyor...",
+    nextRoundStarted: "Sonraki raund başladı!",
+    nextMatchToast: "Sonraki eşleşme!",
+    nextMatchError: "Sonraki eşleşmeye geçilirken hata oluştu!",
+    confirmEndPoll: "Poll'u sonlandırmak istediğinizden emin misiniz?",
+    pollEnded: "Poll sonlandırıldı!",
+    pollEndError: "Poll sonlandırılırken hata oluştu!",
+    hostPanelRound: (round, total) => `Host Paneli - Round ${round}/${total}`,
+    playersConnected: (n) => `👥 ${n} oyuncu`,
+    adminPanel: "Admin Panel",
+    waitingForPlayers: "Oyuncular Bekleniyor...",
+    pollCodeLabel: "Poll Kodu:",
+    startPoll: "Poll'u Başlat",
+    waitingMinPlayer: "En az 1 oyuncu bekleniyor",
+    matchNumber: (n) => `Eşleşme #${n}`,
+    roundLabel: (n) => `Round ${n}`,
+    voteStatus: "Oy Durumu",
+    showResults: "Sonuçları Göster",
+    winnerHeading: "Kazanan!",
+    endPoll: "Poll'u Bitir",
+    nextMatch: "Sonraki Eşleşme",
+    playersHeading: (n) => `Oyuncular (${n})`,
+    dangerZone: "Tehlikeli Bölge",
+    endPollButton: "Poll'u Sonlandır",
+  },
+  en: {
+    pollNotFound: "Poll not found!",
+    pollStarted: "Poll started!",
+    pollStartError: "An error occurred while starting the poll!",
+    showingResults: "Showing results!",
+    showResultsError: "An error occurred while showing results!",
+    pollFinished: "Poll completed!",
+    roundFinished: "Round completed! Moving to the next round...",
+    nextRoundStarted: "Next round started!",
+    nextMatchToast: "Next match!",
+    nextMatchError: "An error occurred while moving to the next match!",
+    confirmEndPoll: "Are you sure you want to end the poll?",
+    pollEnded: "Poll ended!",
+    pollEndError: "An error occurred while ending the poll!",
+    hostPanelRound: (round, total) => `Host Panel - Round ${round}/${total}`,
+    playersConnected: (n) => `👥 ${n} players`,
+    adminPanel: "Admin Panel",
+    waitingForPlayers: "Waiting for Players...",
+    pollCodeLabel: "Poll Code:",
+    startPoll: "Start Poll",
+    waitingMinPlayer: "Waiting for at least 1 player",
+    matchNumber: (n) => `Match #${n}`,
+    roundLabel: (n) => `Round ${n}`,
+    voteStatus: "Vote Status",
+    showResults: "Show Results",
+    winnerHeading: "Winner!",
+    endPoll: "Finish Poll",
+    nextMatch: "Next Match",
+    playersHeading: (n) => `Players (${n})`,
+    dangerZone: "Danger Zone",
+    endPollButton: "End Poll",
+  },
+};
+
 export default function PollHostPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
   const params = useParams();
@@ -39,7 +111,7 @@ export default function PollHostPage() {
     const loadPoll = async () => {
       const pollData = await findPollByCode(pollCode);
       if (!pollData) {
-        toast.error("Poll bulunamadı!");
+        toast.error(copy.pollNotFound);
         router.push("/admin/poll");
         return;
       }
@@ -86,10 +158,10 @@ export default function PollHostPage() {
   const handleStartPoll = async () => {
     try {
       await startCurrentMatch(pollId);
-      toast.success("Poll başlatıldı!");
+      toast.success(copy.pollStarted);
     } catch (error) {
       logger.error("Error starting poll:", error);
-      toast.error("Poll başlatılırken hata oluştu!");
+      toast.error(copy.pollStartError);
     }
   };
 
@@ -102,10 +174,10 @@ export default function PollHostPage() {
       // Show round review
       await updatePollStatus(pollId, "round_review");
 
-      toast.success("Sonuçlar gösteriliyor!");
+      toast.success(copy.showingResults);
     } catch (error) {
       logger.error("Error showing results:", error);
-      toast.error("Sonuçlar gösterilirken hata oluştu!");
+      toast.error(copy.showResultsError);
     }
     setCheckingVotes(false);
   };
@@ -115,37 +187,37 @@ export default function PollHostPage() {
       const result = await nextMatch(pollId);
 
       if (result.finished) {
-        toast.success("Poll tamamlandı!");
+        toast.success(copy.pollFinished);
         await endPoll(pollId);
       } else if (result.needsNextRound) {
-        toast.info("Raund tamamlandı! Sonraki raunda geçiliyor...");
+        toast.info(copy.roundFinished);
         await advanceToNextRound(pollId);
-        toast.success("Sonraki raund başladı!");
+        toast.success(copy.nextRoundStarted);
       } else if (result.continues) {
-        toast.success("Sonraki eşleşme!");
+        toast.success(copy.nextMatchToast);
       }
     } catch (error) {
       logger.error("Error moving to next match:", error);
-      toast.error("Sonraki eşleşmeye geçilirken hata oluştu!");
+      toast.error(copy.nextMatchError);
     }
   };
 
   const handleEndPoll = async () => {
-    if (!confirm("Poll'u sonlandırmak istediğinizden emin misiniz?")) return;
+    if (!confirm(copy.confirmEndPoll)) return;
 
     try {
       await endPoll(pollId);
-      toast.success("Poll sonlandırıldı!");
+      toast.success(copy.pollEnded);
     } catch (error) {
       logger.error("Error ending poll:", error);
-      toast.error("Poll sonlandırılırken hata oluştu!");
+      toast.error(copy.pollEndError);
     }
   };
 
   if (loading || !poll) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-white">Yükleniyor...</p>
+        <p className="text-lg text-white">{a.loading}</p>
       </div>
     );
   }
@@ -153,7 +225,7 @@ export default function PollHostPage() {
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Giriş yapmalısınız!</p>
+        <p className="text-lg text-red-500">{a.loginRequired}</p>
       </div>
     );
   }
@@ -169,18 +241,18 @@ export default function PollHostPage() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white">{poll.datasetName}</h1>
               <p className="text-gray-400 text-sm sm:text-base">
-                Host Paneli - Round {poll.currentRound}/{poll.totalRounds}
+                {copy.hostPanelRound(poll.currentRound, poll.totalRounds)}
               </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-gray-400 text-sm sm:text-base">
-                👥 {connectedPlayerCount} oyuncu
+                {copy.playersConnected(connectedPlayerCount)}
               </div>
               <button
                 onClick={() => router.push("/admin/poll")}
                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm sm:text-base"
               >
-                Admin Panel
+                {copy.adminPanel}
               </button>
             </div>
           </div>
@@ -195,12 +267,12 @@ export default function PollHostPage() {
             {poll.status === "waiting" && (
               <div className="bg-gray-800 rounded-xl p-6 sm:p-8 border border-gray-700">
                 <h2 className="text-xl sm:text-2xl font-bold text-white mb-6">
-                  Oyuncular Bekleniyor...
+                  {copy.waitingForPlayers}
                 </h2>
 
                 <div className="space-y-4">
                   <div className="bg-gray-700/50 rounded-lg p-4">
-                    <div className="text-sm text-gray-400 mb-2">Poll Kodu:</div>
+                    <div className="text-sm text-gray-400 mb-2">{copy.pollCodeLabel}</div>
                     <div className="text-4xl sm:text-5xl font-bold text-white tracking-widest">
                       {pollCode}
                     </div>
@@ -211,12 +283,12 @@ export default function PollHostPage() {
                     disabled={connectedPlayerCount === 0}
                     className="w-full py-3 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg"
                   >
-                    Poll'u Başlat
+                    {copy.startPoll}
                   </button>
 
                   {connectedPlayerCount === 0 && (
                     <p className="text-sm text-gray-400 text-center">
-                      En az 1 oyuncu bekleniyor
+                      {copy.waitingMinPlayer}
                     </p>
                   )}
                 </div>
@@ -229,10 +301,10 @@ export default function PollHostPage() {
                 <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl sm:text-2xl font-bold text-white">
-                      Eşleşme #{currentMatch.matchNumber + 1}
+                      {copy.matchNumber(currentMatch.matchNumber + 1)}
                     </h2>
                     <div className="text-gray-400 text-sm sm:text-base">
-                      Round {poll.currentRound}
+                      {copy.roundLabel(poll.currentRound)}
                     </div>
                   </div>
 
@@ -276,7 +348,7 @@ export default function PollHostPage() {
 
                   <div className="mt-6">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-gray-400 text-sm sm:text-base">Oy Durumu</span>
+                      <span className="text-gray-400 text-sm sm:text-base">{copy.voteStatus}</span>
                       <span className="text-white text-sm sm:text-base">
                         {currentMatch.votes.item1 + currentMatch.votes.item2} / {connectedPlayerCount}
                       </span>
@@ -296,7 +368,7 @@ export default function PollHostPage() {
                   onClick={handleShowResults}
                   className="w-full py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-bold text-base sm:text-lg"
                 >
-                  Sonuçları Göster
+                  {copy.showResults}
                 </button>
               </div>
             )}
@@ -309,7 +381,7 @@ export default function PollHostPage() {
                     <div className="text-4xl sm:text-6xl mb-4">
                       {currentMatch.winner?.id === currentMatch.item1.id ? "🔵" : "🔴"}
                     </div>
-                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Kazanan!</h2>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">{copy.winnerHeading}</h2>
                     <div className="text-xl sm:text-2xl text-yellow-400 font-bold">
                       {currentMatch.winner?.name}
                     </div>
@@ -337,8 +409,8 @@ export default function PollHostPage() {
                 >
                   {poll.currentRound >= poll.totalRounds &&
                   poll.currentMatchIndex >= poll.allMatchups.filter(m => m.roundNumber === poll.currentRound).length - 1
-                    ? "Poll'u Bitir"
-                    : "Sonraki Eşleşme"}
+                    ? copy.endPoll
+                    : copy.nextMatch}
                 </button>
               </div>
             )}
@@ -349,7 +421,7 @@ export default function PollHostPage() {
                 <div className="text-center">
                   <div className="text-6xl sm:text-8xl mb-6">🏆</div>
                   <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                    Kazanan!
+                    {copy.winnerHeading}
                   </h2>
                   <div className="max-w-sm mx-auto">
                     <div className="aspect-square relative rounded-2xl overflow-hidden mb-6">
@@ -367,7 +439,7 @@ export default function PollHostPage() {
                     onClick={() => router.push("/admin/poll")}
                     className="mt-8 px-6 sm:px-8 py-3 sm:py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-base sm:text-lg"
                   >
-                    Admin Paneline Dön
+                    {a.backToAdmin}
                   </button>
                 </div>
               </div>
@@ -380,7 +452,7 @@ export default function PollHostPage() {
             {poll.status !== "finished" && (
               <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                 <div className="mt-4 text-center">
-                  <div className="text-sm text-gray-400 mb-2">Poll Kodu:</div>
+                  <div className="text-sm text-gray-400 mb-2">{copy.pollCodeLabel}</div>
                   <div className="text-3xl font-bold text-white tracking-widest">
                     {pollCode}
                   </div>
@@ -391,7 +463,7 @@ export default function PollHostPage() {
             {/* Players List */}
             <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <h3 className="text-lg font-bold text-white mb-4">
-                Oyuncular ({connectedPlayerCount})
+                {copy.playersHeading(connectedPlayerCount)}
               </h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {Object.values(players)
@@ -418,12 +490,12 @@ export default function PollHostPage() {
             {/* Danger Zone */}
             {poll.status !== "finished" && (
               <div className="bg-red-500/10 border border-red-500 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-red-500 mb-4">Tehlikeli Bölge</h3>
+                <h3 className="text-lg font-bold text-red-500 mb-4">{copy.dangerZone}</h3>
                 <button
                   onClick={handleEndPoll}
                   className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-sm sm:text-base"
                 >
-                  Poll'u Sonlandır
+                  {copy.endPollButton}
                 </button>
               </div>
             )}

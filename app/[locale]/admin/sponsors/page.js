@@ -1,6 +1,7 @@
 "use client";
 // admin/sponsors/page.js
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { auth, db } from "@/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { logger } from "@/utils/logger";
@@ -17,8 +18,77 @@ import { useRouter } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    backToAdmin: "Admin Paneline Geri Dön",
+    pageTitle: "Sponsor Yönetimi",
+    pageSubtitle: "Tüm sponsorları görüntüleyin ve yönetin",
+    totalSponsors: "Toplam Sponsor",
+    activeSponsors: "Aktif Sponsorlar",
+    addedThisMonth: "Bu Ay Eklenen",
+    editSponsor: "Sponsor Düzenle",
+    addNewSponsor: "Yeni Sponsor Ekle",
+    sponsorName: "Sponsor Adı *",
+    sponsorNamePlaceholder: "Sponsor adını girin...",
+    logoUrl: "Logo URL *",
+    websiteUrl: "Website URL *",
+    logoPreview: "Logo Önizlemesi:",
+    sponsorNameFallback: "Sponsor Adı",
+    websiteUrlFallback: "Website URL",
+    updateSponsor: "Sponsor Güncelle",
+    addSponsorBtn: "Sponsor Ekle",
+    cancelBtn: "İptal Et",
+    allSponsors: (n) => `Tüm Sponsorlar (${n})`,
+    noSponsors: "Henüz sponsor bulunmuyor",
+    noSponsorsHint: "İlk sponsoru eklemek için yukarıdaki formu kullanın",
+    addSuccess: "Sponsor başarıyla eklendi!",
+    addError: "Sponsor eklenirken bir hata oluştu!",
+    updateSuccess: "Sponsor başarıyla güncellendi!",
+    updateError: "Sponsor güncellenirken bir hata oluştu!",
+    confirmDelete:
+      "Bu sponsoru silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    deleteSuccess: "Sponsor başarıyla silindi!",
+    deleteError: "Sponsor silinirken bir hata oluştu!",
+  },
+  en: {
+    backToAdmin: "Back to Admin Panel",
+    pageTitle: "Sponsor Management",
+    pageSubtitle: "View and manage all sponsors",
+    totalSponsors: "Total Sponsors",
+    activeSponsors: "Active Sponsors",
+    addedThisMonth: "Added This Month",
+    editSponsor: "Edit Sponsor",
+    addNewSponsor: "Add New Sponsor",
+    sponsorName: "Sponsor Name *",
+    sponsorNamePlaceholder: "Enter sponsor name...",
+    logoUrl: "Logo URL *",
+    websiteUrl: "Website URL *",
+    logoPreview: "Logo Preview:",
+    sponsorNameFallback: "Sponsor Name",
+    websiteUrlFallback: "Website URL",
+    updateSponsor: "Update Sponsor",
+    addSponsorBtn: "Add Sponsor",
+    cancelBtn: "Cancel",
+    allSponsors: (n) => `All Sponsors (${n})`,
+    noSponsors: "No sponsors yet",
+    noSponsorsHint: "Use the form above to add the first sponsor",
+    addSuccess: "Sponsor added successfully!",
+    addError: "An error occurred while adding the sponsor!",
+    updateSuccess: "Sponsor updated successfully!",
+    updateError: "An error occurred while updating the sponsor!",
+    confirmDelete:
+      "Are you sure you want to delete this sponsor? This action cannot be undone.",
+    deleteSuccess: "Sponsor deleted successfully!",
+    deleteError: "An error occurred while deleting the sponsor!",
+  },
+};
 
 export default function AdminSponsorsPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -125,10 +195,10 @@ export default function AdminSponsorsPage() {
         { firestoreId: docRef.id, ...newSponsor },
       ]);
       resetSponsorForm();
-      toast.success("Sponsor başarıyla eklendi!");
+      toast.success(copy.addSuccess);
     } catch (error) {
       logger.error("Error adding sponsor:", error);
-      toast.error("Sponsor eklenirken bir hata oluştu!");
+      toast.error(copy.addError);
     }
   };
 
@@ -159,38 +229,33 @@ export default function AdminSponsorsPage() {
         )
       );
       resetSponsorForm();
-      toast.success("Sponsor başarıyla güncellendi!");
+      toast.success(copy.updateSuccess);
     } catch (error) {
       logger.error("Error updating sponsor:", error);
-      toast.error("Sponsor güncellenirken bir hata oluştu!");
+      toast.error(copy.updateError);
     }
   };
 
   // Delete sponsor
   const handleDeleteSponsor = async (firestoreId) => {
-    if (
-      !confirm(
-        "Bu sponsoru silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
-      )
-    )
-      return;
+    if (!confirm(copy.confirmDelete)) return;
 
     try {
       await deleteDoc(doc(db, "sponsors", firestoreId));
       setSponsors((prev) =>
         prev.filter((sponsor) => sponsor.firestoreId !== firestoreId)
       );
-      toast.success("Sponsor başarıyla silindi!");
+      toast.success(copy.deleteSuccess);
     } catch (error) {
       logger.error("Error deleting sponsor:", error);
-      toast.error("Sponsor silinirken bir hata oluştu!");
+      toast.error(copy.deleteError);
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-gray-200">Loading...</p>
+        <p className="text-lg text-gray-200">{a.loading}</p>
       </div>
     );
   }
@@ -198,7 +263,7 @@ export default function AdminSponsorsPage() {
   if (!isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-red-500">Access Denied</p>
+        <p className="text-lg text-red-500">{a.accessDenied}</p>
       </div>
     );
   }
@@ -226,7 +291,7 @@ export default function AdminSponsorsPage() {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          Admin Paneline Geri Dön
+          {copy.backToAdmin}
         </Link>
       </div>
 
@@ -234,12 +299,12 @@ export default function AdminSponsorsPage() {
       <div className="text-center mb-8 sm:mb-12">
         <div className="inline-block">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-green-400 via-teal-400 to-blue-400 bg-clip-text text-transparent mb-2">
-            Sponsor Yönetimi
+            {copy.pageTitle}
           </h1>
           <div className="h-1 bg-gradient-to-r from-green-400 via-teal-400 to-blue-400 rounded-full"></div>
         </div>
         <p className="text-gray-300 mt-4 text-lg">
-          Tüm sponsorları görüntüleyin ve yönetin
+          {copy.pageSubtitle}
         </p>
       </div>
 
@@ -249,7 +314,7 @@ export default function AdminSponsorsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-300">
-                Toplam Sponsor
+                {copy.totalSponsors}
               </p>
               <p className="text-3xl font-bold text-green-400">
                 {sponsors.length}
@@ -277,7 +342,7 @@ export default function AdminSponsorsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-300">
-                Aktif Sponsorlar
+                {copy.activeSponsors}
               </p>
               <p className="text-3xl font-bold text-teal-400">
                 {sponsors.filter((s) => s.website_url && s.img_url).length}
@@ -304,7 +369,7 @@ export default function AdminSponsorsPage() {
         <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-300">Bu Ay Eklenen</p>
+              <p className="text-sm font-medium text-gray-300">{copy.addedThisMonth}</p>
               <p className="text-3xl font-bold text-blue-400">0</p>
             </div>
             <div className="p-3 bg-blue-500/20 rounded-xl">
@@ -345,7 +410,7 @@ export default function AdminSponsorsPage() {
             </svg>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-100">
-            {isEditing ? "Sponsor Düzenle" : "Yeni Sponsor Ekle"}
+            {isEditing ? copy.editSponsor : copy.addNewSponsor}
           </h2>
         </div>
 
@@ -355,12 +420,12 @@ export default function AdminSponsorsPage() {
         >
           <div>
             <label className="block text-sm font-medium text-gray-200 mb-2">
-              Sponsor Adı *
+              {copy.sponsorName}
             </label>
             <input
               type="text"
               name="name"
-              placeholder="Sponsor adını girin..."
+              placeholder={copy.sponsorNamePlaceholder}
               value={sponsorFormData.name}
               onChange={handleSponsorChange}
               required
@@ -371,7 +436,7 @@ export default function AdminSponsorsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-200 mb-2">
-                Logo URL *
+                {copy.logoUrl}
               </label>
               <input
                 type="url"
@@ -385,7 +450,7 @@ export default function AdminSponsorsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-200 mb-2">
-                Website URL *
+                {copy.websiteUrl}
               </label>
               <input
                 type="url"
@@ -403,7 +468,7 @@ export default function AdminSponsorsPage() {
           {sponsorFormData.img_url && (
             <div className="bg-gray-700/40 rounded-xl p-4">
               <p className="text-sm font-medium text-gray-200 mb-3">
-                Logo Önizlemesi:
+                {copy.logoPreview}
               </p>
               <div className="flex items-center space-x-4">
                 <img
@@ -416,10 +481,10 @@ export default function AdminSponsorsPage() {
                 />
                 <div>
                   <p className="font-medium text-gray-100">
-                    {sponsorFormData.name || "Sponsor Adı"}
+                    {sponsorFormData.name || copy.sponsorNameFallback}
                   </p>
                   <p className="text-sm text-gray-300">
-                    {sponsorFormData.website_url || "Website URL"}
+                    {sponsorFormData.website_url || copy.websiteUrlFallback}
                   </p>
                 </div>
               </div>
@@ -435,7 +500,7 @@ export default function AdminSponsorsPage() {
                   : "bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600"
               }`}
             >
-              {isEditing ? "Sponsor Güncelle" : "Sponsor Ekle"}
+              {isEditing ? copy.updateSponsor : copy.addSponsorBtn}
             </button>
             {isEditing && (
               <button
@@ -443,7 +508,7 @@ export default function AdminSponsorsPage() {
                 onClick={resetSponsorForm}
                 className="flex-1 py-4 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-2xl font-semibold text-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
               >
-                İptal Et
+                {copy.cancelBtn}
               </button>
             )}
           </div>
@@ -470,7 +535,7 @@ export default function AdminSponsorsPage() {
               </svg>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-100">
-              Tüm Sponsorlar ({sponsors.length})
+              {copy.allSponsors(sponsors.length)}
             </h2>
           </div>
         </div>
@@ -493,10 +558,10 @@ export default function AdminSponsorsPage() {
               </svg>
             </div>
             <p className="text-lg text-gray-400 mb-2">
-              Henüz sponsor bulunmuyor
+              {copy.noSponsors}
             </p>
             <p className="text-sm text-gray-400">
-              İlk sponsoru eklemek için yukarıdaki formu kullanın
+              {copy.noSponsorsHint}
             </p>
           </div>
         ) : (
@@ -545,13 +610,13 @@ export default function AdminSponsorsPage() {
                     onClick={() => handleEditSponsor(sponsor)}
                     className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-2 px-4 rounded-xl hover:from-blue-600 hover:to-cyan-600 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
                   >
-                    Düzenle
+                    {a.edit}
                   </button>
                   <button
                     onClick={() => handleDeleteSponsor(sponsor.firestoreId)}
                     className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-xl hover:from-red-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
                   >
-                    Sil
+                    {a.delete}
                   </button>
                 </div>
               </div>

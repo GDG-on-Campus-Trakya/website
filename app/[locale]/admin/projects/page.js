@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { auth, db } from "@/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -22,8 +23,172 @@ import "react-toastify/dist/ReactToastify.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { uploadImage, StoragePaths } from "@/utils/storageUtils";
 import UserMentionInput from "@/components/UserMentionInput";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    pageTitle: "Projeler Yönetimi",
+    pageSubtitle: "Tüm projeleri görüntüleyin ve yönetin",
+    adminPanel: "← Admin Paneli",
+    projectsPage: "Projeler Sayfası",
+    newProject: "Yeni Proje Ekle",
+    statsTitle: "İstatistikler",
+    totalProjects: "Toplam Proje",
+    collaborativeProjects: "İşbirlikçili Projeler",
+    githubLinked: "GitHub Linkli",
+    editProject: "Proje Düzenle",
+    projectTitle: "Proje Başlığı *",
+    projectTitlePlaceholder: "Proje başlığını girin",
+    englishTitle: "English Project Title",
+    englishTitlePlaceholder: "Enter the English project title",
+    description: "Açıklama *",
+    descriptionPlaceholder: "Proje hakkında kısa bir açıklama yazın",
+    englishDescription: "English Description",
+    englishDescriptionPlaceholder:
+      "Write a short English description for the project",
+    githubLink: "GitHub Linki",
+    projectImage: "Proje Görseli",
+    currentImage: "Mevcut görsel:",
+    currentImageAlt: "Mevcut proje görseli",
+    imageReplaceNote:
+      "Yeni bir görsel seçerseniz mevcut görsel değiştirilecektir.",
+    collaborators: "İşbirlikçiler",
+    collaboratorsPlaceholder: "Kullanıcı emaili ile ara ve ekle...",
+    selectedCollaborators: "Seçilen işbirlikçiler:",
+    projectStatus: "Proje Durumu",
+    statusActive: "Aktif",
+    statusCompleted: "Tamamlanmış",
+    statusPaused: "Beklemede",
+    archiveProject: "Projeyi Arşivle",
+    updating: "Güncelleniyor...",
+    adding: "Ekleniyor...",
+    updateProjectBtn: "Proje Güncelle",
+    addProjectBtn: "Proje Ekle",
+    allProjects: (n) => `Tüm Projeler (${n})`,
+    noProjects: "Henüz proje bulunmuyor.",
+    addFirstProject: "İlk Projeyi Ekle",
+    colProject: "Proje",
+    colCollaborators: "İşbirlikçiler",
+    colSocialData: "Sosyal Veriler",
+    colDate: "Tarih",
+    colActions: "İşlemler",
+    manage: "Yönet",
+    socialDataManagement: "Sosyal Veri Yönetimi",
+    statsAndActions: "İstatistikler ve İşlemler",
+    likes: "Beğeni",
+    views: "Görüntülenme",
+    comments: "Yorum",
+    resetViews: "Görüntülenme Sayısını Sıfırla",
+    resetLikes: "Tüm Beğenileri Sil",
+    commentsCount: (n) => `Yorumlar (${n})`,
+    noComments: "Henüz yorum bulunmuyor.",
+    fillRequired: "Lütfen tüm zorunlu alanları doldurun!",
+    projectUpdated: "Proje başarıyla güncellendi!",
+    projectAdded: "Proje başarıyla eklendi!",
+    saveError: (editing) =>
+      editing
+        ? "Proje güncellenirken bir hata oluştu!"
+        : "Proje eklenirken bir hata oluştu!",
+    loadError: "Projeler yüklenirken bir hata oluştu!",
+    confirmDeleteProject: (title) =>
+      `"${title}" projesini silmek istediğinizden emin misiniz?`,
+    projectDeleted: "Proje başarıyla silindi!",
+    deleteError: "Proje silinirken bir hata oluştu!",
+    confirmResetViews:
+      "Görüntülenme sayısını sıfırlamak istediğinizden emin misiniz?",
+    viewsReset: "Görüntülenme sayısı sıfırlandı!",
+    viewsResetError: "Görüntülenme sayısı sıfırlanırken bir hata oluştu!",
+    confirmResetLikes: "Tüm beğenileri silmek istediğinizden emin misiniz?",
+    likesReset: "Tüm beğeniler silindi!",
+    likesResetError: "Beğeniler silinirken bir hata oluştu!",
+    confirmDeleteComment: "Bu yorumu silmek istediğinizden emin misiniz?",
+    commentDeleted: "Yorum silindi!",
+    commentDeleteError: "Yorum silinirken bir hata oluştu!",
+  },
+  en: {
+    pageTitle: "Projects Management",
+    pageSubtitle: "View and manage all projects",
+    adminPanel: "← Admin Panel",
+    projectsPage: "Projects Page",
+    newProject: "Add New Project",
+    statsTitle: "Statistics",
+    totalProjects: "Total Projects",
+    collaborativeProjects: "Collaborative Projects",
+    githubLinked: "GitHub Linked",
+    editProject: "Edit Project",
+    projectTitle: "Project Title *",
+    projectTitlePlaceholder: "Enter the project title",
+    englishTitle: "English Project Title",
+    englishTitlePlaceholder: "Enter the English project title",
+    description: "Description *",
+    descriptionPlaceholder: "Write a short description about the project",
+    englishDescription: "English Description",
+    englishDescriptionPlaceholder:
+      "Write a short English description for the project",
+    githubLink: "GitHub Link",
+    projectImage: "Project Image",
+    currentImage: "Current image:",
+    currentImageAlt: "Current project image",
+    imageReplaceNote:
+      "If you select a new image, the current image will be replaced.",
+    collaborators: "Collaborators",
+    collaboratorsPlaceholder: "Search and add by user email...",
+    selectedCollaborators: "Selected collaborators:",
+    projectStatus: "Project Status",
+    statusActive: "Active",
+    statusCompleted: "Completed",
+    statusPaused: "Paused",
+    archiveProject: "Archive Project",
+    updating: "Updating...",
+    adding: "Adding...",
+    updateProjectBtn: "Update Project",
+    addProjectBtn: "Add Project",
+    allProjects: (n) => `All Projects (${n})`,
+    noProjects: "No projects yet.",
+    addFirstProject: "Add the First Project",
+    colProject: "Project",
+    colCollaborators: "Collaborators",
+    colSocialData: "Social Data",
+    colDate: "Date",
+    colActions: "Actions",
+    manage: "Manage",
+    socialDataManagement: "Social Data Management",
+    statsAndActions: "Statistics and Actions",
+    likes: "Likes",
+    views: "Views",
+    comments: "Comments",
+    resetViews: "Reset View Count",
+    resetLikes: "Delete All Likes",
+    commentsCount: (n) => `Comments (${n})`,
+    noComments: "No comments yet.",
+    fillRequired: "Please fill in all required fields!",
+    projectUpdated: "Project updated successfully!",
+    projectAdded: "Project added successfully!",
+    saveError: (editing) =>
+      editing
+        ? "An error occurred while updating the project!"
+        : "An error occurred while adding the project!",
+    loadError: "An error occurred while loading projects!",
+    confirmDeleteProject: (title) =>
+      `Are you sure you want to delete the "${title}" project?`,
+    projectDeleted: "Project deleted successfully!",
+    deleteError: "An error occurred while deleting the project!",
+    confirmResetViews: "Are you sure you want to reset the view count?",
+    viewsReset: "View count reset!",
+    viewsResetError: "An error occurred while resetting the view count!",
+    confirmResetLikes: "Are you sure you want to delete all likes?",
+    likesReset: "All likes deleted!",
+    likesResetError: "An error occurred while deleting the likes!",
+    confirmDeleteComment: "Are you sure you want to delete this comment?",
+    commentDeleted: "Comment deleted!",
+    commentDeleteError: "An error occurred while deleting the comment!",
+  },
+};
 
 export default function AdminProjectsPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
   const [projects, setProjects] = useState([]);
@@ -89,7 +254,7 @@ export default function AdminProjectsPage() {
         );
       } catch (error) {
         logger.error("Error fetching projects:", error);
-        toast.error("Projeler yüklenirken bir hata oluştu!");
+        toast.error(copy.loadError);
       } finally {
         setLoadingProjects(false);
       }
@@ -150,7 +315,7 @@ export default function AdminProjectsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title || !formData.description) {
-      toast.error("Lütfen tüm zorunlu alanları doldurun!");
+      toast.error(copy.fillRequired);
       return;
     }
 
@@ -188,7 +353,7 @@ export default function AdminProjectsPage() {
       if (editingProject) {
         // Update existing project
         await updateDoc(doc(db, "projects", editingProject.id), projectData);
-        toast.success("Proje başarıyla güncellendi!");
+        toast.success(copy.projectUpdated);
       } else {
         // Create new project
         await addDoc(collection(db, "projects"), {
@@ -204,7 +369,7 @@ export default function AdminProjectsPage() {
           status: "active", // active, completed, paused
           archived: false,
         });
-        toast.success("Proje başarıyla eklendi!");
+        toast.success(copy.projectAdded);
       }
 
       setFormData({
@@ -235,7 +400,7 @@ export default function AdminProjectsPage() {
       );
     } catch (error) {
       logger.error("Error saving project:", error);
-      toast.error(editingProject ? "Proje güncellenirken bir hata oluştu!" : "Proje eklenirken bir hata oluştu!");
+      toast.error(copy.saveError(!!editingProject));
     } finally {
       setUploading(false);
     }
@@ -274,14 +439,14 @@ export default function AdminProjectsPage() {
   };
 
   const handleDeleteProject = async (projectId, projectTitle) => {
-    if (window.confirm(`"${projectTitle}" projesini silmek istediğinizden emin misiniz?`)) {
+    if (window.confirm(copy.confirmDeleteProject(projectTitle))) {
       try {
         await deleteDoc(doc(db, "projects", projectId));
         setProjects(prev => prev.filter(project => project.id !== projectId));
-        toast.success("Proje başarıyla silindi!");
+        toast.success(copy.projectDeleted);
       } catch (error) {
         logger.error("Error deleting project:", error);
-        toast.error("Proje silinirken bir hata oluştu!");
+        toast.error(copy.deleteError);
       }
     }
   };
@@ -292,43 +457,43 @@ export default function AdminProjectsPage() {
   };
 
   const handleResetViews = async (projectId) => {
-    if (window.confirm("Görüntülenme sayısını sıfırlamak istediğinizden emin misiniz?")) {
+    if (window.confirm(copy.confirmResetViews)) {
       try {
         await updateDoc(doc(db, "projects", projectId), {
           views: 0
         });
-        setProjects(prev => prev.map(p => 
+        setProjects(prev => prev.map(p =>
           p.id === projectId ? { ...p, views: 0 } : p
         ));
         setSelectedProject(prev => ({ ...prev, views: 0 }));
-        toast.success("Görüntülenme sayısı sıfırlandı!");
+        toast.success(copy.viewsReset);
       } catch (error) {
         logger.error("Error resetting views:", error);
-        toast.error("Görüntülenme sayısı sıfırlanırken bir hata oluştu!");
+        toast.error(copy.viewsResetError);
       }
     }
   };
 
   const handleResetLikes = async (projectId) => {
-    if (window.confirm("Tüm beğenileri silmek istediğinizden emin misiniz?")) {
+    if (window.confirm(copy.confirmResetLikes)) {
       try {
         await updateDoc(doc(db, "projects", projectId), {
           likes: []
         });
-        setProjects(prev => prev.map(p => 
+        setProjects(prev => prev.map(p =>
           p.id === projectId ? { ...p, likes: [] } : p
         ));
         setSelectedProject(prev => ({ ...prev, likes: [] }));
-        toast.success("Tüm beğeniler silindi!");
+        toast.success(copy.likesReset);
       } catch (error) {
         logger.error("Error resetting likes:", error);
-        toast.error("Beğeniler silinirken bir hata oluştu!");
+        toast.error(copy.likesResetError);
       }
     }
   };
 
   const handleDeleteComment = async (projectId, commentId) => {
-    if (window.confirm("Bu yorumu silmek istediğinizden emin misiniz?")) {
+    if (window.confirm(copy.confirmDeleteComment)) {
       try {
         const project = projects.find(p => p.id === projectId);
         const updatedComments = project.comments.filter(c => c.id !== commentId);
@@ -341,10 +506,10 @@ export default function AdminProjectsPage() {
           p.id === projectId ? { ...p, comments: updatedComments } : p
         ));
         setSelectedProject(prev => ({ ...prev, comments: updatedComments }));
-        toast.success("Yorum silindi!");
+        toast.success(copy.commentDeleted);
       } catch (error) {
         logger.error("Error deleting comment:", error);
-        toast.error("Yorum silinirken bir hata oluştu!");
+        toast.error(copy.commentDeleteError);
       }
     }
   };
@@ -352,7 +517,7 @@ export default function AdminProjectsPage() {
   if (loading || loadingProjects) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-gray-200">Loading...</p>
+        <p className="text-lg text-gray-200">{a.loading}</p>
       </div>
     );
   }
@@ -360,7 +525,7 @@ export default function AdminProjectsPage() {
   if (!isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-red-500">Access Denied</p>
+        <p className="text-lg text-red-500">{a.accessDenied}</p>
       </div>
     );
   }
@@ -372,10 +537,10 @@ export default function AdminProjectsPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-100">
-              Projeler Yönetimi
+              {copy.pageTitle}
             </h1>
             <p className="text-gray-300 mt-1">
-              Tüm projeleri görüntüleyin ve yönetin
+              {copy.pageSubtitle}
             </p>
           </div>
           <div className="flex gap-3">
@@ -383,19 +548,19 @@ export default function AdminProjectsPage() {
               href="/admin"
               className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
             >
-              ← Admin Paneli
+              {copy.adminPanel}
             </Link>
             <Link
               href="/projects"
               className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
             >
-              Projeler Sayfası
+              {copy.projectsPage}
             </Link>
             <button
               onClick={() => showAddForm ? handleCancelEdit() : setShowAddForm(true)}
               className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
             >
-              {showAddForm ? "İptal" : "Yeni Proje Ekle"}
+              {showAddForm ? a.cancel : copy.newProject}
             </button>
           </div>
         </div>
@@ -403,21 +568,21 @@ export default function AdminProjectsPage() {
         {/* Projects Stats */}
         <div className="bg-gray-800/70 backdrop-blur-sm shadow-md rounded-lg p-6 mb-6 border border-gray-700/50">
           <h2 className="text-xl font-semibold mb-4 text-gray-200">
-            İstatistikler
+            {copy.statsTitle}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-blue-900/30 p-4 rounded-lg border border-blue-700/50">
-              <h3 className="text-lg font-medium text-blue-200">Toplam Proje</h3>
+              <h3 className="text-lg font-medium text-blue-200">{copy.totalProjects}</h3>
               <p className="text-2xl font-bold text-blue-400">{projects.length}</p>
             </div>
             <div className="bg-green-900/30 p-4 rounded-lg border border-green-700/50">
-              <h3 className="text-lg font-medium text-green-200">İşbirlikçili Projeler</h3>
+              <h3 className="text-lg font-medium text-green-200">{copy.collaborativeProjects}</h3>
               <p className="text-2xl font-bold text-green-400">
                 {projects.filter(p => p.collaborators && p.collaborators.length > 0).length}
               </p>
             </div>
             <div className="bg-purple-900/30 p-4 rounded-lg border border-purple-700/50">
-              <h3 className="text-lg font-medium text-purple-200">GitHub Linkli</h3>
+              <h3 className="text-lg font-medium text-purple-200">{copy.githubLinked}</h3>
               <p className="text-2xl font-bold text-purple-400">
                 {projects.filter(p => p.githubLink).length}
               </p>
@@ -435,12 +600,12 @@ export default function AdminProjectsPage() {
               className="bg-gray-800/70 backdrop-blur-sm shadow-md rounded-lg p-6 mb-6 border border-gray-700/50"
             >
               <h2 className="text-xl font-semibold mb-4 text-gray-200">
-                {editingProject ? "Proje Düzenle" : "Yeni Proje Ekle"}
+                {editingProject ? copy.editProject : copy.newProject}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-200 mb-2">
-                    Proje Başlığı *
+                    {copy.projectTitle}
                   </label>
                   <input
                     type="text"
@@ -449,12 +614,12 @@ export default function AdminProjectsPage() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Proje başlığını girin"
+                    placeholder={copy.projectTitlePlaceholder}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-200 mb-2">
-                    English Project Title
+                    {copy.englishTitle}
                   </label>
                   <input
                     type="text"
@@ -462,14 +627,14 @@ export default function AdminProjectsPage() {
                     value={formData.titleEn}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter the English project title"
+                    placeholder={copy.englishTitlePlaceholder}
                   />
                 </div>
 
 
                 <div>
                   <label className="block text-sm font-medium text-gray-200 mb-2">
-                    Açıklama *
+                    {copy.description}
                   </label>
                   <textarea
                     name="description"
@@ -478,12 +643,12 @@ export default function AdminProjectsPage() {
                     required
                     rows={4}
                     className="w-full px-4 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Proje hakkında kısa bir açıklama yazın"
+                    placeholder={copy.descriptionPlaceholder}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-200 mb-2">
-                    English Description
+                    {copy.englishDescription}
                   </label>
                   <textarea
                     name="descriptionEn"
@@ -491,14 +656,14 @@ export default function AdminProjectsPage() {
                     onChange={handleInputChange}
                     rows={4}
                     className="w-full px-4 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Write a short English description for the project"
+                    placeholder={copy.englishDescriptionPlaceholder}
                   />
                 </div>
 
 
                 <div>
                   <label className="block text-sm font-medium text-gray-200 mb-2">
-                    GitHub Linki
+                    {copy.githubLink}
                   </label>
                   <input
                     type="url"
@@ -512,14 +677,14 @@ export default function AdminProjectsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-200 mb-2">
-                    Proje Görseli
+                    {copy.projectImage}
                   </label>
                   {editingProject?.imageUrl && (
                     <div className="mb-3">
-                      <p className="text-sm text-gray-300 mb-2">Mevcut görsel:</p>
+                      <p className="text-sm text-gray-300 mb-2">{copy.currentImage}</p>
                       <img
                         src={editingProject.imageUrl}
-                        alt="Mevcut proje görseli"
+                        alt={copy.currentImageAlt}
                         className="w-32 h-24 object-cover rounded-lg border"
                       />
                     </div>
@@ -532,25 +697,25 @@ export default function AdminProjectsPage() {
                   />
                   {editingProject?.imageUrl && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Yeni bir görsel seçerseniz mevcut görsel değiştirilecektir.
+                      {copy.imageReplaceNote}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-200 mb-2">
-                    İşbirlikçiler
+                    {copy.collaborators}
                   </label>
                   <UserMentionInput
                     onUserSelect={handleUserSelect}
                     selectedUsers={formData.collaborators}
-                    placeholder="Kullanıcı emaili ile ara ve ekle..."
+                    placeholder={copy.collaboratorsPlaceholder}
                   />
                   
                   {/* Selected Collaborators */}
                   {formData.collaborators.length > 0 && (
                     <div className="mt-3 space-y-2">
-                      <p className="text-sm text-gray-300">Seçilen işbirlikçiler:</p>
+                      <p className="text-sm text-gray-300">{copy.selectedCollaborators}</p>
                       <div className="flex flex-wrap gap-2">
                         {formData.collaborators.map((collab) => (
                           <div
@@ -580,7 +745,7 @@ export default function AdminProjectsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-200 mb-2">
-                      Proje Durumu
+                      {copy.projectStatus}
                     </label>
                     <select
                       name="status"
@@ -588,9 +753,9 @@ export default function AdminProjectsPage() {
                       onChange={handleInputChange}
                       className="w-full px-4 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="active">Aktif</option>
-                      <option value="completed">Tamamlanmış</option>
-                      <option value="paused">Beklemede</option>
+                      <option value="active">{copy.statusActive}</option>
+                      <option value="completed">{copy.statusCompleted}</option>
+                      <option value="paused">{copy.statusPaused}</option>
                     </select>
                   </div>
 
@@ -606,7 +771,7 @@ export default function AdminProjectsPage() {
                         }))}
                         className="w-4 h-4 text-blue-400 bg-gray-900 border-gray-500 rounded focus:ring-blue-500"
                       />
-                      Projeyi Arşivle
+                      {copy.archiveProject}
                     </label>
                   </div>
                 </div>
@@ -617,9 +782,9 @@ export default function AdminProjectsPage() {
                     disabled={uploading}
                     className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors disabled:opacity-50"
                   >
-                    {uploading ? 
-                      (editingProject ? "Güncelleniyor..." : "Ekleniyor...") : 
-                      (editingProject ? "Proje Güncelle" : "Proje Ekle")
+                    {uploading ?
+                      (editingProject ? copy.updating : copy.adding) :
+                      (editingProject ? copy.updateProjectBtn : copy.addProjectBtn)
                     }
                   </button>
                   <button
@@ -627,7 +792,7 @@ export default function AdminProjectsPage() {
                     onClick={handleCancelEdit}
                     className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-colors"
                   >
-                    İptal
+                    {a.cancel}
                   </button>
                 </div>
               </form>
@@ -639,18 +804,18 @@ export default function AdminProjectsPage() {
         <div className="bg-gray-800/70 backdrop-blur-sm shadow-md rounded-lg overflow-hidden border border-gray-700/50">
           <div className="px-6 py-4 border-b border-gray-600">
             <h2 className="text-xl font-semibold text-gray-200">
-              Tüm Projeler ({projects.length})
+              {copy.allProjects(projects.length)}
             </h2>
           </div>
           
           {projects.length === 0 ? (
             <div className="p-8 text-center">
-              <p className="text-gray-400 text-lg">Henüz proje bulunmuyor.</p>
+              <p className="text-gray-400 text-lg">{copy.noProjects}</p>
               <Link
                 href="/projects"
                 className="inline-block mt-4 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
               >
-                İlk Projeyi Ekle
+                {copy.addFirstProject}
               </Link>
             </div>
           ) : (
@@ -659,19 +824,19 @@ export default function AdminProjectsPage() {
                 <thead className="bg-gradient-to-r from-gray-800 to-gray-700">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Proje
+                      {copy.colProject}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      İşbirlikçiler
+                      {copy.colCollaborators}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Sosyal Veriler
+                      {copy.colSocialData}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Tarih
+                      {copy.colDate}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      İşlemler
+                      {copy.colActions}
                     </th>
                   </tr>
                 </thead>
@@ -766,13 +931,13 @@ export default function AdminProjectsPage() {
                             onClick={() => handleManageSocial(project)}
                             className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-2 py-1 rounded transition-colors"
                           >
-                            Yönet
+                            {copy.manage}
                           </button>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                         {project.createdAt ? (
-                          new Date(project.createdAt.toDate()).toLocaleDateString('tr-TR')
+                          new Date(project.createdAt.toDate()).toLocaleDateString(locale === "en" ? 'en-US' : 'tr-TR')
                         ) : (
                           '-'
                         )}
@@ -783,13 +948,13 @@ export default function AdminProjectsPage() {
                             onClick={() => handleEditProject(project)}
                             className="text-blue-400 hover:text-blue-900 transition-colors"
                           >
-                            Düzenle
+                            {a.edit}
                           </button>
                           <button
                             onClick={() => handleDeleteProject(project.id, project.title)}
                             className="text-red-400 hover:text-red-900 transition-colors"
                           >
-                            Sil
+                            {a.delete}
                           </button>
                         </div>
                       </td>
@@ -826,7 +991,7 @@ export default function AdminProjectsPage() {
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="text-xl font-semibold text-gray-100">
-                      Sosyal Veri Yönetimi
+                      {copy.socialDataManagement}
                     </h3>
                     <p className="text-gray-300 mt-1">{selectedProject.title}</p>
                   </div>
@@ -853,7 +1018,7 @@ export default function AdminProjectsPage() {
                   {/* Stats and Actions */}
                   <div className="space-y-6">
                     <div>
-                      <h4 className="text-lg font-medium text-gray-100 mb-4">İstatistikler ve İşlemler</h4>
+                      <h4 className="text-lg font-medium text-gray-100 mb-4">{copy.statsAndActions}</h4>
                       
                       {/* Stats Cards */}
                       <div className="grid grid-cols-3 gap-4 mb-6">
@@ -864,7 +1029,7 @@ export default function AdminProjectsPage() {
                             </svg>
                           </div>
                           <p className="text-2xl font-bold text-red-400">{selectedProject.likes?.length || 0}</p>
-                          <p className="text-xs text-red-300">Beğeni</p>
+                          <p className="text-xs text-red-300">{copy.likes}</p>
                         </div>
                         
                         <div className="bg-blue-900/30 p-4 rounded-lg text-center border border-blue-700/50">
@@ -874,7 +1039,7 @@ export default function AdminProjectsPage() {
                             </svg>
                           </div>
                           <p className="text-2xl font-bold text-blue-400">{selectedProject.views || 0}</p>
-                          <p className="text-xs text-blue-300">Görüntülenme</p>
+                          <p className="text-xs text-blue-300">{copy.views}</p>
                         </div>
                         
                         <div className="bg-green-900/30 p-4 rounded-lg text-center border border-green-700/50">
@@ -884,7 +1049,7 @@ export default function AdminProjectsPage() {
                             </svg>
                           </div>
                           <p className="text-2xl font-bold text-green-400">{selectedProject.comments?.length || 0}</p>
-                          <p className="text-xs text-green-300">Yorum</p>
+                          <p className="text-xs text-green-300">{copy.comments}</p>
                         </div>
                       </div>
 
@@ -897,7 +1062,7 @@ export default function AdminProjectsPage() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                           </svg>
-                          Görüntülenme Sayısını Sıfırla
+                          {copy.resetViews}
                         </button>
                         
                         <button
@@ -907,7 +1072,7 @@ export default function AdminProjectsPage() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
-                          Tüm Beğenileri Sil
+                          {copy.resetLikes}
                         </button>
                       </div>
                     </div>
@@ -915,7 +1080,7 @@ export default function AdminProjectsPage() {
 
                   {/* Comments Management */}
                   <div>
-                    <h4 className="text-lg font-medium text-gray-100 mb-4">Yorumlar ({selectedProject.comments?.length || 0})</h4>
+                    <h4 className="text-lg font-medium text-gray-100 mb-4">{copy.commentsCount(selectedProject.comments?.length || 0)}</h4>
                     
                     <div className="space-y-3 max-h-96 overflow-y-auto">
                       {selectedProject.comments && selectedProject.comments.length > 0 ? (
@@ -934,7 +1099,7 @@ export default function AdminProjectsPage() {
                                   <div>
                                     <p className="font-medium text-gray-100 text-sm">{comment.userName}</p>
                                     <p className="text-xs text-gray-400">
-                                      {new Date(comment.createdAt).toLocaleDateString('tr-TR', {
+                                      {new Date(comment.createdAt).toLocaleDateString(locale === "en" ? 'en-US' : 'tr-TR', {
                                         year: 'numeric',
                                         month: 'short',
                                         day: 'numeric',
@@ -959,7 +1124,7 @@ export default function AdminProjectsPage() {
                         ))
                       ) : (
                         <div className="text-center py-8">
-                          <p className="text-gray-400">Henüz yorum bulunmuyor.</p>
+                          <p className="text-gray-400">{copy.noComments}</p>
                         </div>
                       )}
                     </div>
@@ -974,7 +1139,7 @@ export default function AdminProjectsPage() {
                     onClick={() => setShowSocialModal(false)}
                     className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors"
                   >
-                    Kapat
+                    {a.close}
                   </button>
                 </div>
               </div>

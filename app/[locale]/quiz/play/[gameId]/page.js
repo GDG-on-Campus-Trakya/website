@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { useParams } from "next/navigation";
@@ -15,7 +16,78 @@ import {
   updatePlayerConnection
 } from "@/utils/quizUtils";
 
+const COPY = {
+  tr: {
+    gameNotFound: "Oyun bulunamadı!",
+    correctToast: (pts) => `Doğru! +${pts} puan`,
+    wrongToast: "Yanlış cevap!",
+    submitError: "Cevap gönderilirken hata oluştu!",
+    loading: "Yükleniyor...",
+    loginRequired: "Giriş yapmalısınız!",
+    resultCorrect: "Doğru Cevap!",
+    resultWrong: "Yanlış Cevap",
+    resultReceived: "Cevabınız alındı",
+    pointsShort: "puan",
+    pointsShortMobile: "p",
+    waitingTitle: "Oyun Başlamayı Bekliyor...",
+    waitingSubtitle: "Host oyunu başlattığında sorular görünecek",
+    syncing: "Sunucu ile senkronize ediliyor...",
+    timeLeft: "Kalan Süre",
+    answerReceivedTitle: "Cevabınız Alındı!",
+    answerReceivedSubtitle: "Sonuçları görmek için diğer oyuncuları bekleyin",
+    youWon: "Kazandınız!",
+    winner: "Kazanan",
+    fastestCorrect: (s) => `En hızlı doğru cevap: ${s} saniye`,
+    correctAnswerIs: (ans) => `Doğru cevap: ${ans}`,
+    correctAnswerHidden: "Doğru cevap oyun sırasında gizli tutuluyor.",
+    top5: "İlk 5",
+    waitNextQuestion: "Sonraki soruyu bekleyin...",
+    gameOver: "Oyun Bitti!",
+    pointsLabel: "Puan",
+    yourRank: (rank) => `Sıralamanız: #${rank}`,
+    kahootThanks: "Teşekkürler! Her soru için kazananlar gösterildi.",
+    finalRanking: "Final Sıralaması",
+    correctSuffix: "doğru",
+    joinNewGame: "Yeni Oyuna Katıl",
+  },
+  en: {
+    gameNotFound: "Game not found!",
+    correctToast: (pts) => `Correct! +${pts} points`,
+    wrongToast: "Wrong answer!",
+    submitError: "An error occurred while submitting your answer!",
+    loading: "Loading...",
+    loginRequired: "You need to sign in!",
+    resultCorrect: "Correct Answer!",
+    resultWrong: "Wrong Answer",
+    resultReceived: "Answer received",
+    pointsShort: "points",
+    pointsShortMobile: "p",
+    waitingTitle: "Waiting for the game to start...",
+    waitingSubtitle: "Questions will appear once the host starts the game",
+    syncing: "Syncing with the server...",
+    timeLeft: "Time Left",
+    answerReceivedTitle: "Answer Received!",
+    answerReceivedSubtitle: "Wait for the other players to see the results",
+    youWon: "You Won!",
+    winner: "Winner",
+    fastestCorrect: (s) => `Fastest correct answer: ${s} seconds`,
+    correctAnswerIs: (ans) => `Correct answer: ${ans}`,
+    correctAnswerHidden: "The correct answer is kept hidden during the game.",
+    top5: "Top 5",
+    waitNextQuestion: "Wait for the next question...",
+    gameOver: "Game Over!",
+    pointsLabel: "Points",
+    yourRank: (rank) => `Your rank: #${rank}`,
+    kahootThanks: "Thanks! Winners were shown for each question.",
+    finalRanking: "Final Ranking",
+    correctSuffix: "correct",
+    joinNewGame: "Join a New Game",
+  },
+};
+
 export default function PlayGamePage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
   const params = useParams();
@@ -44,7 +116,7 @@ export default function PlayGamePage() {
 
     const unsubscribeGame = subscribeToGame(gameId, (gameData) => {
       if (!gameData) {
-        toast.error("Oyun bulunamadı!");
+        toast.error(copy.gameNotFound);
         router.push("/game");
         return;
       }
@@ -251,13 +323,13 @@ export default function PlayGamePage() {
       });
 
       if (result.isCorrect) {
-        toast.success(`Doğru! +${result.pointsEarned} puan`);
+        toast.success(copy.correctToast(result.pointsEarned));
       } else {
-        toast.error("Yanlış cevap!");
+        toast.error(copy.wrongToast);
       }
     } catch (error) {
       logger.error("Error submitting answer:", error);
-      toast.error("Cevap gönderilirken hata oluştu!");
+      toast.error(copy.submitError);
       setHasAnswered(false);
       setSelectedAnswer(null);
       setAnswerResult(null);
@@ -269,7 +341,7 @@ export default function PlayGamePage() {
   if (loading || !game) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-white">Yükleniyor...</p>
+        <p className="text-lg text-white">{copy.loading}</p>
       </div>
     );
   }
@@ -277,7 +349,7 @@ export default function PlayGamePage() {
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Giriş yapmalısınız!</p>
+        <p className="text-lg text-red-500">{copy.loginRequired}</p>
       </div>
     );
   }
@@ -307,10 +379,10 @@ export default function PlayGamePage() {
       : "border-white/20";
   const resultIcon = isAnswerCorrect === true ? "🎉" : isAnswerCorrect === false ? "😔" : "ℹ️";
   const resultTitle = isAnswerCorrect === true
-    ? "Doğru Cevap!"
+    ? copy.resultCorrect
     : isAnswerCorrect === false
-      ? "Yanlış Cevap"
-      : "Cevabınız alındı";
+      ? copy.resultWrong
+      : copy.resultReceived;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
@@ -332,7 +404,7 @@ export default function PlayGamePage() {
                 </div>
               )}
               <div className="text-white font-bold text-sm sm:text-xl">
-                {playerScore} <span className="hidden sm:inline">puan</span><span className="sm:hidden">p</span>
+                {playerScore} <span className="hidden sm:inline">{copy.pointsShort}</span><span className="sm:hidden">{copy.pointsShortMobile}</span>
               </div>
             </div>
           )}
@@ -346,10 +418,10 @@ export default function PlayGamePage() {
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-6 sm:p-12 border border-white/20 text-center">
               <div className="text-4xl sm:text-6xl mb-4 sm:mb-6">⏳</div>
               <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3 sm:mb-4">
-                Oyun Başlamayı Bekliyor...
+                {copy.waitingTitle}
               </h2>
               <p className="text-base sm:text-xl text-gray-300">
-                Host oyunu başlattığında sorular görünecek
+                {copy.waitingSubtitle}
               </p>
             </div>
           )}
@@ -362,7 +434,7 @@ export default function PlayGamePage() {
                 <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-3 text-center">
                   <div className="flex items-center justify-center gap-2 text-yellow-200">
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-yellow-400 border-t-transparent"></div>
-                    <span className="text-sm">Sunucu ile senkronize ediliyor...</span>
+                    <span className="text-sm">{copy.syncing}</span>
                   </div>
                 </div>
               )}
@@ -370,7 +442,7 @@ export default function PlayGamePage() {
               {/* Timer & Question */}
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-white/20">
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
-                  <div className="text-white/70 text-sm sm:text-base">Kalan Süre</div>
+                  <div className="text-white/70 text-sm sm:text-base">{copy.timeLeft}</div>
                   <div className={`text-3xl sm:text-5xl font-bold ${
                     timeLeft <= 5 ? "text-red-500" : "text-white"
                   }`}>
@@ -402,10 +474,10 @@ export default function PlayGamePage() {
                 <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/20 text-center">
                   <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">✓</div>
                   <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
-                    Cevabınız Alındı!
+                    {copy.answerReceivedTitle}
                   </h3>
                   <p className="text-sm sm:text-base text-gray-300">
-                    Sonuçları görmek için diğer oyuncuları bekleyin
+                    {copy.answerReceivedSubtitle}
                   </p>
                 </div>
               ) : (
@@ -442,13 +514,13 @@ export default function PlayGamePage() {
                 <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl sm:rounded-3xl p-6 sm:p-12 border-4 border-yellow-300 text-center">
                   <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">🏆</div>
                   <h2 className="text-2xl sm:text-4xl font-bold text-white mb-2">
-                    {questionWinners[game.currentQuestion].userId === user.uid ? "Kazandınız!" : "Kazanan"}
+                    {questionWinners[game.currentQuestion].userId === user.uid ? copy.youWon : copy.winner}
                   </h2>
                   <div className="text-xl sm:text-3xl font-bold text-white mb-2">
                     {questionWinners[game.currentQuestion].name}
                   </div>
                   <div className="text-base sm:text-xl text-white/90">
-                    ⚡ En hızlı doğru cevap: {questionWinners[game.currentQuestion].timeSpent.toFixed(2)} saniye
+                    ⚡ {copy.fastestCorrect(questionWinners[game.currentQuestion].timeSpent.toFixed(2))}
                   </div>
                 </div>
               )}
@@ -463,8 +535,8 @@ export default function PlayGamePage() {
                 </h2>
                 <p className="text-base sm:text-xl text-gray-300">
                   {correctAnswerText
-                    ? `Doğru cevap: ${correctAnswerText}`
-                    : "Doğru cevap oyun sırasında gizli tutuluyor."}
+                    ? copy.correctAnswerIs(correctAnswerText)
+                    : copy.correctAnswerHidden}
                 </p>
               </div>
 
@@ -472,7 +544,7 @@ export default function PlayGamePage() {
               {game.gameMode !== "kahoot" && leaderboard.length > 0 && (
                 <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-white/20">
                   <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 text-center">
-                    🏆 İlk 5
+                    🏆 {copy.top5}
                   </h3>
                   <div className="space-y-2 sm:space-y-3">
                     {leaderboard.slice(0, 5).map((player, index) => {
@@ -505,7 +577,7 @@ export default function PlayGamePage() {
               )}
 
               <div className="text-center text-sm sm:text-base text-gray-300">
-                Sonraki soruyu bekleyin...
+                {copy.waitNextQuestion}
               </div>
             </div>
           )}
@@ -516,17 +588,17 @@ export default function PlayGamePage() {
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-6 sm:p-12 border border-white/20 text-center">
                 <div className="text-4xl sm:text-6xl mb-4 sm:mb-6">🎊</div>
                 <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3 sm:mb-4">
-                  Oyun Bitti!
+                  {copy.gameOver}
                 </h2>
                 {/* Only show score in classic mode */}
                 {game.gameMode !== "kahoot" && (
                   <>
                     <div className="text-2xl sm:text-3xl font-bold text-purple-400 mb-2">
-                      {playerScore} Puan
+                      {playerScore} {copy.pointsLabel}
                     </div>
                     {playerRank && (
                       <div className="text-lg sm:text-xl text-gray-300">
-                        Sıralamanız: #{playerRank}
+                        {copy.yourRank(playerRank)}
                       </div>
                     )}
                   </>
@@ -534,7 +606,7 @@ export default function PlayGamePage() {
                 {/* Kahoot mode - different message */}
                 {game.gameMode === "kahoot" && (
                   <div className="text-base sm:text-lg text-gray-300 mt-4">
-                    Teşekkürler! Her soru için kazananlar gösterildi.
+                    {copy.kahootThanks}
                   </div>
                 )}
               </div>
@@ -543,7 +615,7 @@ export default function PlayGamePage() {
               {game.gameMode !== "kahoot" && leaderboard.length > 0 && (
                 <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-white/20">
                   <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6 text-center">
-                    🏆 Final Sıralaması
+                    🏆 {copy.finalRanking}
                   </h3>
                   <div className="space-y-2 sm:space-y-3">
                     {leaderboard.map((player, index) => {
@@ -572,7 +644,7 @@ export default function PlayGamePage() {
                                 {player.name}
                               </div>
                               <div className="text-xs sm:text-sm text-gray-400">
-                                ✅ {player.correctAnswers}/{game.totalQuestions} doğru
+                                ✅ {player.correctAnswers}/{game.totalQuestions} {copy.correctSuffix}
                               </div>
                             </div>
                           </div>
@@ -590,7 +662,7 @@ export default function PlayGamePage() {
                 onClick={() => router.push("/quiz/join")}
                 className="w-full py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-colors font-bold text-lg sm:text-xl"
               >
-                Yeni Oyuna Katıl
+                {copy.joinNewGame}
               </button>
             </div>
           )}

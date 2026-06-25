@@ -1,11 +1,30 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useLocale } from "next-intl";
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { db } from "../firebase";
 import { motion, AnimatePresence } from "framer-motion";
 import { logger } from "@/utils/logger";
 
-const UserMentionInput = ({ onUserSelect, selectedUsers = [], placeholder = "Kullanıcı emaili ile ara..." }) => {
+const COPY = {
+  tr: {
+    placeholder: "Kullanıcı emaili ile ara...",
+    searching: "Aranıyor...",
+    noName: "İsim belirtilmemiş",
+    noUsers: "Kullanıcı bulunamadı",
+  },
+  en: {
+    placeholder: "Search by user email...",
+    searching: "Searching...",
+    noName: "Name not specified",
+    noUsers: "No users found",
+  },
+};
+
+const UserMentionInput = ({ onUserSelect, selectedUsers = [], placeholder }) => {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const resolvedPlaceholder = placeholder || copy.placeholder;
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -93,7 +112,7 @@ const UserMentionInput = ({ onUserSelect, selectedUsers = [], placeholder = "Kul
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         onFocus={handleInputFocus}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
 
@@ -108,7 +127,7 @@ const UserMentionInput = ({ onUserSelect, selectedUsers = [], placeholder = "Kul
           >
             {isLoading ? (
               <div className="p-3 text-center text-gray-500">
-                Aranıyor...
+                {copy.searching}
               </div>
             ) : searchResults.length > 0 ? (
               searchResults.map((user) => (
@@ -125,7 +144,7 @@ const UserMentionInput = ({ onUserSelect, selectedUsers = [], placeholder = "Kul
                   />
                   <div>
                     <div className="font-medium text-gray-900">
-                      {user.name || "İsim belirtilmemiş"}
+                      {user.name || copy.noName}
                     </div>
                     <div className="text-sm text-gray-500">
                       {user.email}
@@ -135,7 +154,7 @@ const UserMentionInput = ({ onUserSelect, selectedUsers = [], placeholder = "Kul
               ))
             ) : searchTerm.length >= 2 ? (
               <div className="p-3 text-center text-gray-500">
-                Kullanıcı bulunamadı
+                {copy.noUsers}
               </div>
             ) : null}
           </motion.div>

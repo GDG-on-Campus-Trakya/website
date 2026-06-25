@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/firebase";
 import { useRouter } from "@/i18n/navigation";
 import { logger } from "@/utils/logger";
+import { adminCopy } from "@/utils/adminCopy";
 import {
   collection,
   getDocs,
@@ -23,7 +25,77 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AdminProtection from "@/components/AdminProtection";
 
+const COPY = {
+  tr: {
+    pageTitle: "Kullanıcı Yönetimi",
+    pageSubtitle: "Tüm kullanıcıları görüntüleyin ve yönetin",
+    totalUsers: "Toplam Kullanıcı",
+    wantsEmails: "Email Almak İsteyen",
+    thisMonth: "Bu Ay Kayıt",
+    editUser: "Kullanıcı Düzenle",
+    addUser: "Yeni Kullanıcı Ekle",
+    userName: "Kullanıcı Adı *",
+    userNamePlaceholder: "Kullanıcı adını girin...",
+    emailAddress: "Email Adresi *",
+    emailPlaceholder: "Email adresini girin...",
+    wantsEmailsLabel: "Email bildirimleri almak istiyor",
+    wantsEmailsHelp: "Etkinlik duyuruları ve önemli güncellemeler için",
+    updateUserBtn: "Kullanıcı Güncelle",
+    addUserBtn: "Kullanıcı Ekle",
+    cancelBtn: "İptal Et",
+    allUsers: (n) => `Tüm Kullanıcılar (${n})`,
+    noUsers: "Henüz kullanıcı bulunmuyor",
+    noUsersHelp: "İlk kullanıcıyı eklemek için yukarıdaki formu kullanın",
+    receivingEmail: "Email Alıyor",
+    notReceivingEmail: "Email Almıyor",
+    registrationDate: (d) => `Kayıt Tarihi: ${d}`,
+    userAdded: "Kullanıcı başarıyla eklendi!",
+    userAddError: "Kullanıcı eklenirken bir hata oluştu!",
+    userUpdated: "Kullanıcı başarıyla güncellendi!",
+    userUpdateError: "Kullanıcı güncellenirken bir hata oluştu!",
+    confirmDeleteUser:
+      "Bu kullanıcıyı ve tüm ilgili kayıtlarını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    userDeleted: "Kullanıcı ve ilgili kayıtları başarıyla silindi!",
+    userDeleteError: "Kullanıcı silinirken bir hata oluştu!",
+  },
+  en: {
+    pageTitle: "User Management",
+    pageSubtitle: "View and manage all users",
+    totalUsers: "Total Users",
+    wantsEmails: "Wants Emails",
+    thisMonth: "Registered This Month",
+    editUser: "Edit User",
+    addUser: "Add New User",
+    userName: "Username *",
+    userNamePlaceholder: "Enter the username...",
+    emailAddress: "Email Address *",
+    emailPlaceholder: "Enter the email address...",
+    wantsEmailsLabel: "Wants to receive email notifications",
+    wantsEmailsHelp: "For event announcements and important updates",
+    updateUserBtn: "Update User",
+    addUserBtn: "Add User",
+    cancelBtn: "Cancel",
+    allUsers: (n) => `All Users (${n})`,
+    noUsers: "No users yet",
+    noUsersHelp: "Use the form above to add the first user",
+    receivingEmail: "Receiving Email",
+    notReceivingEmail: "Not Receiving Email",
+    registrationDate: (d) => `Registration Date: ${d}`,
+    userAdded: "User added successfully!",
+    userAddError: "An error occurred while adding the user!",
+    userUpdated: "User updated successfully!",
+    userUpdateError: "An error occurred while updating the user!",
+    confirmDeleteUser:
+      "Are you sure you want to delete this user and all related records? This action cannot be undone.",
+    userDeleted: "User and related records deleted successfully!",
+    userDeleteError: "An error occurred while deleting the user!",
+  },
+};
+
 export default function AdminUsersPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
 
   const [usersList, setUsersList] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -112,10 +184,10 @@ export default function AdminUsersPage() {
         },
       ]);
       resetUserForm();
-      toast.success("Kullanıcı başarıyla eklendi!");
+      toast.success(copy.userAdded);
     } catch (error) {
       logger.error("Error adding user:", error);
-      toast.error("Kullanıcı eklenirken bir hata oluştu!");
+      toast.error(copy.userAddError);
     }
   };
 
@@ -156,21 +228,16 @@ export default function AdminUsersPage() {
         )
       );
       resetUserForm();
-      toast.success("Kullanıcı başarıyla güncellendi!");
+      toast.success(copy.userUpdated);
     } catch (error) {
       logger.error("Error updating user:", error);
-      toast.error("Kullanıcı güncellenirken bir hata oluştu!");
+      toast.error(copy.userUpdateError);
     }
   };
 
   // Delete user
   const handleDeleteUser = async (firestoreId) => {
-    if (
-      !confirm(
-        "Bu kullanıcıyı ve tüm ilgili kayıtlarını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
-      )
-    )
-      return;
+    if (!confirm(copy.confirmDeleteUser)) return;
 
     try {
       // First, get all registrations for this user
@@ -198,10 +265,10 @@ export default function AdminUsersPage() {
       setUsersList((prev) =>
         prev.filter((user) => user.firestoreId !== firestoreId)
       );
-      toast.success("Kullanıcı ve ilgili kayıtları başarıyla silindi!");
+      toast.success(copy.userDeleted);
     } catch (error) {
       logger.error("Error deleting user:", error);
-      toast.error("Kullanıcı silinirken bir hata oluştu!");
+      toast.error(copy.userDeleteError);
     }
   };
 
@@ -227,7 +294,7 @@ export default function AdminUsersPage() {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          Admin Paneline Geri Dön
+          {a.backToAdmin}
         </Link>
       </div>
 
@@ -235,12 +302,12 @@ export default function AdminUsersPage() {
       <div className="text-center mb-8 sm:mb-12">
         <div className="inline-block">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
-            Kullanıcı Yönetimi
+            {copy.pageTitle}
           </h1>
           <div className="h-1 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 rounded-full"></div>
         </div>
         <p className="text-gray-300 mt-4 text-lg">
-          Tüm kullanıcıları görüntüleyin ve yönetin
+          {copy.pageSubtitle}
         </p>
       </div>
 
@@ -250,7 +317,7 @@ export default function AdminUsersPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-400">
-                Toplam Kullanıcı
+                {copy.totalUsers}
               </p>
               <p className="text-3xl font-bold text-blue-400">
                 {usersList.length}
@@ -278,7 +345,7 @@ export default function AdminUsersPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-400">
-                Email Almak İsteyen
+                {copy.wantsEmails}
               </p>
               <p className="text-3xl font-bold text-green-400">
                 {usersList.filter((u) => u.wantsToGetEmails).length}
@@ -305,7 +372,7 @@ export default function AdminUsersPage() {
         <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-400">Bu Ay Kayıt</p>
+              <p className="text-sm font-medium text-gray-400">{copy.thisMonth}</p>
               <p className="text-3xl font-bold text-purple-400">
                 {
                   usersList.filter((u) => {
@@ -362,7 +429,7 @@ export default function AdminUsersPage() {
             </svg>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-100">
-            {isEditing ? "Kullanıcı Düzenle" : "Yeni Kullanıcı Ekle"}
+            {isEditing ? copy.editUser : copy.addUser}
           </h2>
         </div>
 
@@ -373,12 +440,12 @@ export default function AdminUsersPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Kullanıcı Adı *
+                {copy.userName}
               </label>
               <input
                 type="text"
                 name="name"
-                placeholder="Kullanıcı adını girin..."
+                placeholder={copy.userNamePlaceholder}
                 value={userFormData.name}
                 onChange={handleChange}
                 required
@@ -387,12 +454,12 @@ export default function AdminUsersPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Email Adresi *
+                {copy.emailAddress}
               </label>
               <input
                 type="email"
                 name="email"
-                placeholder="Email adresini girin..."
+                placeholder={copy.emailPlaceholder}
                 value={userFormData.email}
                 onChange={handleChange}
                 required
@@ -415,11 +482,11 @@ export default function AdminUsersPage() {
                 htmlFor="wantsEmails"
                 className="text-gray-200 select-none cursor-pointer font-medium"
               >
-                Email bildirimleri almak istiyor
+                {copy.wantsEmailsLabel}
               </label>
             </div>
             <p className="text-xs text-gray-400 mt-1 ml-8">
-              Etkinlik duyuruları ve önemli güncellemeler için
+              {copy.wantsEmailsHelp}
             </p>
           </div>
 
@@ -432,7 +499,7 @@ export default function AdminUsersPage() {
                   : "bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600"
               }`}
             >
-              {isEditing ? "Kullanıcı Güncelle" : "Kullanıcı Ekle"}
+              {isEditing ? copy.updateUserBtn : copy.addUserBtn}
             </button>
             {isEditing && (
               <button
@@ -440,7 +507,7 @@ export default function AdminUsersPage() {
                 onClick={resetUserForm}
                 className="flex-1 py-4 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-2xl font-semibold text-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
               >
-                İptal Et
+                {copy.cancelBtn}
               </button>
             )}
           </div>
@@ -467,7 +534,7 @@ export default function AdminUsersPage() {
               </svg>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-100">
-              Tüm Kullanıcılar ({usersList.length})
+              {copy.allUsers(usersList.length)}
             </h2>
           </div>
         </div>
@@ -490,10 +557,10 @@ export default function AdminUsersPage() {
               </svg>
             </div>
             <p className="text-lg text-gray-300 mb-2">
-              Henüz kullanıcı bulunmuyor
+              {copy.noUsers}
             </p>
             <p className="text-sm text-gray-400">
-              İlk kullanıcıyı eklemek için yukarıdaki formu kullanın
+              {copy.noUsersHelp}
             </p>
           </div>
         ) : (
@@ -529,7 +596,7 @@ export default function AdminUsersPage() {
                                   clipRule="evenodd"
                                 />
                               </svg>
-                              Email Alıyor
+                              {copy.receivingEmail}
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-900/50 text-red-300 border border-red-700">
@@ -544,14 +611,14 @@ export default function AdminUsersPage() {
                                   clipRule="evenodd"
                                 />
                               </svg>
-                              Email Almıyor
+                              {copy.notReceivingEmail}
                             </span>
                           )}
                         </div>
                       </div>
                       <p className="text-gray-300 mb-1">{usr.email}</p>
                       <p className="text-xs text-gray-400">
-                        Kayıt Tarihi: {usr.createdAt}
+                        {copy.registrationDate(usr.createdAt)}
                       </p>
                     </div>
                   </div>
@@ -561,13 +628,13 @@ export default function AdminUsersPage() {
                       onClick={() => handleEditUser(usr)}
                       className="flex-1 lg:flex-none bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-6 py-2 rounded-xl hover:from-blue-600 hover:to-cyan-600 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
                     >
-                      Düzenle
+                      {a.edit}
                     </button>
                     <button
                       onClick={() => handleDeleteUser(usr.firestoreId)}
                       className="flex-1 lg:flex-none bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2 rounded-xl hover:from-red-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
                     >
-                      Sil
+                      {a.delete}
                     </button>
                   </div>
                 </div>

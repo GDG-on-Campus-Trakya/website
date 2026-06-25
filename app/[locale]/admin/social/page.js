@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -11,8 +12,65 @@ import PostModal from "@/components/PostModal";
 import { Search, Filter, BarChart3, Eye, EyeOff, Trash2, ArrowLeft } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    title: "Sosyal Platform Yönetimi",
+    subtitle: "Kullanıcı postlarını yönetin ve moderasyon yapın",
+    adminPanel: "Admin Panel",
+    totalPosts: "Toplam Post",
+    eventPosts: "Etkinlik Postları",
+    generalPosts: "Genel Postlar",
+    activeUsers: "Aktif Kullanıcı",
+    searchPlaceholder: "Post, kullanıcı veya etkinlik ara...",
+    filterAll: (n) => `Tüm Postlar (${n})`,
+    filterVisible: (n) => `Görünür Postlar (${n})`,
+    filterHidden: (n) => `Gizli Postlar (${n})`,
+    filterEvents: (n) => `Etkinlik Postları (${n})`,
+    filterGeneral: (n) => `Genel Postlar (${n})`,
+    hideAll: "Tümünü Gizle",
+    showAll: "Tümünü Göster",
+    refresh: "Yenile",
+    noPostsFound: "Post bulunamadı",
+    noPostsHint: "Arama kriterlerinizi değiştirmeyi deneyin.",
+    loadPostsError: "Postlar yüklenirken hata oluştu!",
+    confirmHideAll: "Tüm görünür postları gizlemek istediğinizden emin misiniz?",
+    confirmShowAll: "Tüm gizli postları göstermek istediğinizden emin misiniz?",
+    postsHidden: (n) => `${n} post gizlendi!`,
+    postsShown: (n) => `${n} post gösterildi!`,
+  },
+  en: {
+    title: "Social Platform Management",
+    subtitle: "Manage and moderate user posts",
+    adminPanel: "Admin Panel",
+    totalPosts: "Total Posts",
+    eventPosts: "Event Posts",
+    generalPosts: "General Posts",
+    activeUsers: "Active Users",
+    searchPlaceholder: "Search posts, users or events...",
+    filterAll: (n) => `All Posts (${n})`,
+    filterVisible: (n) => `Visible Posts (${n})`,
+    filterHidden: (n) => `Hidden Posts (${n})`,
+    filterEvents: (n) => `Event Posts (${n})`,
+    filterGeneral: (n) => `General Posts (${n})`,
+    hideAll: "Hide All",
+    showAll: "Show All",
+    refresh: "Refresh",
+    noPostsFound: "No posts found",
+    noPostsHint: "Try changing your search criteria.",
+    loadPostsError: "An error occurred while loading posts!",
+    confirmHideAll: "Are you sure you want to hide all visible posts?",
+    confirmShowAll: "Are you sure you want to show all hidden posts?",
+    postsHidden: (n) => `${n} posts hidden!`,
+    postsShown: (n) => `${n} posts shown!`,
+  },
+};
 
 export default function AdminSocialPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
   const [posts, setPosts] = useState([]);
@@ -70,7 +128,7 @@ export default function AdminSocialPage() {
     if (result.success) {
       setPosts(result.posts);
     } else {
-      toast.error("Postlar yüklenirken hata oluştu!");
+      toast.error(copy.loadPostsError);
     }
     
     setIsLoading(false);
@@ -129,7 +187,7 @@ export default function AdminSocialPage() {
   };
 
   const bulkHideVisible = async () => {
-    if (!confirm("Tüm görünür postları gizlemek istediğinizden emin misiniz?")) return;
+    if (!confirm(copy.confirmHideAll)) return;
 
     const visiblePosts = posts.filter(post => !post.isHidden);
     let successCount = 0;
@@ -139,12 +197,12 @@ export default function AdminSocialPage() {
       if (result.success) successCount++;
     }
 
-    toast.success(`${successCount} post gizlendi!`);
+    toast.success(copy.postsHidden(successCount));
     loadAllPosts();
   };
 
   const bulkShowHidden = async () => {
-    if (!confirm("Tüm gizli postları göstermek istediğinizden emin misiniz?")) return;
+    if (!confirm(copy.confirmShowAll)) return;
 
     const hiddenPosts = posts.filter(post => post.isHidden);
     let successCount = 0;
@@ -154,14 +212,14 @@ export default function AdminSocialPage() {
       if (result.success) successCount++;
     }
 
-    toast.success(`${successCount} post gösterildi!`);
+    toast.success(copy.postsShown(successCount));
     loadAllPosts();
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-gray-200">Loading...</p>
+        <p className="text-lg text-gray-200">{a.loading}</p>
       </div>
     );
   }
@@ -169,7 +227,7 @@ export default function AdminSocialPage() {
   if (!isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Access Denied</p>
+        <p className="text-lg text-red-500">{a.accessDenied}</p>
       </div>
     );
   }
@@ -185,15 +243,15 @@ export default function AdminSocialPage() {
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-100 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Admin Panel</span>
+              <span>{copy.adminPanel}</span>
             </button>
             <div className="border-l border-gray-500 h-8"></div>
             <div>
               <h1 className="text-3xl font-bold text-gray-100 mb-2">
-                Sosyal Platform Yönetimi
+                {copy.title}
               </h1>
               <p className="text-gray-300">
-                Kullanıcı postlarını yönetin ve moderasyon yapın
+                {copy.subtitle}
               </p>
             </div>
           </div>
@@ -206,7 +264,7 @@ export default function AdminSocialPage() {
               <div className="flex items-center">
                 <BarChart3 className="w-8 h-8 text-blue-400" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-300">Toplam Post</p>
+                  <p className="text-sm font-medium text-gray-300">{copy.totalPosts}</p>
                   <p className="text-2xl font-bold text-gray-100">{stats.totalPosts}</p>
                 </div>
               </div>
@@ -216,7 +274,7 @@ export default function AdminSocialPage() {
               <div className="flex items-center">
                 <Eye className="w-8 h-8 text-green-400" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-300">Etkinlik Postları</p>
+                  <p className="text-sm font-medium text-gray-300">{copy.eventPosts}</p>
                   <p className="text-2xl font-bold text-gray-100">{stats.eventPosts}</p>
                 </div>
               </div>
@@ -226,7 +284,7 @@ export default function AdminSocialPage() {
               <div className="flex items-center">
                 <Filter className="w-8 h-8 text-purple-400" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-300">Genel Postlar</p>
+                  <p className="text-sm font-medium text-gray-300">{copy.generalPosts}</p>
                   <p className="text-2xl font-bold text-gray-100">{stats.generalPosts}</p>
                 </div>
               </div>
@@ -236,7 +294,7 @@ export default function AdminSocialPage() {
               <div className="flex items-center">
                 <BarChart3 className="w-8 h-8 text-red-400" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-300">Aktif Kullanıcı</p>
+                  <p className="text-sm font-medium text-gray-300">{copy.activeUsers}</p>
                   <p className="text-2xl font-bold text-gray-100">{stats.uniqueUsers}</p>
                 </div>
               </div>
@@ -253,7 +311,7 @@ export default function AdminSocialPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Post, kullanıcı veya etkinlik ara..."
+                  placeholder={copy.searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 bg-gray-700/60 text-gray-100 placeholder-gray-400 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
@@ -267,11 +325,11 @@ export default function AdminSocialPage() {
               onChange={(e) => setFilter(e.target.value)}
               className="px-4 py-2 bg-gray-700/60 text-gray-100 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             >
-              <option value="all">Tüm Postlar ({posts.length})</option>
-              <option value="visible">Görünür Postlar ({posts.filter(p => !p.isHidden).length})</option>
-              <option value="hidden">Gizli Postlar ({posts.filter(p => p.isHidden).length})</option>
-              <option value="events">Etkinlik Postları ({posts.filter(p => p.isEventPost).length})</option>
-              <option value="general">Genel Postlar ({posts.filter(p => !p.isEventPost).length})</option>
+              <option value="all">{copy.filterAll(posts.length)}</option>
+              <option value="visible">{copy.filterVisible(posts.filter(p => !p.isHidden).length)}</option>
+              <option value="hidden">{copy.filterHidden(posts.filter(p => p.isHidden).length)}</option>
+              <option value="events">{copy.filterEvents(posts.filter(p => p.isEventPost).length)}</option>
+              <option value="general">{copy.filterGeneral(posts.filter(p => !p.isEventPost).length)}</option>
             </select>
           </div>
 
@@ -282,7 +340,7 @@ export default function AdminSocialPage() {
               className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors flex items-center space-x-2"
             >
               <EyeOff className="w-4 h-4" />
-              <span>Tümünü Gizle</span>
+              <span>{copy.hideAll}</span>
             </button>
             
             <button
@@ -290,14 +348,14 @@ export default function AdminSocialPage() {
               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
             >
               <Eye className="w-4 h-4" />
-              <span>Tümünü Göster</span>
+              <span>{copy.showAll}</span>
             </button>
             
             <button
               onClick={loadAllPosts}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Yenile
+              {copy.refresh}
             </button>
           </div>
         </div>
@@ -323,10 +381,10 @@ export default function AdminSocialPage() {
               <div className="col-span-full text-center py-12">
                 <div className="bg-gray-800 rounded-lg p-8">
                   <h3 className="text-xl font-semibold text-gray-100 mb-2">
-                    Post bulunamadı
+                    {copy.noPostsFound}
                   </h3>
                   <p className="text-gray-300">
-                    Arama kriterlerinizi değiştirmeyi deneyin.
+                    {copy.noPostsHint}
                   </p>
                 </div>
               </div>
