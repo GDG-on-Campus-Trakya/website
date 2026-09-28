@@ -178,7 +178,10 @@ export default async function RootLayout({ children }) {
   };
 
   return (
-    <html lang={locale} className="h-full">
+    <html
+      lang={locale}
+      className={`h-full ${bricolage.variable} ${plex.variable} ${plexMono.variable}`}
+    >
       <head>
         <script
           type="application/ld+json"
@@ -186,7 +189,7 @@ export default async function RootLayout({ children }) {
         />
       </head>
       <body
-        className={`${bricolage.variable} ${plex.variable} ${plexMono.variable} font-sans flex flex-col min-h-screen`}
+        className="font-sans flex flex-col min-h-screen"
       >
         {children}
         <ConditionalAnalytics />

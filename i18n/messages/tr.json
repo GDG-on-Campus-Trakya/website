@@ -26,14 +26,19 @@
     "loading": "Navigasyon yükleniyor...",
     "languageLabel": "Dil",
     "switchToTurkish": "Türkçe",
-    "switchToEnglish": "English"
+    "switchToEnglish": "English",
+    "menu": "Menü",
+    "closeMenu": "Menüyü kapat",
+    "university": "Trakya Üniversitesi",
+    "primaryNavigation": "Ana gezinme",
+    "account": "Hesap"
   },
   "footer": {
     "about": "Hakkımızda",
     "events": "Etkinlikler",
     "announcements": "Duyurular",
     "projects": "Projeler",
-    "description": "Teknoloji tutkunlarını bir araya getiren, geleceği şekillendiren topluluk.",
+    "description": "Trakya Üniversitesi'nde yazılım ve teknoloji üzerine etkinlik, atölye ve proje yapan öğrenci topluluğu.",
     "pages": "Sayfalar",
     "interactive": "İnteraktif",
     "legal": "Yasal",
@@ -47,7 +52,7 @@
     "terms": "Kullanım Şartları",
     "cookiePolicy": "Çerez Politikası",
     "support": "Destek",
-    "rights": "© 2025 GDG On Campus Trakya Üniversitesi. Her hakkı saklıdır."
+    "rights": "© {year} GDG on Campus Trakya Üniversitesi"
   },
   "cookieConsent": {
     "title": "Çerez Kullanımı",
@@ -66,8 +71,38 @@
     "cancel": "İptal"
   },
   "notFound": {
-    "title": "Oops! Uzayda kaybolmuş gibisin.",
-    "description": "Aradığın sayfayı bulamadık. Ama endişelenme, geri dönüş yolunu biliyoruz.",
+    "title": "Sayfa bulunamadı.",
+    "description": "Aradığın adres yok ya da taşınmış olabilir.",
     "backHome": "Ana Sayfaya Dön"
+  },
+  "home": {
+    "title": "GDG on Campus Trakya: yazılım yapan öğrenciler",
+    "lede": "Trakya Üniversitesi'nde etkinlik, atölye ve hackathon düzenliyoruz. Sıradaki buluşma ve son duyurular aşağıda.",
+    "ctaEvents": "Etkinlikleri gör",
+    "ctaAbout": "Bizi tanı",
+    "nextEvent": "Sıradaki etkinlik",
+    "noEvent": "Yeni etkinlik yakında duyurulacak.",
+    "viewEvent": "Ayrıntı ve kayıt",
+    "upcoming": "Yaklaşan etkinlikler",
+    "announcements": "Son duyurular",
+    "seeAll": "Tümü",
+    "try": "Dene",
+    "tryPersonality": "Kişilik testleri",
+    "tryPersonalityText": "Sonucu paylaşabileceğin kısa testler.",
+    "tryTyping": "Yazma hızı testi",
+    "tryTypingText": "Kod parçalarıyla hızını ölç.",
+    "tryGame": "Oyuna katıl",
+    "tryGameText": "Etkinlikte verilen kodla canlı quiz'e gir.",
+    "teamCaption": "Yönetim kurulu",
+    "teamLink": "Ekibi tanı",
+    "teamAlt": "GDG on Campus Trakya yönetim kurulu",
+    "statMembers": "Topluluk üyesi",
+    "statEvents": "Etkinlik",
+    "statPartners": "Teknoloji partneri",
+    "statHours": "Saat eğitim",
+    "seoTitle": "GDG on Campus Trakya Üniversitesi Hakkında",
+    "seoP1": "GDG on Campus Trakya Üniversitesi (gdgoncampustu), Trakya Üniversitesi'nde faaliyet gösteren Google Developer Groups topluluğudur. GDG, teknoloji meraklıları, yazılım geliştiriciler ve öğrenciler için etkinlikler, hackathonlar, workshop'lar ve eğitim programları düzenlemektedir.",
+    "seoP2": "Google Developer Groups on Campus olarak, modern teknolojiler, yazılım geliştirme, yapay zeka, bulut bilişim ve diğer Google teknolojileri üzerine düzenli etkinlikler gerçekleştiriyoruz. Trakya Üniversitesi kampüsünde teknolojiyi seven herkes için bir topluluk oluşturuyoruz.",
+    "lastEvent": "Son etkinlik"
   }
 }

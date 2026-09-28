@@ -75,6 +75,11 @@ module.exports = {
           5: token("ink-2"),
         },
       },
+      fontSize: {
+        md: ["var(--text-md)", { lineHeight: "1.5" }],
+        "display-s": ["var(--text-display-s)", { lineHeight: "1.05", letterSpacing: "-0.025em" }],
+        display: ["var(--text-display)", { lineHeight: "1.02", letterSpacing: "-0.03em" }],
+      },
       borderRadius: {
         sm: "var(--radius-sm)",
         DEFAULT: "var(--radius)",
@@ -83,6 +88,15 @@ module.exports = {
       },
       boxShadow: {
         whisper: "var(--shadow-whisper)",
+      },
+      zIndex: {
+        raised: "var(--z-raised)",
+        dropdown: "var(--z-dropdown)",
+        sticky: "var(--z-sticky)",
+        modal: "var(--z-modal)",
+        popover: "var(--z-popover)",
+        toast: "var(--z-toast)",
+        tooltip: "var(--z-tooltip)",
       },
       transitionTimingFunction: {
         out: "var(--ease-out)",

@@ -125,6 +125,7 @@
   --z-dropdown: 100;
   --z-sticky:   200;
   --z-modal:    400;
+  --z-popover:  450;   /* select/menus that open from inside a modal */
   --z-toast:    500;
   --z-tooltip:  600;
 }

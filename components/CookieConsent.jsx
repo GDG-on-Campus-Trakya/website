@@ -69,63 +69,72 @@ export default function CookieConsent() {
   if (!showBanner) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-      <div className="w-full bg-gray-900 border-t border-gray-700 shadow-2xl pointer-events-auto relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
-            <div className="flex-1 pr-10 sm:pr-12 lg:pr-0">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl flex-shrink-0">🍪</span>
-                <div>
-                  <h3 className="text-base font-semibold text-white mb-1">
-                    {t('title')}
-                  </h3>
-                  <p className="text-sm text-gray-300">
-                    {t('description')}{' '}
-                    <Link href="/cookie-policy" className="text-blue-400 hover:underline">
-                      {t('policy')}
-                    </Link>
-                  </p>
-                  {!showDetails && (
-                    <button
-                      onClick={() => setShowDetails(true)}
-                      className="text-sm text-blue-400 hover:underline mt-2 inline-block"
-                    >
-                      {t('manage')}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {showDetails && (
-                <CookiePreferences
-                  onSave={savePreferences}
-                  onCancel={() => setShowDetails(false)}
-                />
-              )}
-            </div>
-
+    <div
+      role="region"
+      aria-label={t('title')}
+      className="fixed inset-x-0 bottom-0 z-toast border-t border-ink bg-paper text-ink"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <div className="mx-auto w-full max-w-page px-gutter py-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+          <div className="max-w-2xl flex-1">
+            <h2 className="font-display text-base font-bold">{t('title')}</h2>
+            <p className="mt-1 text-sm text-ink-2">
+              {t('description')}{' '}
+              <Link
+                href="/cookie-policy"
+                className="text-brand underline underline-offset-4 decoration-1 hover:decoration-2"
+              >
+                {t('policy')}
+              </Link>
+            </p>
             {!showDetails && (
-              <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                <Button
-                  onClick={acceptAll}
-                  className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap"
-                >
-                  {t('acceptAll')}
-                </Button>
-                <Button
-                  onClick={acceptNecessary}
-                  variant="outline"
-                  className="bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-200 whitespace-nowrap"
-                >
-                  {t('acceptNecessary')}
-                </Button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowDetails(true)}
+                className="mt-1 inline-flex min-h-11 items-center rounded-sm text-sm font-medium text-brand underline underline-offset-4 decoration-1 hover:decoration-2"
+              >
+                {t('manage')}
+              </button>
+            )}
+
+            {showDetails && (
+              <CookiePreferences
+                onSave={savePreferences}
+                onCancel={() => setShowDetails(false)}
+              />
             )}
           </div>
+
+          {!showDetails && (
+            <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+              <Button onClick={acceptAll}>{t('acceptAll')}</Button>
+              <Button onClick={acceptNecessary} variant="outline">
+                {t('acceptNecessary')}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+function PreferenceRow({ title, description, checked, disabled, onChange }) {
+  return (
+    <label className={`flex items-start gap-3 py-3 ${disabled ? '' : 'cursor-pointer'}`}>
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={onChange}
+        className="mt-0.5 h-5 w-5 shrink-0 accent-brand"
+      />
+      <span>
+        <span className="block text-sm font-semibold text-ink">{title}</span>
+        <span className="block text-sm text-muted-foreground">{description}</span>
+      </span>
+    </label>
   );
 }
 
@@ -137,70 +146,35 @@ function CookiePreferences({ onSave, onCancel }) {
   const t = useTranslations('cookieConsent');
 
   return (
-    <div className="mt-4 space-y-4 bg-gray-800 p-4 rounded-lg border border-gray-700">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-sm text-white">
-              {t('necessaryTitle')}
-            </h4>
-            <input
-              type="checkbox"
-              checked={true}
-              disabled
-              className="w-4 h-4 rounded border-gray-600 bg-gray-700"
-            />
-          </div>
-          <p className="text-xs text-gray-400">{t('necessaryDescription')}</p>
-        </div>
-
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-sm text-white">
-              {t('analyticsTitle')}
-            </h4>
-            <input
-              type="checkbox"
-              checked={preferences.analytics}
-              onChange={(e) =>
-                setPreferences({ ...preferences, analytics: e.target.checked })
-              }
-              className="w-4 h-4 rounded border-gray-600 bg-gray-700 accent-blue-600"
-            />
-          </div>
-          <p className="text-xs text-gray-400">{t('analyticsDescription')}</p>
-        </div>
-
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-sm text-white">
-              {t('functionalTitle')}
-            </h4>
-            <input
-              type="checkbox"
-              checked={preferences.functional}
-              onChange={(e) =>
-                setPreferences({ ...preferences, functional: e.target.checked })
-              }
-              className="w-4 h-4 rounded border-gray-600 bg-gray-700 accent-blue-600"
-            />
-          </div>
-          <p className="text-xs text-gray-400">{t('functionalDescription')}</p>
-        </div>
+    <div className="mt-3 border-t border-rule">
+      <div className="divide-y divide-rule">
+        <PreferenceRow
+          title={t('necessaryTitle')}
+          description={t('necessaryDescription')}
+          checked={true}
+          disabled
+        />
+        <PreferenceRow
+          title={t('analyticsTitle')}
+          description={t('analyticsDescription')}
+          checked={preferences.analytics}
+          onChange={(e) =>
+            setPreferences({ ...preferences, analytics: e.target.checked })
+          }
+        />
+        <PreferenceRow
+          title={t('functionalTitle')}
+          description={t('functionalDescription')}
+          checked={preferences.functional}
+          onChange={(e) =>
+            setPreferences({ ...preferences, functional: e.target.checked })
+          }
+        />
       </div>
 
-      <div className="flex gap-2 pt-2">
-        <Button
-          onClick={() => onSave(preferences)}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          {t('savePreferences')}
-        </Button>
-        <Button
-          onClick={onCancel}
-          variant="outline"
-          className="flex-1 bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-200"
-        >
+      <div className="flex flex-col gap-3 border-t border-rule pt-4 sm:flex-row">
+        <Button onClick={() => onSave(preferences)}>{t('savePreferences')}</Button>
+        <Button onClick={onCancel} variant="outline">
           {t('cancel')}
         </Button>
       </div>

@@ -26,14 +26,19 @@
     "loading": "Loading navigation...",
     "languageLabel": "Language",
     "switchToTurkish": "Türkçe",
-    "switchToEnglish": "English"
+    "switchToEnglish": "English",
+    "menu": "Menu",
+    "closeMenu": "Close menu",
+    "university": "Trakya University",
+    "primaryNavigation": "Primary navigation",
+    "account": "Account"
   },
   "footer": {
     "about": "About",
     "events": "Events",
     "announcements": "Announcements",
     "projects": "Projects",
-    "description": "A community that brings technology enthusiasts together and helps shape the future.",
+    "description": "A student community at Trakya University running events, workshops and projects around software and technology.",
     "pages": "Pages",
     "interactive": "Interactive",
     "legal": "Legal",
@@ -47,7 +52,7 @@
     "terms": "Terms of Use",
     "cookiePolicy": "Cookie Policy",
     "support": "Support",
-    "rights": "© 2025 GDG On Campus Trakya University. All rights reserved."
+    "rights": "© {year} GDG on Campus Trakya University"
   },
   "cookieConsent": {
     "title": "Cookie Usage",
@@ -66,8 +71,38 @@
     "cancel": "Cancel"
   },
   "notFound": {
-    "title": "Oops! You seem lost in space.",
-    "description": "We couldn't find the page you were looking for, but we know the way back.",
+    "title": "Page not found.",
+    "description": "That address does not exist, or it has moved.",
     "backHome": "Back to Home"
+  },
+  "home": {
+    "title": "GDG on Campus Trakya: students who build software",
+    "lede": "We run events, workshops and hackathons at Trakya University. What is next and the latest announcements are below.",
+    "ctaEvents": "See events",
+    "ctaAbout": "Meet the team",
+    "nextEvent": "Next event",
+    "noEvent": "The next event will be announced soon.",
+    "viewEvent": "Details and sign-up",
+    "upcoming": "Upcoming events",
+    "announcements": "Latest announcements",
+    "seeAll": "All",
+    "try": "Try",
+    "tryPersonality": "Personality tests",
+    "tryPersonalityText": "Short tests with results you can share.",
+    "tryTyping": "Typing speed test",
+    "tryTypingText": "Measure your speed on code snippets.",
+    "tryGame": "Join the game",
+    "tryGameText": "Enter a live quiz with the code given at the event.",
+    "teamCaption": "The board",
+    "teamLink": "Meet the team",
+    "teamAlt": "GDG on Campus Trakya board",
+    "statMembers": "Community members",
+    "statEvents": "Events",
+    "statPartners": "Technology partners",
+    "statHours": "Training hours",
+    "seoTitle": "About GDG on Campus Trakya University",
+    "seoP1": "GDG on Campus Trakya University is the Google Developer Groups community active at Trakya University. We organize events, hackathons, workshops and learning programs for students and developers.",
+    "seoP2": "As Google Developer Groups on Campus, we run regular activities around modern software development, AI, cloud computing and Google technologies for everyone who loves technology on campus.",
+    "lastEvent": "Last event"
   }
 }
