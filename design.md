@@ -35,7 +35,7 @@ Rules: accent covers under 5% of a view; no gradients, no glass, no glow; no raw
 - Motion: none by default. State changes only: 120 to 320ms, `--ease-out`, transform and opacity. No hover scale, no stagger, no infinite loops except real loaders and live indicators. `prefers-reduced-motion` collapses to a 150ms crossfade.
 
 ## Components
-`components/ui/*` is the single vocabulary: Button (default, outline, secondary, ghost, link, destructive; `loading` prop), Input, Textarea, Select, Checkbox, Switch, Card, Dialog, AlertDialog, Drawer. New screens compose these; do not hand-roll button or input class strings.
+`components/ui/*` is the single vocabulary: Button (default, outline, secondary, ghost, link, destructive; `loading` prop), Input, Textarea, Select, Checkbox, Switch, Card, Badge, Field (label + control + helper/error), Dialog, AlertDialog, Drawer, and `page.jsx` (PageContainer, PageHeader, Section, EmptyState, Skeleton). New screens compose these; do not hand-roll button, input, badge or page-title class strings.
 
 ## Copy
 Concrete over promotional. No "seamless", "empower", "next-generation". Any changed Turkish string needs its English entry in `utils/legacyTranslations.js`.
