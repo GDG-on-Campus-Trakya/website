@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Trophy, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { logger } from "@/utils/logger";
 import {
   findPollByCode,
@@ -144,78 +146,112 @@ export default function PollHostPage() {
 
   if (loading || !poll) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-white">Yükleniyor...</p>
+      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
+        <p className="text-lg">Yükleniyor...</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Giriş yapmalısınız!</p>
+      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
+        <p className="text-lg font-semibold">Giriş yapmalısınız!</p>
       </div>
     );
   }
 
   const connectedPlayerCount = Object.values(players).filter(p => p.isConnected).length;
 
+  const stageButton =
+    "border border-stage-rule bg-transparent text-stage-ink hover:bg-stage-2";
+
+  const renderCandidate = (item, votes, tone, letter) => (
+    <div className="min-w-0 overflow-hidden rounded-lg border-2 border-stage-rule bg-stage">
+      <div className="relative aspect-square w-full">
+        <img
+          src={item.imageUrl}
+          alt={item.name}
+          className="h-full w-full object-cover"
+        />
+      </div>
+      <div className={`flex items-center gap-3 p-4 text-ink ${tone}`}>
+        <span
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded border-2 border-ink font-outlier text-base font-bold"
+          aria-hidden="true"
+        >
+          {letter}
+        </span>
+        <div className="min-w-0 flex-1 break-words font-display text-sm font-bold sm:text-base">
+          {item.name}
+        </div>
+        <div className="font-outlier text-3xl font-bold tabular-nums sm:text-5xl">
+          {votes}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-[calc(100dvh-4rem)] bg-stage text-stage-ink">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 p-4 sm:p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">{poll.datasetName}</h1>
-              <p className="text-gray-400 text-sm sm:text-base">
-                Host Paneli - Round {poll.currentRound}/{poll.totalRounds}
+      <div className="border-b border-stage-rule px-4 py-4 sm:px-6 sm:py-6">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="min-w-0">
+              <h1 className="break-words font-display text-3xl font-bold md:text-5xl">{poll.datasetName}</h1>
+              <p className="mt-1 text-sm text-stage-muted sm:text-base">
+                Host Paneli - Round <span className="font-outlier tabular-nums">{poll.currentRound}/{poll.totalRounds}</span>
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-gray-400 text-sm sm:text-base">
-                👥 {connectedPlayerCount} oyuncu
+              <div className="flex items-center gap-2 text-sm text-stage-muted sm:text-base">
+                <Users className="h-4 w-4" aria-hidden="true" />
+                <span>
+                  <span className="font-outlier tabular-nums">{connectedPlayerCount}</span> oyuncu
+                </span>
               </div>
-              <button
+              <Button
+                variant="outline"
                 onClick={() => router.push("/admin/poll")}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm sm:text-base"
+                className={stageButton}
               >
                 Admin Panel
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-4 sm:p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="mx-auto max-w-7xl p-4 sm:p-6">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="min-w-0 space-y-6">
             {/* Waiting State */}
             {poll.status === "waiting" && (
-              <div className="bg-gray-800 rounded-xl p-6 sm:p-8 border border-gray-700">
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-6">
+              <div className="border-t-2 border-stage-ink pt-6">
+                <h2 className="mb-6 font-display text-2xl font-bold sm:text-3xl">
                   Oyuncular Bekleniyor...
                 </h2>
 
-                <div className="space-y-4">
-                  <div className="bg-gray-700/50 rounded-lg p-4">
-                    <div className="text-sm text-gray-400 mb-2">Poll Kodu:</div>
-                    <div className="text-4xl sm:text-5xl font-bold text-white tracking-widest">
+                <div className="space-y-6">
+                  <div>
+                    <div className="mb-2 text-sm text-stage-muted">Poll Kodu:</div>
+                    <div className="break-all font-outlier text-5xl font-bold tracking-widest sm:text-7xl">
                       {pollCode}
                     </div>
                   </div>
 
-                  <button
+                  <Button
+                    size="lg"
                     onClick={handleStartPoll}
                     disabled={connectedPlayerCount === 0}
-                    className="w-full py-3 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg"
+                    className="w-full sm:w-auto sm:min-w-64"
                   >
                     Poll'u Başlat
-                  </button>
+                  </Button>
 
                   {connectedPlayerCount === 0 && (
-                    <p className="text-sm text-gray-400 text-center">
+                    <p className="text-sm text-stage-muted">
                       En az 1 oyuncu bekleniyor
                     </p>
                   )}
@@ -226,64 +262,31 @@ export default function PollHostPage() {
             {/* Playing State */}
             {poll.status === "playing" && currentMatch && (
               <div className="space-y-6">
-                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl sm:text-2xl font-bold text-white">
+                <div className="border-t-2 border-stage-ink pt-6">
+                  <div className="mb-6 flex items-baseline justify-between gap-4">
+                    <h2 className="font-display text-2xl font-bold sm:text-3xl">
                       Eşleşme #{currentMatch.matchNumber + 1}
                     </h2>
-                    <div className="text-gray-400 text-sm sm:text-base">
+                    <div className="font-outlier text-sm tabular-nums text-stage-muted sm:text-base">
                       Round {poll.currentRound}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 sm:gap-6">
-                    <div className="bg-blue-500/20 border-2 border-blue-500 rounded-lg p-4">
-                      <div className="aspect-square relative rounded-lg overflow-hidden mb-3">
-                        <img
-                          src={currentMatch.item1.imageUrl}
-                          alt={currentMatch.item1.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="text-center">
-                        <div className="font-bold text-white mb-2 text-sm sm:text-base">
-                          {currentMatch.item1.name}
-                        </div>
-                        <div className="text-2xl sm:text-3xl font-bold text-blue-400">
-                          {currentMatch.votes.item1}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-red-500/20 border-2 border-red-500 rounded-lg p-4">
-                      <div className="aspect-square relative rounded-lg overflow-hidden mb-3">
-                        <img
-                          src={currentMatch.item2.imageUrl}
-                          alt={currentMatch.item2.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="text-center">
-                        <div className="font-bold text-white mb-2 text-sm sm:text-base">
-                          {currentMatch.item2.name}
-                        </div>
-                        <div className="text-2xl sm:text-3xl font-bold text-red-400">
-                          {currentMatch.votes.item2}
-                        </div>
-                      </div>
-                    </div>
+                  <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 sm:gap-6">
+                    {renderCandidate(currentMatch.item1, currentMatch.votes.item1, "bg-mark-blue", "A")}
+                    {renderCandidate(currentMatch.item2, currentMatch.votes.item2, "bg-mark-red", "B")}
                   </div>
 
                   <div className="mt-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-gray-400 text-sm sm:text-base">Oy Durumu</span>
-                      <span className="text-white text-sm sm:text-base">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-sm text-stage-muted sm:text-base">Oy Durumu</span>
+                      <span className="font-outlier text-sm tabular-nums sm:text-base">
                         {currentMatch.votes.item1 + currentMatch.votes.item2} / {connectedPlayerCount}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-3">
+                    <div className="h-3 w-full rounded-sm bg-stage-2">
                       <div
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 h-3 rounded-full transition-all"
+                        className="h-3 rounded-sm bg-brand transition-[width]"
                         style={{
                           width: `${((currentMatch.votes.item1 + currentMatch.votes.item2) / Math.max(connectedPlayerCount, 1)) * 100}%`
                         }}
@@ -292,121 +295,129 @@ export default function PollHostPage() {
                   </div>
                 </div>
 
-                <button
+                <Button
+                  size="lg"
                   onClick={handleShowResults}
-                  className="w-full py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-bold text-base sm:text-lg"
+                  className="w-full sm:w-auto sm:min-w-64"
                 >
                   Sonuçları Göster
-                </button>
+                </Button>
               </div>
             )}
 
             {/* Round Review State */}
             {poll.status === "round_review" && currentMatch && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500 rounded-xl p-6 sm:p-8">
-                  <div className="text-center mb-6">
-                    <div className="text-4xl sm:text-6xl mb-4">
-                      {currentMatch.winner?.id === currentMatch.item1.id ? "🔵" : "🔴"}
+                <div className="rounded-lg bg-warning p-6 text-ink sm:p-8">
+                  <div className="mb-6">
+                    <div className="mb-3 flex items-center gap-3">
+                      <span
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded border-2 border-ink font-outlier text-lg font-bold"
+                        aria-hidden="true"
+                      >
+                        {currentMatch.winner?.id === currentMatch.item1.id ? "A" : "B"}
+                      </span>
+                      <Trophy className="h-8 w-8" aria-hidden="true" />
                     </div>
-                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Kazanan!</h2>
-                    <div className="text-xl sm:text-2xl text-yellow-400 font-bold">
+                    <h2 className="mb-2 font-display text-2xl font-bold sm:text-4xl">Kazanan!</h2>
+                    <div className="break-words font-display text-xl font-bold sm:text-2xl">
                       {currentMatch.winner?.name}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                      <div className="text-gray-400 text-xs sm:text-sm">{currentMatch.item1.name}</div>
-                      <div className="text-xl sm:text-2xl font-bold text-white">
+                  <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 border-t-2 border-ink pt-4">
+                    <div className="min-w-0">
+                      <div className="break-words text-xs sm:text-sm">{currentMatch.item1.name}</div>
+                      <div className="font-outlier text-3xl font-bold tabular-nums sm:text-5xl">
                         {currentMatch.votes.item1}
                       </div>
                     </div>
-                    <div>
-                      <div className="text-gray-400 text-xs sm:text-sm">{currentMatch.item2.name}</div>
-                      <div className="text-xl sm:text-2xl font-bold text-white">
+                    <div className="min-w-0">
+                      <div className="break-words text-xs sm:text-sm">{currentMatch.item2.name}</div>
+                      <div className="font-outlier text-3xl font-bold tabular-nums sm:text-5xl">
                         {currentMatch.votes.item2}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <button
+                <Button
+                  size="lg"
                   onClick={handleNextMatch}
-                  className="w-full py-3 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-bold text-base sm:text-lg"
+                  className="w-full sm:w-auto sm:min-w-64"
                 >
                   {poll.currentRound >= poll.totalRounds &&
                   poll.currentMatchIndex >= poll.allMatchups.filter(m => m.roundNumber === poll.currentRound).length - 1
                     ? "Poll'u Bitir"
                     : "Sonraki Eşleşme"}
-                </button>
+                </Button>
               </div>
             )}
 
             {/* Finished State */}
             {poll.status === "finished" && poll.winner && (
-              <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500 rounded-xl p-8 sm:p-12">
-                <div className="text-center">
-                  <div className="text-6xl sm:text-8xl mb-6">🏆</div>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              <div className="rounded-lg bg-warning p-6 text-ink sm:p-10">
+                <div className="mb-4 flex items-center gap-3">
+                  <Trophy className="h-10 w-10 sm:h-14 sm:w-14" aria-hidden="true" />
+                  <h2 className="font-display text-3xl font-bold sm:text-5xl">
                     Kazanan!
                   </h2>
-                  <div className="max-w-sm mx-auto">
-                    <div className="aspect-square relative rounded-2xl overflow-hidden mb-6">
-                      <img
-                        src={poll.winner.imageUrl}
-                        alt={poll.winner.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-bold text-yellow-400">
-                      {poll.winner.name}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => router.push("/admin/poll")}
-                    className="mt-8 px-6 sm:px-8 py-3 sm:py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-base sm:text-lg"
-                  >
-                    Admin Paneline Dön
-                  </button>
                 </div>
+                <div className="max-w-sm">
+                  <div className="relative mb-6 aspect-square overflow-hidden rounded-lg border-2 border-ink">
+                    <img
+                      src={poll.winner.imageUrl}
+                      alt={poll.winner.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="break-words font-display text-2xl font-bold sm:text-4xl">
+                    {poll.winner.name}
+                  </div>
+                </div>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => router.push("/admin/poll")}
+                  className="mt-8 border-ink"
+                >
+                  Admin Paneline Dön
+                </Button>
               </div>
             )}
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-8">
             {/* QR Code */}
             {poll.status !== "finished" && (
-              <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-                <div className="mt-4 text-center">
-                  <div className="text-sm text-gray-400 mb-2">Poll Kodu:</div>
-                  <div className="text-3xl font-bold text-white tracking-widest">
-                    {pollCode}
-                  </div>
+              <div className="border-t-2 border-stage-ink pt-4">
+                <div className="mb-2 text-sm text-stage-muted">Poll Kodu:</div>
+                <div className="break-all font-outlier text-4xl font-bold tracking-widest">
+                  {pollCode}
                 </div>
               </div>
             )}
 
             {/* Players List */}
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-              <h3 className="text-lg font-bold text-white mb-4">
-                Oyuncular ({connectedPlayerCount})
+            <div className="border-t border-stage-rule pt-4">
+              <h3 className="mb-4 font-display text-lg font-bold">
+                Oyuncular (<span className="font-outlier tabular-nums">{connectedPlayerCount}</span>)
               </h3>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
+              <div className="max-h-96 overflow-y-auto">
                 {Object.values(players)
                   .filter(p => p.isConnected)
                   .map(player => (
                     <div
                       key={player.userId}
-                      className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg"
+                      className="flex items-center gap-3 border-b border-stage-rule py-3"
                     >
-                      <div className="w-2 h-2 bg-green-500 rounded-full" />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-white font-semibold text-sm truncate">
+                      <div className="h-2 w-2 shrink-0 rounded-full bg-success" />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-semibold">
                           {player.name}
                         </div>
-                        <div className="text-xs text-gray-400 truncate">
+                        <div className="truncate text-xs text-stage-muted">
                           {player.email}
                         </div>
                       </div>
@@ -417,14 +428,15 @@ export default function PollHostPage() {
 
             {/* Danger Zone */}
             {poll.status !== "finished" && (
-              <div className="bg-red-500/10 border border-red-500 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-red-500 mb-4">Tehlikeli Bölge</h3>
-                <button
+              <div className="border-t border-error pt-4">
+                <h3 className="mb-4 font-display text-lg font-bold">Tehlikeli Bölge</h3>
+                <Button
+                  variant="destructive"
                   onClick={handleEndPoll}
-                  className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-sm sm:text-base"
+                  className="w-full"
                 >
                   Poll'u Sonlandır
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -437,7 +449,7 @@ export default function PollHostPage() {
         hideProgressBar={false}
         newestOnTop
         closeOnClick
-        theme="dark"
+        theme="light"
       />
     </div>
   );

@@ -3,6 +3,14 @@ import { defaultLocale } from '@/i18n/locales';
 const EXACT_TRANSLATIONS = {
   // Labels that lost their emoji or arrow in the redesign, plus new accessible labels
   'Doğru': 'Correct',
+  'İlk 5': 'Top 5',
+  'Final Sıralaması': 'Final Ranking',
+  'Sıralama': 'Ranking',
+  // Field renders the required asterisk as its own text node
+  'Ürün Adı': 'Item Name',
+  'Olasılık (%)': 'Probability (%)',
+  'Renk': 'Color',
+  'Etkinlik Seçimi': 'Event Selection',
   'Resim': 'Image',
   'Email Adresi': 'Email Address',
   'Rol': 'Role',
