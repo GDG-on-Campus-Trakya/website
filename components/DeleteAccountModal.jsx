@@ -21,6 +21,8 @@ import {
 } from "firebase/auth";
 import { toast } from "react-toastify";
 import { useRouter } from "@/i18n/navigation";
+import { buttonVariants } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,7 +49,7 @@ const COPY = {
       "Tekrar giriş başarısız. Güvenlik nedeniyle çıkış yapılıyor...",
     genericError: "Hesap silinirken bir hata oluştu. Lütfen tekrar deneyin.",
     title: "Hesabı Kalıcı Olarak Sil",
-    irreversible: "⚠️ Bu işlem GERİ ALINAMAZ!",
+    irreversible: "Bu işlem GERİ ALINAMAZ!",
     description:
       "Hesabınızı sildiğinizde aşağıdaki verileriniz kalıcı olarak silinecektir:",
     items: [
@@ -75,7 +77,7 @@ const COPY = {
       "Reauthentication failed. You will be signed out for security reasons...",
     genericError: "An error occurred while deleting the account. Please try again.",
     title: "Permanently Delete Account",
-    irreversible: "⚠️ This action CANNOT be undone!",
+    irreversible: "This action CANNOT be undone!",
     description:
       "If you delete your account, the following data will be removed permanently:",
     items: [
@@ -217,66 +219,54 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
 
   return (
     <AlertDialog open={isOpen} onOpenChange={handleClose}>
-      <AlertDialogContent className="max-w-md border-2 border-red-500 bg-gray-800 text-white">
-        <AlertDialogHeader className="space-y-4">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-            <AlertTriangle className="h-8 w-8 text-red-600" />
-          </div>
-
-          <AlertDialogTitle className="text-center text-xl font-bold text-red-400">
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2 text-error">
+            <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden="true" />
             {copy.title}
           </AlertDialogTitle>
 
-          <AlertDialogDescription className="space-y-3 text-gray-300">
-            <div className="space-y-2 rounded-lg border border-red-500 bg-red-900/20 p-4">
-              <p className="font-semibold text-red-300">{copy.irreversible}</p>
-              <p className="text-sm">{copy.description}</p>
-              <ul className="ml-4 space-y-1 text-sm">
+          <AlertDialogDescription asChild>
+            <div className="space-y-2 pt-2 text-ink-2">
+              <p className="font-semibold text-error">{copy.irreversible}</p>
+              <p>{copy.description}</p>
+              <ul className="list-disc space-y-1 pl-5">
                 {copy.items.map((item) => (
-                  <li key={item}>• {item}</li>
+                  <li key={item}>{item}</li>
                 ))}
               </ul>
-            </div>
-
-            <div className="pt-4">
-              <p className="mb-2 font-medium">{copy.prompt}</p>
-              <p className="rounded bg-red-900/30 p-2 text-center font-mono text-red-300">
-                {copy.confirmationText}
-              </p>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-2 border-t border-rule pt-4">
+          <Label htmlFor="delete-confirmation" className="leading-normal">
+            {copy.prompt}
+          </Label>
+          <p className="rounded bg-paper-2 px-3 py-2 text-center text-sm font-semibold text-ink">
+            {copy.confirmationText}
+          </p>
           <Input
+            id="delete-confirmation"
             placeholder={copy.inputPlaceholder}
             value={confirmationText}
             onChange={(event) => setConfirmationText(event.target.value)}
             disabled={isDeleting}
-            className="border-gray-600 bg-gray-700 font-mono text-white placeholder-gray-400"
             autoComplete="off"
           />
         </div>
 
-        <AlertDialogFooter className="space-x-2">
-          <AlertDialogCancel
-            onClick={handleClose}
-            disabled={isDeleting}
-            className="border-0 bg-gray-700 text-white hover:bg-gray-600"
-          >
+        <AlertDialogFooter className="gap-2 sm:space-x-0">
+          <AlertDialogCancel onClick={handleClose} disabled={isDeleting}>
             {copy.cancel}
           </AlertDialogCancel>
 
           <AlertDialogAction
             onClick={handleDeleteAccount}
             disabled={!isConfirmationValid || isDeleting}
-            className={`flex items-center gap-2 border-0 text-white ${
-              isConfirmationValid
-                ? "bg-red-600 hover:bg-red-700"
-                : "cursor-not-allowed bg-gray-600"
-            }`}
+            className={buttonVariants({ variant: "destructive" })}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 />
             {isDeleting ? copy.deleting : copy.delete}
           </AlertDialogAction>
         </AlertDialogFooter>

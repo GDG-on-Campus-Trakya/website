@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
-import { Instagram, Linkedin, ArrowRight } from "lucide-react";
+import { Instagram, Linkedin, ArrowRight, ArrowUpRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { PageContainer } from "@/components/ui/page";
 
 const TikTokIcon = ({ className }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -38,139 +39,79 @@ const COPY = {
 export default function WelcomePage() {
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const socialLinks = [
     {
       name: "Instagram",
       icon: Instagram,
       url: "https://www.instagram.com/gdgoncampustu/",
-      color: "from-purple-600 to-pink-600",
-      hoverColor: "hover:shadow-purple-500/50",
     },
     {
       name: "TikTok",
       icon: TikTokIcon,
       url: "https://www.tiktok.com/@gdg.on.campus.trakya?_t=ZS-90WYQTJFhiS&_r=1",
-      color: "from-black to-gray-900",
-      hoverColor: "hover:shadow-gray-500/50",
     },
     {
       name: copy.whatsapp,
       icon: WhatsAppIcon,
       url: "https://chat.whatsapp.com/Eqz1kKViz3dBhVRkZs3P5D?mode=wwc",
-      color: "from-green-500 to-green-600",
-      hoverColor: "hover:shadow-green-500/50",
     },
     {
       name: "LinkedIn",
       icon: Linkedin,
       url: "https://www.linkedin.com/company/gdscedirne/posts/?feedView=all",
-      color: "from-blue-600 to-blue-700",
-      hoverColor: "hover:shadow-blue-500/50",
-    },
-    {
-      name: copy.continue,
-      icon: ArrowRight,
-      url: "/",
-      color: "from-green-600 to-emerald-600",
-      hoverColor: "hover:shadow-green-500/50",
-      isInternal: true,
     },
   ];
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-      <div className="w-full max-w-md">
-        <div
-          className={`mb-8 text-center transition-all duration-700 ${
-            mounted ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
-          }`}
-        >
-          <div className="mb-4 inline-block">
-            <div className="mx-auto flex h-24 w-24 items-center justify-center">
-              <Image
-                src="/logo.svg"
-                alt="GDG on Campus Trakya Logo"
-                width={96}
-                height={96}
-              />
-            </div>
-          </div>
-          <h1 className="mb-2 text-3xl font-bold text-white">{copy.title}</h1>
-          <p className="text-gray-400">{copy.subtitle}</p>
+    <PageContainer>
+      <div className="max-w-xl">
+        <Image
+          src="/logo.svg"
+          alt="GDG on Campus Trakya Logo"
+          width={96}
+          height={96}
+          className="h-16 w-auto"
+        />
+        <h1 className="mt-8 font-display text-display-s font-extrabold">{copy.title}</h1>
+        <p className="mt-3 text-md text-ink-2">{copy.subtitle}</p>
+
+        <div className="mt-8">
+          <Button asChild size="lg">
+            <Link href="/">
+              {copy.continue}
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </Button>
         </div>
 
-        <div className="space-y-4">
-          {socialLinks.map((link, index) => {
+        <ul className="mt-12 border-t-2 border-ink">
+          {socialLinks.map((link) => {
             const Icon = link.icon;
-            const delay = index * 100;
-
-            if (link.isInternal) {
-              return (
-                <div
-                  key={link.name}
-                  className={`transition-all duration-700 ${
-                    mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-                  }`}
-                  style={{ transitionDelay: `${delay}ms` }}
-                >
-                  <Link
-                    href={link.url}
-                    className={`group relative block w-full rounded-2xl bg-gradient-to-r ${link.color} p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-2xl ${link.hoverColor}`}
-                  >
-                    <div className="flex items-center justify-between text-white">
-                      <div className="flex items-center gap-3">
-                        <Icon className="h-6 w-6" />
-                        <span className="text-lg font-semibold">{link.name}</span>
-                      </div>
-                      <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </Link>
-                </div>
-              );
-            }
 
             return (
-              <div
-                key={link.name}
-                className={`transition-all duration-700 ${
-                  mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-                }`}
-                style={{ transitionDelay: `${delay}ms` }}
-              >
+              <li key={link.name}>
                 <a
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`group relative block w-full rounded-2xl bg-gradient-to-r ${link.color} p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-2xl ${link.hoverColor}`}
+                  className="group flex min-h-14 items-center justify-between gap-4 border-b border-rule py-3 transition-colors duration-micro ease-out hover:bg-paper-2 focus-visible:outline-offset-[-2px]"
                 >
-                  <div className="flex items-center justify-between text-white">
-                    <div className="flex items-center gap-3">
-                      <Icon className="h-6 w-6" />
-                      <span className="text-lg font-semibold">{link.name}</span>
-                    </div>
-                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                  </div>
+                  <span className="flex min-w-0 items-center gap-3">
+                    <Icon className="h-5 w-5 shrink-0 text-ink-2" />
+                    <span className="min-w-0 font-medium text-ink group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
+                      {link.name}
+                    </span>
+                  </span>
+                  <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                 </a>
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
 
-        <div
-          className={`mt-8 text-center text-sm text-gray-500 transition-all duration-700 ${
-            mounted ? "opacity-100" : "opacity-0"
-          }`}
-          style={{ transitionDelay: "400ms" }}
-        >
-          <p>{copy.copyright}</p>
-        </div>
+        <p className="mt-8 text-sm text-muted-foreground">{copy.copyright}</p>
       </div>
-    </div>
+    </PageContainer>
   );
 }

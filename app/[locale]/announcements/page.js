@@ -4,8 +4,10 @@ import { announcementsUtils } from "@/utils/announcementsUtils";
 import AnnouncementPostCard from "@/components/AnnouncementPostCard";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { motion } from "framer-motion";
 import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { EmptyState, PageContainer, PageHeader, Skeleton } from "@/components/ui/page";
 import { useLocale } from "next-intl";
 import { getLocalizedField } from "@/utils/localeUtils";
 
@@ -81,97 +83,98 @@ export default function AnnouncementsPage() {
     setIsLoading(false);
   };
 
-  return (
-    <div className="flex flex-col min-h-screen font-sans bg-gradient-to-b from-[#1a1a2e] to-[#000000] text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pt-20 sm:pt-24">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 sm:mb-12"
-        >
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-[1.2] pb-3">
-            {copy.title}
-          </h1>
-          <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
-            {copy.description}
-          </p>
-        </motion.div>
+  // Without a search, the newest announcement leads the page at a larger size
+  const showLead = !searchQuery && filteredAnnouncements.length > 0;
+  const leadAnnouncement = showLead ? filteredAnnouncements[0] : null;
+  const restAnnouncements = showLead
+    ? filteredAnnouncements.slice(1)
+    : filteredAnnouncements;
 
-        <div className="mb-8 sm:mb-12">
-          <div className="relative max-w-lg mx-auto">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder={copy.searchPlaceholder}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            />
+  return (
+    <PageContainer>
+      <PageHeader title={copy.title} description={copy.description} />
+
+      <div className="relative mb-10 max-w-md">
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden="true"
+        />
+        <Input
+          type="text"
+          placeholder={copy.searchPlaceholder}
+          aria-label={copy.searchPlaceholder}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {isLoading ? (
+        <div aria-busy="true">
+          <p className="mb-6 text-sm text-muted-foreground">{copy.loading}</p>
+          <div className="grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map((item) => (
+              <div key={item} className="border-t-2 border-ink pt-4">
+                <Skeleton className="aspect-[16/9] w-full" />
+                <Skeleton className="mt-4 h-4 w-1/3" />
+                <Skeleton className="mt-3 h-6 w-4/5" />
+                <Skeleton className="mt-3 h-4 w-full" />
+              </div>
+            ))}
           </div>
         </div>
+      ) : (
+        <>
+          {announcements.length === 0 ? (
+            <EmptyState
+              title={copy.noAnnouncements}
+              description={copy.noAnnouncementsDescription}
+            />
+          ) : filteredAnnouncements.length === 0 && searchQuery ? (
+            <EmptyState
+              title={copy.noResults}
+              description={copy.noResultsDescription}
+            />
+          ) : (
+            <>
+              {leadAnnouncement && (
+                <div className="mb-12">
+                  <AnnouncementPostCard
+                    announcement={leadAnnouncement}
+                    showAdminActions={false}
+                    featured
+                  />
+                </div>
+              )}
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent mb-4"></div>
-            <p className="text-gray-400 text-sm">{copy.loading}</p>
-          </div>
-        ) : (
-          <>
-            {announcements.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 shadow-xl max-w-md mx-auto">
-                  <div className="text-6xl mb-4">📢</div>
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    {copy.noAnnouncements}
-                  </h3>
-                  <p className="text-gray-400">{copy.noAnnouncementsDescription}</p>
-                </div>
-              </div>
-            ) : filteredAnnouncements.length === 0 && searchQuery ? (
-              <div className="text-center py-12">
-                <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 shadow-xl max-w-md mx-auto">
-                  <div className="text-6xl mb-4">🔍</div>
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    {copy.noResults}
-                  </h3>
-                  <p className="text-gray-400">{copy.noResultsDescription}</p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                  {filteredAnnouncements.map((announcement, index) => (
-                    <motion.div
+              {restAnnouncements.length > 0 && (
+                <div className="grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
+                  {restAnnouncements.map((announcement) => (
+                    <AnnouncementPostCard
                       key={announcement.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <AnnouncementPostCard
-                        announcement={announcement}
-                        showAdminActions={false}
-                      />
-                    </motion.div>
+                      announcement={announcement}
+                      showAdminActions={false}
+                    />
                   ))}
                 </div>
+              )}
 
-                {!searchQuery && hasMore && (
-                  <div className="flex justify-center py-6">
-                    <button
-                      onClick={() => loadAnnouncements(true)}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg font-medium"
-                    >
-                      {copy.loadMore}
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        )}
-      </div>
+              {!searchQuery && hasMore && (
+                <div className="mt-12 flex justify-start">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    onClick={() => loadAnnouncements(true)}
+                  >
+                    {copy.loadMore}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
 
       <ToastContainer
         position="top-right"
@@ -183,8 +186,8 @@ export default function AnnouncementsPage() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
+        theme="light"
       />
-    </div>
+    </PageContainer>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { PageContainer } from "@/components/ui/page";
 
 const COPY = {
   tr: {
@@ -410,261 +411,148 @@ const COPY = {
   },
 };
 
+const h2Class =
+  "mt-12 border-t border-rule pt-6 font-display text-xl font-bold first:mt-0 first:border-t-0 first:pt-0";
+const h3Class = "mt-6 font-display text-lg font-semibold";
+const pClass = "mt-3 text-ink-2";
+const listClass = "mt-3 list-disc space-y-1.5 pl-5 text-ink-2";
+const linkClass =
+  "font-medium text-brand underline underline-offset-4 decoration-1 hover:decoration-2";
+
+function BulletList({ items }) {
+  return (
+    <ul className={listClass}>
+      {items.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
+function Groups({ groups }) {
+  return groups.map((group) => (
+    <div key={group.title}>
+      <h3 className={h3Class}>{group.title}</h3>
+      <BulletList items={group.items} />
+    </div>
+  ));
+}
+
 export default function TermsOfService() {
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
+  const { sections } = copy;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#000000] text-white">
-      <div className="container mx-auto px-4 pb-12 pt-20 sm:pt-24 md:pt-28">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-12 text-center">
-            <h1 className="mb-4 bg-clip-text text-4xl font-bold sm:text-5xl">
-              {copy.title}
-            </h1>
-            <p className="text-xl text-gray-300">{copy.organization}</p>
-            <p className="mt-2 text-sm text-gray-400">{copy.updated}</p>
-          </div>
+    <PageContainer>
+      <header className="mb-10 border-b border-rule pb-6">
+        <h1 className="font-display text-4xl font-extrabold md:text-5xl">{copy.title}</h1>
+        <p className="mt-3 text-md text-ink-2">{copy.organization}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{copy.updated}</p>
+      </header>
 
-          <div className="space-y-8 rounded-2xl border border-gray-700/50 bg-gray-800/30 p-8 backdrop-blur-md">
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.acceptance.title}
-              </h2>
-              <p className="leading-relaxed text-gray-300">{copy.sections.acceptance.body}</p>
-            </section>
+      <div className="max-w-measure">
+        <section>
+          <h2 className={h2Class}>{sections.acceptance.title}</h2>
+          <p className={pClass}>{sections.acceptance.body}</p>
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.services.title}
-              </h2>
-              <p className="mb-4 text-gray-300">{copy.sections.services.intro}</p>
-              <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                {copy.sections.services.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.services.title}</h2>
+          <p className={pClass}>{sections.services.intro}</p>
+          <BulletList items={sections.services.items} />
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.responsibilities.title}
-              </h2>
-              <div className="space-y-6">
-                {copy.sections.responsibilities.groups.map((group) => (
-                  <div key={group.title}>
-                    <h3 className="mb-3 text-lg font-semibold text-white">{group.title}</h3>
-                    <ul className="ml-4 list-inside list-disc space-y-1 text-gray-300">
-                      {group.items.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.responsibilities.title}</h2>
+          <Groups groups={sections.responsibilities.groups} />
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.prohibited.title}
-              </h2>
-              <div className="rounded-xl border border-red-500/30 bg-red-900/20 p-6">
-                <p className="mb-4 text-gray-300">{copy.sections.prohibited.intro}</p>
-                <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                  {copy.sections.prohibited.items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.prohibited.title}</h2>
+          <p className={pClass}>{sections.prohibited.intro}</p>
+          <BulletList items={sections.prohibited.items} />
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.intellectualProperty.title}
-              </h2>
-              <div className="space-y-4">
-                <div className="rounded-xl border border-purple-500/30 bg-purple-900/20 p-6">
-                  <h3 className="mb-3 text-lg font-semibold text-white">
-                    {copy.sections.intellectualProperty.openSourceTitle}
-                  </h3>
-                  <p className="leading-relaxed text-gray-300">
-                    {copy.sections.intellectualProperty.openSourceBody}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="mb-3 text-lg font-semibold text-white">
-                    {copy.sections.intellectualProperty.userContentTitle}
-                  </h3>
-                  <ul className="ml-4 list-inside list-disc space-y-1 text-gray-300">
-                    {copy.sections.intellectualProperty.userContentItems.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.intellectualProperty.title}</h2>
+          <h3 className={h3Class}>{sections.intellectualProperty.openSourceTitle}</h3>
+          <p className={pClass}>{sections.intellectualProperty.openSourceBody}</p>
+          <h3 className={h3Class}>{sections.intellectualProperty.userContentTitle}</h3>
+          <BulletList items={sections.intellectualProperty.userContentItems} />
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.continuity.title}
-              </h2>
-              <div className="rounded-xl border border-yellow-500/30 bg-yellow-900/20 p-6">
-                <p className="mb-4 leading-relaxed text-gray-300">
-                  {copy.sections.continuity.intro}
-                </p>
-                <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                  {copy.sections.continuity.items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.continuity.title}</h2>
+          <p className={pClass}>{sections.continuity.intro}</p>
+          <BulletList items={sections.continuity.items} />
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.backup.title}
-              </h2>
-              <p className="mb-4 leading-relaxed text-gray-300">{copy.sections.backup.intro}</p>
-              <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                {copy.sections.backup.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.backup.title}</h2>
+          <p className={pClass}>{sections.backup.intro}</p>
+          <BulletList items={sections.backup.items} />
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.eventRules.title}
-              </h2>
-              <div className="space-y-4">
-                {copy.sections.eventRules.groups.map((group) => (
-                  <div key={group.title}>
-                    <h3 className="mb-3 text-lg font-semibold text-white">{group.title}</h3>
-                    <ul className="ml-4 list-inside list-disc space-y-1 text-gray-300">
-                      {group.items.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.eventRules.title}</h2>
+          <Groups groups={sections.eventRules.groups} />
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.liability.title}
-              </h2>
-              <div className="rounded-xl border border-gray-600/50 bg-gray-700/30 p-6">
-                <p className="mb-4 text-gray-300">{copy.sections.liability.intro}</p>
-                <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                  {copy.sections.liability.items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.liability.title}</h2>
+          <p className={pClass}>{sections.liability.intro}</p>
+          <BulletList items={sections.liability.items} />
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.suspension.title}
-              </h2>
-              <div className="space-y-4">
-                {copy.sections.suspension.groups.map((group) => (
-                  <div key={group.title}>
-                    <h3 className="mb-3 text-lg font-semibold text-white">{group.title}</h3>
-                    <ul className="ml-4 list-inside list-disc space-y-1 text-gray-300">
-                      {group.items.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.suspension.title}</h2>
+          <Groups groups={sections.suspension.groups} />
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.support.title}
-              </h2>
-              <div className="rounded-xl border border-gray-600/50 bg-gray-700/30 p-6">
-                <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                  {copy.sections.support.items.map(([label, value]) => (
-                    <li key={label}>
-                      <strong className="text-white">{label}:</strong> {value}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.support.title}</h2>
+          <ul className={listClass}>
+            {sections.support.items.map(([label, value]) => (
+              <li key={label}>
+                <strong className="font-semibold text-ink">{label}:</strong> {value}
+              </li>
+            ))}
+          </ul>
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.cookies.title}
-              </h2>
-              <div className="space-y-4">
-                <div className="rounded-xl border border-orange-500/30 bg-orange-900/20 p-6">
-                  <h3 className="mb-3 text-lg font-semibold text-white">
-                    {copy.sections.cookies.cardTitle}
-                  </h3>
-                  <p className="leading-relaxed text-gray-300">
-                    {copy.sections.cookies.cardBody}
-                  </p>
-                  <p className="mt-4 text-gray-300">
-                    <Link href="/cookie-policy" className="font-semibold text-blue-400 hover:underline">
-                      /cookie-policy
-                    </Link>
-                  </p>
-                </div>
-                <div>
-                  <h3 className="mb-3 text-lg font-semibold text-white">
-                    {copy.sections.cookies.extraTitle}
-                  </h3>
-                  <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                    {copy.sections.cookies.extraItems.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.cookies.title}</h2>
+          <h3 className={h3Class}>{sections.cookies.cardTitle}</h3>
+          <p className={pClass}>{sections.cookies.cardBody}</p>
+          <p className="mt-3">
+            <Link
+              href="/cookie-policy"
+              className={`inline-flex min-h-11 items-center whitespace-nowrap ${linkClass}`}
+            >
+              /cookie-policy
+            </Link>
+          </p>
+          <h3 className={h3Class}>{sections.cookies.extraTitle}</h3>
+          <BulletList items={sections.cookies.extraItems} />
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.compliance.title}
-              </h2>
-              <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                {copy.sections.compliance.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.compliance.title}</h2>
+          <BulletList items={sections.compliance.items} />
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.updates.title}
-              </h2>
-              <div className="rounded-xl border border-blue-500/30 bg-blue-900/20 p-6">
-                <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                  {copy.sections.updates.items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </section>
+        <section>
+          <h2 className={h2Class}>{sections.updates.title}</h2>
+          <BulletList items={sections.updates.items} />
+        </section>
 
-            <div className="mt-12 border-t border-gray-700/50 pt-8 text-center">
-              <div className="rounded-xl border border-green-500/30 bg-green-900/20 p-6">
-                <p className="mb-2 font-semibold text-green-300">{copy.closingTitle}</p>
-                <p className="text-sm leading-relaxed text-gray-300">
-                  {copy.closingBody}
-                  <br />
-                  <strong className="text-white">{copy.closingEmphasis}</strong>
-                </p>
-              </div>
-            </div>
-          </div>
+        <div className="mt-12 border-t-2 border-ink pt-4">
+          <h2 className="font-display text-lg font-semibold">{copy.closingTitle}</h2>
+          <p className={pClass}>{copy.closingBody}</p>
+          <p className="mt-3 font-semibold text-ink">{copy.closingEmphasis}</p>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

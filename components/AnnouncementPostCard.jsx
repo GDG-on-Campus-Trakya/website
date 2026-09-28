@@ -2,11 +2,12 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Calendar, User, Trash2, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { getLocalizedField } from '@/utils/localeUtils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function AnnouncementPostCard({
   announcement,
@@ -58,83 +59,82 @@ export default function AnnouncementPostCard({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02, boxShadow: '0px 10px 30px rgba(0, 0, 0, 0.3)' }}
+    <article
       onClick={handleCardClick}
-      className="group bg-gray-800/30 backdrop-blur-md rounded-2xl overflow-hidden border border-gray-700 hover:border-blue-500/50 transition-all duration-300 shadow-lg hover:shadow-blue-500/20 cursor-pointer flex flex-col h-full"
+      className="group flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-lg border border-rule bg-background transition-colors duration-micro ease-out hover:border-ink"
     >
       {announcement.imageUrl && !imageError && (
-        <div className="relative w-full h-48 bg-gray-900 overflow-hidden">
+        <div className="relative aspect-[16/9] w-full overflow-hidden bg-paper-2">
           <Image
             src={announcement.imageUrl}
             alt={title}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-cover"
             onError={() => setImageError(true)}
           />
           {!announcement.isPublished && showAdminActions && (
-            <div className="absolute top-3 right-3 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-semibold z-10">
+            <Badge variant="warning" className="absolute right-3 top-3 z-raised">
               {copy.draft}
-            </div>
+            </Badge>
           )}
         </div>
       )}
 
-      <div className="p-5 flex flex-col flex-grow">
-        <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
+      <div className="flex flex-grow flex-col p-5">
+        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
-            <Calendar className="w-4 h-4" />
-            <span>{formatDate(announcement.createdAt)}</span>
+            <Calendar className="h-4 w-4" aria-hidden="true" />
+            <span className="font-outlier">{formatDate(announcement.createdAt)}</span>
           </div>
           {announcement.authorName && (
-            <div className="flex items-center gap-1.5">
-              <User className="w-4 h-4" />
-              <span>{announcement.authorName}</span>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <User className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="break-words">{announcement.authorName}</span>
             </div>
           )}
         </div>
 
-        <h3 className="text-lg font-bold text-white mb-3 line-clamp-2 group-hover:text-blue-400 transition-colors duration-300">
+        <h3 className="mb-3 line-clamp-2 break-words font-display text-lg font-bold group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
           {title}
         </h3>
 
-        <p className="text-gray-300 text-sm mb-4 line-clamp-3 flex-grow">{description}</p>
+        <p className="mb-4 line-clamp-3 flex-grow text-sm text-ink-2">{description}</p>
 
-        <div className="mt-auto pt-4 border-t border-gray-700/50">
-          <div className="flex justify-between items-center">
-            <div className="text-blue-400 group-hover:text-blue-300 text-sm font-semibold flex items-center gap-2">
+        <div className="mt-auto border-t border-rule pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-1 whitespace-nowrap text-sm font-medium text-brand underline decoration-1 underline-offset-4 group-hover:decoration-2">
               {copy.readMore}
-              <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </div>
 
             {showAdminActions && (
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit && onEdit(announcement);
                   }}
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs font-medium"
                 >
                   {copy.edit}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete && onDelete(announcement.id);
                   }}
-                  className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-xs font-medium flex items-center gap-1.5"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Trash2 aria-hidden="true" />
                   {copy.delete}
-                </button>
+                </Button>
               </div>
             )}
           </div>
         </div>
       </div>
-    </motion.div>
+    </article>
   );
 }

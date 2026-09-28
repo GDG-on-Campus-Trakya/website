@@ -1,7 +1,9 @@
 "use client";
 
 import { useLocale } from "next-intl";
+import { ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { PageContainer } from "@/components/ui/page";
 
 const COPY = {
   tr: {
@@ -25,14 +27,12 @@ const COPY = {
               "Firebase Authentication oturum verileri",
               "Geçici oturum verileri için session storage",
             ],
-            classes: "border-blue-500/30 bg-blue-900/20",
           },
           {
             title: "2.2. Analitik Teknolojiler",
             body:
               "Kullanım davranışını anonim düzeyde anlamamıza yardımcı olur. Tercihlere bağlı olarak sınırlandırılabilir.",
             items: ["Vercel Analytics ile anonim performans ve kullanım ölçümü"],
-            classes: "border-green-500/30 bg-green-900/20",
           },
           {
             title: "2.3. Fonksiyonel Teknolojiler",
@@ -42,7 +42,6 @@ const COPY = {
               "Yerel depolama üzerinde tercih bilgileri",
               "Güvenlik ve oturum bağlamı için sınırlı kimlikler",
             ],
-            classes: "border-purple-500/30 bg-purple-900/20",
           },
         ],
       },
@@ -128,14 +127,12 @@ const COPY = {
               "Firebase Authentication session data",
               "Session storage for temporary session context",
             ],
-            classes: "border-blue-500/30 bg-blue-900/20",
           },
           {
             title: "2.2. Analytics Technologies",
             body:
               "These help us understand usage behavior at an anonymous level and may be limited by preference.",
             items: ["Anonymous usage and performance measurement through Vercel Analytics"],
-            classes: "border-green-500/30 bg-green-900/20",
           },
           {
             title: "2.3. Functional Technologies",
@@ -145,7 +142,6 @@ const COPY = {
               "Preference data stored in local storage",
               "Limited identifiers for security and session context",
             ],
-            classes: "border-purple-500/30 bg-purple-900/20",
           },
         ],
       },
@@ -212,194 +208,149 @@ const COPY = {
   },
 };
 
+const h2Class =
+  "mt-12 border-t border-rule pt-6 font-display text-xl font-bold first:mt-0 first:border-t-0 first:pt-0";
+const h3Class = "mt-6 font-display text-lg font-semibold";
+const pClass = "mt-3 text-ink-2";
+const listClass = "mt-3 list-disc space-y-1.5 pl-5 text-ink-2";
+const linkClass =
+  "font-medium text-brand underline underline-offset-4 decoration-1 hover:decoration-2";
+
 export default function CookiePolicyPage() {
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#000000] px-4 py-12 text-white">
-      <div className="container mx-auto px-4 pb-12 pt-20 sm:pt-24 md:pt-28">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-12 text-center">
-            <h1 className="mb-4 bg-clip-text text-4xl font-bold sm:text-5xl">
-              {copy.title}
-            </h1>
-            <p className="text-xl text-gray-300">{copy.organization}</p>
-            <p className="mt-2 text-sm text-gray-400">{copy.updated}</p>
-          </div>
+    <PageContainer>
+      <header className="mb-10 border-b border-rule pb-6">
+        <h1 className="font-display text-4xl font-extrabold md:text-5xl">{copy.title}</h1>
+        <p className="mt-3 text-md text-ink-2">{copy.organization}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{copy.updated}</p>
+      </header>
 
-          <div className="space-y-8 rounded-2xl border border-gray-700/50 bg-gray-800/30 p-8 backdrop-blur-md">
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.intro.title}
-              </h2>
-              <p className="leading-relaxed text-gray-300">{copy.sections.intro.body}</p>
-            </section>
+      <div className="max-w-measure">
+        <section>
+          <h2 className={h2Class}>{copy.sections.intro.title}</h2>
+          <p className={pClass}>{copy.sections.intro.body}</p>
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.technologies.title}
-              </h2>
-              <div className="space-y-6">
-                {copy.sections.technologies.cards.map((card) => (
-                  <div
-                    key={card.title}
-                    className={`rounded-lg border p-4 ${card.classes}`}
-                  >
-                    <h3 className="mb-3 text-xl font-semibold text-white">{card.title}</h3>
-                    <p className="mb-3 leading-relaxed text-gray-300">{card.body}</p>
-                    <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                      {card.items.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.table.title}
-              </h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-700">
-                  <thead className="bg-gray-900">
-                    <tr>
-                      {copy.sections.table.headers.map((header) => (
-                        <th
-                          key={header}
-                          className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400"
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-700 bg-gray-800/50">
-                    {copy.sections.table.rows.map(([name, value]) => (
-                      <tr key={name}>
-                        <td className="px-4 py-3 text-sm text-white">{name}</td>
-                        <td className="px-4 py-3 text-sm text-gray-300">{value}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.management.title}
-              </h2>
-              <p className="mb-4 leading-relaxed text-gray-300">
-                {copy.sections.management.intro}
-              </p>
-              <ul className="mb-4 ml-4 list-inside list-disc space-y-2 text-gray-300">
-                {copy.sections.management.items.map(([label, value]) => (
-                  <li key={label}>
-                    <strong className="text-white">{label}:</strong> {value}
-                  </li>
-                ))}
-              </ul>
-              <div className="rounded-lg border border-yellow-500/30 bg-yellow-900/20 p-4">
-                <p className="text-sm leading-relaxed text-gray-300">
-                  {copy.sections.management.warning}
-                </p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.browsers.title}
-              </h2>
-              <ul className="space-y-2 text-gray-300">
-                {copy.sections.browsers.items.map((item) => (
+        <section>
+          <h2 className={h2Class}>{copy.sections.technologies.title}</h2>
+          {copy.sections.technologies.cards.map((card) => (
+            <div key={card.title}>
+              <h3 className={h3Class}>{card.title}</h3>
+              <p className={pClass}>{card.body}</p>
+              <ul className={listClass}>
+                {card.items.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.thirdParty.title}
-              </h2>
-              <p className="mb-4 leading-relaxed text-gray-300">
-                {copy.sections.thirdParty.intro}
-              </p>
-              <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                {copy.sections.thirdParty.links.map(([label, href]) => (
-                  <li key={label}>
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:underline"
-                    >
-                      {label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.rights.title}
-              </h2>
-              <p className="leading-relaxed text-gray-300">{copy.sections.rights.body}</p>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.contact.title}
-              </h2>
-              <p className="mb-4 leading-relaxed text-gray-300">
-                {copy.sections.contact.body}
-              </p>
-              <div className="rounded-lg border border-gray-700 bg-gray-900/50 p-4">
-                <Link
-                  href="/tickets"
-                  className="inline-flex items-center gap-2 font-semibold text-blue-400 transition-colors hover:text-blue-300"
-                >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <span>{copy.sections.contact.cta}</span>
-                </Link>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.updates.title}
-              </h2>
-              <p className="leading-relaxed text-gray-300">{copy.sections.updates.body}</p>
-            </section>
-          </div>
-
-          <div className="mt-12 border-t border-gray-700/50 pt-8 text-center">
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <Link href="/terms" className="text-blue-400 hover:underline">
-                {copy.footerLinks.terms}
-              </Link>
-              <span className="text-gray-600">•</span>
-              <Link href="/privacy" className="text-blue-400 hover:underline">
-                {copy.footerLinks.privacy}
-              </Link>
-              <span className="text-gray-600">•</span>
-              <Link href="/" className="text-blue-400 hover:underline">
-                {copy.footerLinks.home}
-              </Link>
             </div>
+          ))}
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{copy.sections.table.title}</h2>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full min-w-[20rem] border-collapse text-sm">
+              <thead>
+                <tr className="border-b-2 border-ink">
+                  {copy.sections.table.headers.map((header) => (
+                    <th
+                      key={header}
+                      className="py-2 pr-4 text-left align-bottom text-xs font-semibold text-muted-foreground"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {copy.sections.table.rows.map(([name, value]) => (
+                  <tr key={name} className="border-b border-rule">
+                    <td className="py-3 pr-4 align-top font-medium text-ink">{name}</td>
+                    <td className="py-3 align-top text-ink-2">{value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{copy.sections.management.title}</h2>
+          <p className={pClass}>{copy.sections.management.intro}</p>
+          <ul className={listClass}>
+            {copy.sections.management.items.map(([label, value]) => (
+              <li key={label}>
+                <strong className="font-semibold text-ink">{label}:</strong> {value}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 rounded bg-warning px-4 py-3 text-sm text-ink">
+            {copy.sections.management.warning}
+          </p>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{copy.sections.browsers.title}</h2>
+          <ul className="mt-3 space-y-2 text-ink-2">
+            {copy.sections.browsers.items.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{copy.sections.thirdParty.title}</h2>
+          <p className={pClass}>{copy.sections.thirdParty.intro}</p>
+          <ul className={listClass}>
+            {copy.sections.thirdParty.links.map(([label, href]) => (
+              <li key={label}>
+                <a href={href} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{copy.sections.rights.title}</h2>
+          <p className={pClass}>{copy.sections.rights.body}</p>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{copy.sections.contact.title}</h2>
+          <p className={pClass}>{copy.sections.contact.body}</p>
+          <p className="mt-3">
+            <Link
+              href="/tickets"
+              className={`inline-flex min-h-11 items-center gap-1 whitespace-nowrap ${linkClass}`}
+            >
+              {copy.sections.contact.cta}
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </p>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{copy.sections.updates.title}</h2>
+          <p className={pClass}>{copy.sections.updates.body}</p>
+        </section>
+
+        <div className="mt-12 flex flex-wrap gap-x-6 gap-y-1 border-t border-rule pt-4 text-sm">
+          <Link href="/terms" className={`inline-flex min-h-11 items-center whitespace-nowrap ${linkClass}`}>
+            {copy.footerLinks.terms}
+          </Link>
+          <Link href="/privacy" className={`inline-flex min-h-11 items-center whitespace-nowrap ${linkClass}`}>
+            {copy.footerLinks.privacy}
+          </Link>
+          <Link href="/" className={`inline-flex min-h-11 items-center whitespace-nowrap ${linkClass}`}>
+            {copy.footerLinks.home}
+          </Link>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -19,6 +19,9 @@ import { doc, getDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { useLocale } from "next-intl";
 import { formatLocalizedDate, getLocalizedField } from "@/utils/localeUtils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 export default function PostModal({
   post,
@@ -302,16 +305,28 @@ export default function PostModal({
     }
   };
 
+  const iconButton =
+    "inline-flex h-control w-control items-center justify-center rounded text-muted-foreground transition-colors duration-micro ease-out hover:bg-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+
+  const menuPanel =
+    "absolute right-0 top-11 z-dropdown min-w-[120px] rounded-lg border border-rule bg-popover py-1 shadow-whisper";
+
+  const menuItem =
+    "flex min-h-11 w-full items-center whitespace-nowrap px-3 text-left text-sm hover:bg-secondary";
+
+  const avatarBox =
+    "flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-rule bg-paper-3 text-muted-foreground";
+
   return (
     <div
-      className="fixed inset-0 bg-black z-50 flex items-center justify-center"
+      className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 animate-in fade-in-0 duration-short"
       onClick={handleBackdropClick}
       style={{ overscrollBehavior: "contain" }}
     >
-      <div className="md:hidden w-full h-full flex flex-col max-w-full overflow-hidden">
-        <div className="flex items-center justify-between p-4 bg-black/80 backdrop-blur-sm max-w-full">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center overflow-hidden">
+      <div className="flex h-full w-full max-w-full flex-col overflow-hidden bg-background text-foreground md:hidden">
+        <div className="flex max-w-full items-center justify-between gap-2 border-b border-rule p-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className={`h-8 w-8 ${avatarBox}`}>
               {(() => {
                 const profilePhoto =
                   postAuthorProfile?.photoURL || post.userPhoto;
@@ -326,43 +341,43 @@ export default function PostModal({
                       }
                       width={32}
                       height={32}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                   );
                 }
-                return <User className="w-4 h-4 text-white" />;
+                return <User className="h-4 w-4" aria-hidden="true" />;
               })()}
             </div>
-            <div>
-              <h3 className="text-white font-semibold text-sm">
+            <div className="min-w-0">
+              <h3 className="break-words font-sans text-sm font-semibold">
                 {postAuthorProfile?.name || post.userName || post.userEmail}
               </h3>
               {eventName && (
-                <div className="flex items-center space-x-1 text-blue-400 text-xs">
-                  <Calendar className="w-3 h-3" />
-                  <span>{eventName}</span>
+                <div className="flex items-center gap-1 text-xs text-ink-2">
+                  <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
+                  <span className="break-words">{eventName}</span>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex shrink-0 items-center">
             {(showAdminActions || post.userId === user?.uid) && (
               <div className="relative">
                 <button
                   onClick={() => setShowMenu(!showMenu)}
-                  className="text-gray-400 hover:text-white p-1"
+                  className={iconButton}
                 >
-                  <MoreHorizontal className="w-5 h-5" />
+                  <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
                 </button>
 
                 {showMenu && (
-                  <div className="absolute right-0 top-8 bg-gray-700 rounded-lg shadow-lg border border-gray-600 py-1 min-w-[120px] z-10">
+                  <div className={menuPanel}>
                     {showAdminActions && (
                       <button
                         key="hide-button"
                         onClick={handleHide}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-600"
+                        className={menuItem}
                       >
                         {post.isHidden ? copy.show : copy.hide}
                       </button>
@@ -371,7 +386,7 @@ export default function PostModal({
                       <button
                         key="delete-button"
                         onClick={handleDelete}
-                        className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-600"
+                        className={`${menuItem} text-error`}
                       >
                         {copy.delete}
                       </button>
@@ -381,66 +396,67 @@ export default function PostModal({
               </div>
             )}
 
-            <button onClick={onClose} className="text-white p-1">
-              <X className="w-6 h-6" />
+            <button onClick={onClose} className={iconButton}>
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </div>
 
-        <div className="flex-1 bg-black flex items-center justify-center max-w-full overflow-hidden">
+        <div className="flex max-w-full flex-1 items-center justify-center overflow-hidden bg-paper-2">
           <Image
             src={post.imageUrl}
             alt={post.description || "Post image"}
             width={800}
             height={800}
-            className="w-full h-full object-contain"
+            className="h-full w-full object-contain"
             priority
           />
         </div>
 
-        <div className="bg-black/80 backdrop-blur-sm p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handleLike}
-                disabled={!user || isLiking}
-                className={`transition-colors ${
-                  isLiked ? "text-red-500" : "text-white hover:text-red-500"
-                } ${!user ? "cursor-not-allowed opacity-50" : ""}`}
-              >
-                <Heart className={`w-7 h-7 ${isLiked ? "fill-current" : ""}`} />
-              </button>
+        <div className="border-t border-rule p-4">
+          <div className="-ml-2 flex items-center">
+            <button
+              onClick={handleLike}
+              disabled={!user || isLiking}
+              className={`inline-flex h-control w-control items-center justify-center rounded transition-colors duration-micro ease-out ${
+                isLiked ? "text-error" : "text-ink-2 hover:text-error"
+              } ${!user ? "cursor-not-allowed opacity-50" : ""}`}
+            >
+              <Heart
+                className={`h-6 w-6 ${isLiked ? "fill-current" : ""}`}
+                aria-hidden="true"
+              />
+            </button>
 
-              <button
-                onClick={() => setShowCommentsDrawer(true)}
-                className="text-white"
-              >
-                <MessageCircle className="w-7 h-7" />
-              </button>
-            </div>
+            <button
+              onClick={() => setShowCommentsDrawer(true)}
+              className="inline-flex h-control w-control items-center justify-center rounded text-ink-2 transition-colors duration-micro ease-out hover:text-brand"
+            >
+              <MessageCircle className="h-6 w-6" aria-hidden="true" />
+            </button>
           </div>
 
-          <div className="text-white font-semibold text-sm mb-2">
-            {likeCount} {copy.likes}
+          <div className="mb-2 text-sm font-semibold">
+            <span className="tabular-nums">{likeCount}</span> {copy.likes}
           </div>
 
           {post.description && (
-            <div className="text-white text-sm mb-2">
-              <span className="font-semibold">
+            <div className="mb-2 text-sm text-ink-2">
+              <span className="font-semibold text-ink">
                 {post.userName || post.userEmail}
               </span>{" "}
               {post.description}
             </div>
           )}
 
-          <div className="text-gray-400 text-xs mb-3">
+          <div className="mb-3 font-outlier text-xs text-muted-foreground">
             {formatDate(post.timestamp)}
           </div>
 
           {comments.length > 0 && (
             <button
               onClick={() => setShowCommentsDrawer(true)}
-              className="text-gray-400 text-sm mb-3 text-left"
+              className="mb-3 inline-flex min-h-11 items-center text-left text-sm text-muted-foreground hover:text-ink"
             >
               {copy.viewComments(comments.length)}
             </button>
@@ -448,45 +464,45 @@ export default function PostModal({
 
           <form
             onSubmit={handleAddComment}
-            className="flex items-center space-x-3 border-t border-gray-700 pt-3"
+            className="flex items-center gap-3 border-t border-rule pt-3"
           >
-            <input
+            <Input
               type="text"
               value={newComment}
               onChange={(event) => setNewComment(event.target.value)}
               placeholder={copy.addComment}
+              aria-label={copy.addComment}
               disabled={!user || isAddingComment}
-              className="flex-1 bg-transparent text-white placeholder-gray-400 focus:outline-none"
+              className="min-w-0 flex-1"
               maxLength={200}
             />
-            <button
+            <Button
               type="submit"
               disabled={!user || !newComment.trim() || isAddingComment}
-              className="text-blue-500 font-semibold disabled:text-gray-500 disabled:cursor-not-allowed"
             >
               {isAddingComment ? "..." : copy.share}
-            </button>
+            </Button>
           </form>
         </div>
       </div>
 
-      <div className="hidden md:block">
-        <div className="relative rounded-xl bg-gray-800/50 backdrop-blur-sm max-w-4xl w-full max-h-[90vh] overflow-hidden flex shadow-xl border border-gray-700/50">
-          <div className="flex-1 bg-black flex items-center justify-center">
+      <div className="hidden w-full max-w-4xl px-4 md:block">
+        <div className="relative flex max-h-[90vh] w-full overflow-hidden rounded-lg border border-rule bg-background text-foreground">
+          <div className="flex min-w-0 flex-1 items-center justify-center bg-paper-2">
             <Image
               src={post.imageUrl}
               alt={post.description || "Post image"}
               width={800}
               height={600}
-              className="max-w-full max-h-full object-contain"
+              className="max-h-full max-w-full object-contain"
               priority
             />
           </div>
 
-          <div className="w-96 flex flex-col bg-gray-800/50 backdrop-blur-sm">
-            <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center overflow-hidden">
+          <div className="flex w-96 shrink-0 flex-col border-l border-rule bg-background">
+            <div className="flex items-center justify-between gap-2 border-b border-rule p-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className={`h-10 w-10 ${avatarBox}`}>
                   {(() => {
                     const profilePhoto =
                       postAuthorProfile?.photoURL || post.userPhoto;
@@ -501,43 +517,43 @@ export default function PostModal({
                           }
                           width={40}
                           height={40}
-                          className="w-full h-full object-cover"
+                          className="h-full w-full object-cover"
                         />
                       );
                     }
-                    return <User className="w-6 h-6 text-white" />;
+                    return <User className="h-5 w-5" aria-hidden="true" />;
                   })()}
                 </div>
-                <div>
-                  <h3 className="text-white font-semibold text-sm">
+                <div className="min-w-0">
+                  <h3 className="break-words font-sans text-sm font-semibold">
                     {postAuthorProfile?.name || post.userName || post.userEmail}
                   </h3>
                   {eventName && (
-                    <div className="flex items-center space-x-1 text-blue-400 text-xs">
-                      <Calendar className="w-3 h-3" />
-                      <span>{eventName}</span>
+                    <div className="flex items-center gap-1 text-xs text-ink-2">
+                      <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
+                      <span className="break-words">{eventName}</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex shrink-0 items-center">
                 {(showAdminActions || post.userId === user?.uid) && (
                   <div className="relative">
                     <button
                       onClick={() => setShowMenu(!showMenu)}
-                      className="text-gray-400 hover:text-white p-1"
+                      className={iconButton}
                     >
-                      <MoreHorizontal className="w-5 h-5" />
+                      <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
                     </button>
 
                     {showMenu && (
-                      <div className="absolute right-0 top-8 bg-gray-700 rounded-lg shadow-lg border border-gray-600 py-1 min-w-[120px] z-10">
+                      <div className={menuPanel}>
                         {showAdminActions && (
                           <button
                             key="desktop-hide-button"
                             onClick={handleHide}
-                            className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-600"
+                            className={menuItem}
                           >
                             {post.isHidden ? copy.show : copy.hide}
                           </button>
@@ -546,7 +562,7 @@ export default function PostModal({
                           <button
                             key="desktop-delete-button"
                             onClick={handleDelete}
-                            className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-600"
+                            className={`${menuItem} text-error`}
                           >
                             {copy.delete}
                           </button>
@@ -556,31 +572,28 @@ export default function PostModal({
                   </div>
                 )}
 
-                <button
-                  onClick={onClose}
-                  className="text-gray-400 hover:text-white p-1"
-                >
-                  <X className="w-5 h-5" />
+                <button onClick={onClose} className={iconButton}>
+                  <X className="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
             </div>
 
             <div
-              className="flex-1 p-4 overflow-y-auto"
+              className="flex-1 overflow-y-auto p-4"
               style={{
                 overscrollBehavior: "contain",
                 WebkitOverflowScrolling: "touch",
               }}
             >
               {post.description && (
-                <div className="mb-4 pb-3 border-b border-gray-700">
-                  <div className="text-[#d1d1e0] text-sm leading-relaxed">
-                    <span className="font-semibold text-white">
+                <div className="mb-4 border-b border-rule pb-3">
+                  <div className="text-sm leading-relaxed text-ink-2">
+                    <span className="font-semibold text-ink">
                       {post.userName || post.userEmail}
                     </span>{" "}
                     {post.description}
                   </div>
-                  <div className="text-gray-500 text-xs mt-2">
+                  <div className="mt-2 font-outlier text-xs text-muted-foreground">
                     {formatDate(post.timestamp)}
                   </div>
                 </div>
@@ -590,75 +603,69 @@ export default function PostModal({
                 {comments.length > 0 ? (
                   <button
                     onClick={() => setShowCommentsDrawer(true)}
-                    className="text-gray-400 hover:text-white text-sm transition-colors"
+                    className="inline-flex min-h-11 items-center text-sm text-muted-foreground transition-colors duration-micro ease-out hover:text-ink"
                   >
                     {copy.viewComments(comments.length)}
                   </button>
                 ) : (
-                  <div className="text-center text-gray-400 text-sm py-8">
+                  <div className="py-8 text-sm text-muted-foreground">
                     {copy.noComments}
                   </div>
                 )}
               </div>
 
-              <div className="mt-4 pt-3 border-t border-gray-700 space-y-2 text-xs text-gray-400">
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>
+              <div className="mt-4 space-y-2 border-t border-rule pt-3 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className="min-w-0 break-words">
                     {copy.event}: {eventName}
                   </span>
                 </div>
 
                 {post.isAdminPost && (
-                  <div className="bg-green-600 px-2 py-1 rounded-full inline-block">
-                    <span className="text-white text-xs font-medium">
-                      {copy.admin}
-                    </span>
+                  <div>
+                    <Badge variant="accent">{copy.admin}</Badge>
                   </div>
                 )}
 
                 {post.isHidden && (
-                  <div className="bg-yellow-600 px-2 py-1 rounded-full inline-block">
-                    <span className="text-white text-xs font-medium">
-                      {copy.hidden}
-                    </span>
+                  <div>
+                    <Badge variant="warning">{copy.hidden}</Badge>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="p-4 border-t border-gray-700">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={handleLike}
-                    disabled={!user || isLiking}
-                    className={`flex items-center space-x-2 transition-colors ${
-                      isLiked
-                        ? "text-red-500"
-                        : "text-gray-400 hover:text-red-500"
-                    } ${!user ? "cursor-not-allowed opacity-50" : ""}`}
-                  >
-                    <Heart
-                      className={`w-6 h-6 ${isLiked ? "fill-current" : ""}`}
-                    />
-                  </button>
+            <div className="border-t border-rule p-4">
+              <div className="-ml-2 mb-2 flex items-center">
+                <button
+                  onClick={handleLike}
+                  disabled={!user || isLiking}
+                  className={`inline-flex h-control w-control items-center justify-center rounded transition-colors duration-micro ease-out ${
+                    isLiked ? "text-error" : "text-ink-2 hover:text-error"
+                  } ${!user ? "cursor-not-allowed opacity-50" : ""}`}
+                >
+                  <Heart
+                    className={`h-6 w-6 ${isLiked ? "fill-current" : ""}`}
+                    aria-hidden="true"
+                  />
+                </button>
 
-                  <button
-                    onClick={() => setShowCommentsDrawer(true)}
-                    className="text-gray-400 hover:text-blue-500 transition-colors"
-                  >
-                    <MessageCircle className="w-6 h-6" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowCommentsDrawer(true)}
+                  className="inline-flex h-control w-control items-center justify-center rounded text-ink-2 transition-colors duration-micro ease-out hover:text-brand"
+                >
+                  <MessageCircle className="h-6 w-6" aria-hidden="true" />
+                </button>
               </div>
 
-              <div className="text-white font-semibold text-sm space-y-1">
+              <div className="space-y-1 text-sm font-semibold">
                 <div>
-                  {likeCount} {copy.likes}
+                  <span className="tabular-nums">{likeCount}</span> {copy.likes}
                 </div>
                 <div>
-                  {comments.length} {copy.comments.toLowerCase()}
+                  <span className="tabular-nums">{comments.length}</span>{" "}
+                  {copy.comments.toLowerCase()}
                 </div>
               </div>
             </div>
@@ -668,35 +675,34 @@ export default function PostModal({
 
       {showCommentsDrawer && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-75 z-[60] flex items-end md:items-center justify-center"
+          className="fixed inset-0 z-popover flex items-end justify-center bg-ink/60 animate-in fade-in-0 duration-short md:items-center"
           style={{ overscrollBehavior: "contain" }}
         >
           <div
-            className="bg-gray-900 w-full md:w-96 md:max-w-lg md:rounded-t-2xl rounded-t-2xl md:rounded-2xl max-h-[80vh] md:max-h-[70vh] flex flex-col border border-gray-700"
+            className="flex max-h-[80vh] w-full flex-col rounded-t-lg border border-rule bg-background text-foreground md:max-h-[70vh] md:w-96 md:max-w-lg md:rounded-lg"
             style={{ overscrollBehavior: "contain" }}
           >
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h3 className="text-lg font-semibold text-white">
+            <div className="flex items-center justify-between border-b border-rule py-2 pl-4 pr-2">
+              <h3 className="font-display text-lg font-semibold">
                 {copy.comments}
               </h3>
               <button
                 onClick={() => setShowCommentsDrawer(false)}
-                className="text-gray-400 hover:text-gray-300"
+                className={iconButton}
               >
-                <X className="w-6 h-6" />
+                <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
 
             <div
-              className="flex-1 overflow-y-auto p-4 space-y-4"
+              className="flex-1 space-y-4 overflow-y-auto p-4"
               style={{
                 overscrollBehavior: "contain",
                 WebkitOverflowScrolling: "touch",
               }}
             >
               {isLoadingComments ? (
-                <div className="text-center text-gray-400 py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent mx-auto mb-2" />
+                <div role="status" className="py-8 text-sm text-muted-foreground">
                   {copy.commentsLoading}
                 </div>
               ) : (
@@ -705,39 +711,38 @@ export default function PostModal({
                     comments.map((comment) => (
                       <div
                         key={`drawer-${comment.id}`}
-                        className="flex space-x-3"
+                        className="flex gap-3"
                       >
-                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <div className={`h-8 w-8 ${avatarBox}`}>
                           {comment.userPhoto ? (
                             <Image
                               src={comment.userPhoto}
                               alt={comment.userName}
                               width={32}
                               height={32}
-                              className="w-full h-full object-cover"
+                              className="h-full w-full object-cover"
                             />
                           ) : (
-                            <User className="w-4 h-4 text-white" />
+                            <User className="h-4 w-4" aria-hidden="true" />
                           )}
                         </div>
-                        <div className="flex-1">
-                          <div className="text-white text-sm">
+                        <div className="min-w-0 flex-1">
+                          <div className="break-words text-sm">
                             <span className="font-semibold">
                               {comment.userName}
                             </span>{" "}
-                            <span className="text-gray-200">
-                              {comment.text}
-                            </span>
+                            <span className="text-ink-2">{comment.text}</span>
                           </div>
-                          <div className="text-gray-500 text-xs mt-1 flex items-center justify-between">
+                          <div className="mt-1 flex items-center justify-between font-outlier text-xs text-muted-foreground">
                             <span>{formatDate(comment.timestamp)}</span>
                             {showAdminActions && (
                               <button
                                 onClick={() => handleDeleteComment(comment.id)}
-                                className="text-red-500 hover:text-red-400 ml-2"
+                                className="-my-2 ml-2 inline-flex h-9 w-9 items-center justify-center rounded text-error hover:bg-secondary"
                                 title={copy.deleteCommentTitle}
+                                aria-label={copy.deleteCommentTitle}
                               >
-                                <Trash2 className="w-3 h-3" />
+                                <Trash2 className="h-4 w-4" aria-hidden="true" />
                               </button>
                             )}
                           </div>
@@ -745,24 +750,25 @@ export default function PostModal({
                       </div>
                     ))
                   ) : (
-                    <div className="text-center text-gray-400 py-8">
-                      <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                      <p className="text-lg font-medium mb-1">
+                    <div className="py-8">
+                      <p className="font-display text-lg font-semibold">
                         {copy.noCommentsTitle}
                       </p>
-                      <p className="text-sm">{copy.noCommentsBody}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {copy.noCommentsBody}
+                      </p>
                     </div>
                   )}
                 </>
               )}
             </div>
 
-            <div className="border-t border-gray-700 p-4">
+            <div className="border-t border-rule p-4">
               <form
                 onSubmit={handleAddComment}
-                className="flex items-center space-x-3"
+                className="flex items-center gap-3"
               >
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <div className={`h-8 w-8 ${avatarBox}`}>
                   {(() => {
                     const profilePhoto =
                       userProfileData?.photoURL || user?.photoURL;
@@ -772,29 +778,29 @@ export default function PostModal({
                         alt="Your profile"
                         width={32}
                         height={32}
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                       />
                     ) : (
-                      <User className="w-4 h-4 text-white" />
+                      <User className="h-4 w-4" aria-hidden="true" />
                     );
                   })()}
                 </div>
-                <input
+                <Input
                   type="text"
                   value={newComment}
                   onChange={(event) => setNewComment(event.target.value)}
                   placeholder={copy.addComment}
+                  aria-label={copy.addComment}
                   disabled={!user || isAddingComment}
-                  className="flex-1 bg-transparent text-white placeholder-gray-400 text-sm focus:outline-none border-none"
+                  className="min-w-0 flex-1"
                   maxLength={200}
                 />
-                <button
+                <Button
                   type="submit"
                   disabled={!user || !newComment.trim() || isAddingComment}
-                  className="text-blue-500 font-semibold text-sm disabled:text-gray-400 disabled:cursor-not-allowed"
                 >
                   {isAddingComment ? "..." : copy.share}
-                </button>
+                </Button>
               </form>
             </div>
           </div>

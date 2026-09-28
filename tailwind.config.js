@@ -109,6 +109,7 @@ module.exports = {
       },
       maxWidth: {
         page: "var(--page-max)",
+        wide: "var(--page-max-wide)",
         measure: "var(--measure)",
       },
       spacing: {

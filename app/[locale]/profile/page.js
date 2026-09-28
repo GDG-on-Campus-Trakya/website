@@ -24,8 +24,8 @@ import "react-toastify/dist/ReactToastify.css";
 import QRCode from "qrcode";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { EmptyState, PageContainer, PageHeader, Section } from "@/components/ui/page";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -372,133 +372,81 @@ const Profile = () => {
 
   if (loadingAuth || loadingData) {
     return (
-      <div className="flex items-center justify-center p-10 text-lg text-white">
-        <p>{copy.loading}</p>
-      </div>
+      <PageContainer>
+        <p className="text-lg text-muted-foreground">{copy.loading}</p>
+      </PageContainer>
     );
   }
 
   if (errorAuth) {
     return (
-      <div className="flex items-center justify-center p-10 text-lg text-red-500">
-        <p>
+      <PageContainer>
+        <p className="text-lg text-error" role="alert">
           {copy.error}: {errorAuth.message}
         </p>
-      </div>
+      </PageContainer>
     );
   }
 
   if (errorData) {
     return (
-      <div className="flex items-center justify-center p-10 text-lg text-red-500">
-        <p>
+      <PageContainer>
+        <p className="text-lg text-error" role="alert">
           {copy.error}: {errorData}
         </p>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      ref={profileRef}
-      className="min-h-screen bg-gray-900 p-10 font-sans text-white"
-    >
-      <motion.h1
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="mb-10 text-center text-4xl"
-      >
-        {copy.title}
-      </motion.h1>
+    <div ref={profileRef}>
+      <PageContainer>
+        <PageHeader title={copy.title} />
 
-      {user && (
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <UserInfo user={user} />
-        </motion.div>
-      )}
-
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="mt-10"
-      >
-        <h2 className="mb-5 inline-block border-b-2 border-blue-400 pb-2 text-2xl">
-          {copy.emailPreferences}
-        </h2>
-        <motion.div
-          whileHover={{ scale: 1.01 }}
-          className="flex flex-col items-start justify-between gap-4 rounded-lg border p-4 sm:flex-row sm:items-center"
-        >
-          <div className="min-w-0 flex-1 space-y-0.5">
-            <Label htmlFor="email-notifications" className="text-base">
-              {copy.emailNotifications}
-            </Label>
-            <p className="break-words text-sm text-gray-400">
-              {copy.emailNotificationsHelp}
-            </p>
+        {user && (
+          <div className="max-w-2xl">
+            <UserInfo user={user} />
           </div>
-          <Switch
-            id="email-notifications"
-            checked={userWantsEmails}
-            onCheckedChange={handleEmailPreferenceChange}
-            disabled={isEmailUpdateLoading}
-            className="shrink-0 data-[state=checked]:bg-blue-600"
-          />
-        </motion.div>
-        {isEmailUpdateLoading && (
-          <p className="mt-2 text-sm text-gray-500">{copy.updating}</p>
         )}
-      </motion.div>
 
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.35 }}
-        className="mt-10"
-      >
-        <h2 className="mb-5 inline-block border-b-2 border-blue-400 pb-2 text-2xl">
-          {copy.language}
-        </h2>
-        <div className="flex flex-col items-start justify-between gap-4 rounded-lg border p-4 sm:flex-row sm:items-center">
-          <div className="min-w-0 flex-1 space-y-0.5">
-            <p className="text-base font-medium">{copy.languageLabel}</p>
-            <p className="break-words text-sm text-gray-400">{copy.languageHelp}</p>
-          </div>
-          <div className="shrink-0">
-            <LanguageSwitcher />
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="mt-10"
-      >
-        <h2 className="mb-5 inline-block border-b-2 border-blue-400 pb-2 text-2xl">
-          {copy.registeredEvents}
-        </h2>
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          {registrations.length === 0 ? (
-            <div className="rounded-lg border border-gray-700 bg-gray-800 py-12 text-center">
-              <div className="mb-4 text-6xl">📅</div>
-              <h3 className="mb-2 text-xl font-semibold text-gray-300">
-                {copy.noEventsTitle}
-              </h3>
-              <p className="text-gray-400">{copy.noEventsBody}</p>
+        <Section title={copy.emailPreferences}>
+          <div className="flex flex-col items-start justify-between gap-4 border-b border-rule py-4 sm:flex-row sm:items-center">
+            <div className="min-w-0 flex-1 space-y-1">
+              <Label htmlFor="email-notifications" className="text-base">
+                {copy.emailNotifications}
+              </Label>
+              <p className="break-words text-sm text-muted-foreground">
+                {copy.emailNotificationsHelp}
+              </p>
             </div>
+            <Switch
+              id="email-notifications"
+              checked={userWantsEmails}
+              onCheckedChange={handleEmailPreferenceChange}
+              disabled={isEmailUpdateLoading}
+              className="shrink-0"
+            />
+          </div>
+          {isEmailUpdateLoading && (
+            <p className="mt-2 text-sm text-muted-foreground">{copy.updating}</p>
+          )}
+        </Section>
+
+        <Section title={copy.language}>
+          <div className="flex flex-col items-start justify-between gap-4 border-b border-rule py-4 sm:flex-row sm:items-center">
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-base font-medium">{copy.languageLabel}</p>
+              <p className="break-words text-sm text-muted-foreground">{copy.languageHelp}</p>
+            </div>
+            <div className="shrink-0">
+              <LanguageSwitcher />
+            </div>
+          </div>
+        </Section>
+
+        <Section title={copy.registeredEvents}>
+          {registrations.length === 0 ? (
+            <EmptyState title={copy.noEventsTitle} description={copy.noEventsBody} />
           ) : (
             <EventList
               registrations={registrations}
@@ -511,58 +459,40 @@ const Profile = () => {
               downloadQRCode={downloadQRCode}
             />
           )}
-        </motion.div>
-      </motion.div>
+        </Section>
 
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="mt-10"
-      >
-        <h2 className="mb-5 inline-block border-b-2 border-red-400 pb-2 text-2xl">
-          {copy.accountSettings}
-        </h2>
-        <motion.div
-          whileHover={{ scale: 1.01 }}
-          className="flex flex-col space-y-4 rounded-lg border border-red-500 bg-red-950/20 p-4"
-        >
-          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-            <div className="min-w-0 flex-1 space-y-0.5">
-              <h3 className="text-lg font-medium text-red-300">{copy.deleteAccount}</h3>
-              <p className="break-words text-sm text-gray-400">
+        <Section title={copy.accountSettings}>
+          <div className="flex flex-col items-start justify-between gap-4 border-b border-rule py-4 sm:flex-row sm:items-center">
+            <div className="min-w-0 flex-1 space-y-1">
+              <h3 className="text-lg font-semibold text-error">{copy.deleteAccount}</h3>
+              <p className="break-words text-sm text-muted-foreground">
                 {copy.deleteAccountBody}
               </p>
             </div>
             <Button
               variant="destructive"
               onClick={() => setIsDeleteAccountModalOpen(true)}
-              className="flex w-full shrink-0 items-center gap-2 bg-red-600 text-white hover:bg-red-700 sm:w-auto"
+              className="shrink-0"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 />
               {copy.deleteAccount}
             </Button>
           </div>
-        </motion.div>
-      </motion.div>
+        </Section>
+      </PageContainer>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="border-gray-700 bg-gray-800 text-white">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{copy.confirmTitle}</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
-              {copy.confirmBody}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{copy.confirmBody}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel
-              className="border-0 bg-gray-700 text-white hover:bg-gray-600"
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
               {copy.cancel}
             </AlertDialogCancel>
             <AlertDialogAction
-              className="border-0 bg-red-600 text-white hover:bg-red-700"
+              className={buttonVariants({ variant: "destructive" })}
               onClick={handleConfirmDelete}
             >
               {copy.delete}
@@ -592,9 +522,9 @@ const Profile = () => {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
+        theme="light"
       />
-    </motion.div>
+    </div>
   );
 };
 

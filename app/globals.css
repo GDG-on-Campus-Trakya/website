@@ -195,3 +195,22 @@ select {
 .animate-slideUp {
   animation: slideUp var(--dur-long) var(--ease-out) forwards;
 }
+
+/* react-toastify on paper: every toast container uses theme="light" */
+.Toastify {
+  --toastify-color-light: var(--color-paper);
+  --toastify-text-color-light: var(--color-ink);
+  --toastify-color-success: var(--color-success);
+  --toastify-color-error: var(--color-error);
+  --toastify-color-warning: var(--color-warning);
+  --toastify-color-info: var(--color-accent);
+  --toastify-toast-min-height: 3rem;
+  --toastify-font-family: var(--font-body);
+  --toastify-z-index: var(--z-toast);
+}
+
+.Toastify__toast {
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-whisper);
+}
