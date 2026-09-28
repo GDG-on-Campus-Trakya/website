@@ -16,7 +16,9 @@ import {
 import { useRouter } from "@/i18n/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Link } from "@/i18n/navigation";
+import { Plus, Minus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PageHeader, Section, EmptyState } from "@/components/ui/page";
 import { useLocale } from "next-intl";
 import { formatLocalizedDate, getLocalizedField } from "@/utils/localeUtils";
 
@@ -27,7 +29,6 @@ export default function AdminRegistrationsPage() {
       ? {
           loading: "Loading...",
           accessDenied: "Access denied",
-          backToAdmin: "Back to Admin Panel",
           title: "Event Registrations",
           subtitle: "View and manage all event registrations",
           manageTitle: "Manage Event Registrations",
@@ -50,7 +51,6 @@ export default function AdminRegistrationsPage() {
       : {
           loading: "Yükleniyor...",
           accessDenied: "Erişim engellendi",
-          backToAdmin: "Admin Paneline Geri Dön",
           title: "Etkinlik Kayıtları",
           subtitle: "Tüm etkinlik kayıtlarını görüntüleyin ve yönetin",
           manageTitle: "Etkinlik Kayıtlarını Yönet",
@@ -193,124 +193,68 @@ export default function AdminRegistrationsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-gray-200">{copy.loading}</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">{copy.loading}</p>;
   }
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-red-500">{copy.accessDenied}</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        {copy.accessDenied}
+      </p>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 sm:p-6">
-      {/* Back to Admin Panel Button */}
-      <div className="mb-6 sm:mb-8">
-        <Link
-          href="/admin"
-          className="inline-flex items-center px-4 py-3 text-sm sm:text-base bg-gray-800/70 backdrop-blur-lg text-gray-200 rounded-2xl hover:bg-gray-700/90 transition-all duration-300 border border-gray-700/50 shadow-lg hover:shadow-xl transform hover:scale-105"
-        >
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          {copy.backToAdmin}
-        </Link>
-      </div>
+    <div>
+      <PageHeader title={copy.title} description={copy.subtitle} />
 
-      {/* Header */}
-      <div className="text-center mb-8 sm:mb-12">
-        <div className="inline-block">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-            {copy.title}
-          </h1>
-          <div className="h-1 bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 rounded-full"></div>
-        </div>
-        <p className="text-gray-300 mt-4 text-lg">
-          {copy.subtitle}
-        </p>
-      </div>
-
-      <section className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border border-gray-700/50 shadow-xl">
-        <div className="flex items-center mb-6">
-          <div className="p-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg mr-3">
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
-            </svg>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-100">
-            {copy.manageTitle}
-          </h2>
-        </div>
+      <Section title={copy.manageTitle}>
         {events.length === 0 ? (
-          <p className="text-gray-400">{copy.noEvents}</p>
+          <EmptyState title={copy.noEvents} />
         ) : (
-          <ul className="space-y-4 sm:space-y-6">
+          <ul className="border-t border-rule">
             {events.map((event) => {
               const registeredUsers = registrations.filter(
                 (reg) => reg.eventId === event.id
               );
               const registrationCount = registeredUsers.length;
+              const isExpanded = !!expandedEvents[event.firestoreId];
 
               return (
-                <li
-                  key={event.firestoreId}
-                  className="bg-gray-800/70 backdrop-blur-lg rounded-md shadow-sm overflow-hidden border border-gray-700/50"
-                >
+                <li key={event.firestoreId} className="border-b border-rule">
                   <button
+                    type="button"
                     onClick={() => toggleEventExpansion(event.firestoreId)}
-                    className="w-full p-3 sm:p-4 flex justify-between items-start gap-4 hover:bg-gray-700/70 transition-colors"
+                    aria-expanded={isExpanded}
+                    className="flex min-h-12 w-full items-start justify-between gap-4 py-3 text-left transition-colors duration-micro hover:bg-secondary"
                   >
-                    <div className="flex flex-col items-start flex-1 min-w-0">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-100 break-words w-full">
+                    <div className="flex min-w-0 flex-1 flex-col items-start">
+                      <h3 className="w-full break-words text-base font-semibold">
                         {getLocalizedField(event, "name", locale)}
                       </h3>
-                      <span className="text-sm text-gray-400 mt-1">
+                      <span className="mt-1 font-outlier text-sm tabular-nums text-muted-foreground">
                         {registrationCount}{" "}
                         {registrationCount === 1
                           ? copy.registration
                           : copy.registrations}
                       </span>
                     </div>
-                    <span className="text-xl font-medium text-gray-400 w-6 h-6 flex items-center justify-center flex-shrink-0">
-                      {expandedEvents[event.firestoreId] ? "−" : "+"}
-                    </span>
+                    {isExpanded ? (
+                      <Minus className="mt-1 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    ) : (
+                      <Plus className="mt-1 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    )}
                   </button>
 
-                  {expandedEvents[event.firestoreId] && (
-                    <div className="border-t border-gray-600 p-3 sm:p-4">
-                      <ul className="space-y-2 sm:space-y-3">
-                        {registrationCount === 0 ? (
-                          <p className="text-sm sm:text-base text-gray-400">
-                            {copy.noRegisteredUsers}
-                          </p>
-                        ) : (
-                          registeredUsers.map((reg) => {
+                  {isExpanded && (
+                    <div className="pb-4 pl-0 sm:pl-6">
+                      {registrationCount === 0 ? (
+                        <p className="py-2 text-sm text-muted-foreground">
+                          {copy.noRegisteredUsers}
+                        </p>
+                      ) : (
+                        <ul className="border-t border-rule">
+                          {registeredUsers.map((reg) => {
                             const userData = usersMap[reg.userId];
                             const signedUpDate = reg.signedUpAt
                               ? new Date(
@@ -321,37 +265,39 @@ export default function AdminRegistrationsPage() {
                             return (
                               <li
                                 key={reg.firestoreId}
-                                className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-700/60 backdrop-blur-sm p-3 rounded-md gap-3 sm:gap-0 border border-gray-600/30 hover:bg-gray-700/80 transition-all duration-300"
+                                className="flex flex-col gap-3 border-b border-rule py-3 sm:flex-row sm:items-center sm:justify-between"
                               >
-                                <div className="w-full sm:w-auto">
-                                  <p className="text-sm sm:text-base text-gray-200">
+                                <div className="min-w-0">
+                                  <p className="break-words text-sm">
                                     {userData
                                       ? `${copy.name}: ${userData.name}`
                                       : `${copy.userId}: ${reg.userId}`}
                                   </p>
-                                  <p className="text-sm sm:text-base text-gray-200">
+                                  <p className="break-all text-sm">
                                     {userData ? `${copy.email}: ${userData.email}` : ""}
                                   </p>
-                                  <p className="text-xs sm:text-sm text-gray-400">
+                                  <p className="font-outlier text-xs text-muted-foreground">
                                     {copy.registrationDate}:{" "}
                                     {signedUpDate
                                       ? formatDateTime(signedUpDate)
                                       : copy.unknownDate}
                                   </p>
                                 </div>
-                                <button
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
                                   onClick={() =>
                                     handleRemoveRegistration(reg.firestoreId)
                                   }
-                                  className="w-full sm:w-auto bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-colors text-sm"
                                 >
                                   {copy.delete}
-                                </button>
+                                </Button>
                               </li>
                             );
-                          })
-                        )}
-                      </ul>
+                          })}
+                        </ul>
+                      )}
                     </div>
                   )}
                 </li>
@@ -359,9 +305,9 @@ export default function AdminRegistrationsPage() {
             })}
           </ul>
         )}
-      </section>
+      </Section>
 
-      <ToastContainer />
+      <ToastContainer theme="light" />
     </div>
   );
 }

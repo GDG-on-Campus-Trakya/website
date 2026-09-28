@@ -13,6 +13,13 @@ import {
 } from "@/utils/datasetUtils";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
+import { ArrowLeft, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { PageHeader, Section } from "@/components/ui/page";
 
 export default function EditDatasetPage() {
   const [user, loading] = useAuthState(auth);
@@ -20,7 +27,6 @@ export default function EditDatasetPage() {
   const params = useParams();
   const datasetId = params.datasetId;
 
-  const [darkMode, setDarkMode] = useState(true);
   const [loadingDataset, setLoadingDataset] = useState(true);
 
   // Dataset state
@@ -225,256 +231,194 @@ export default function EditDatasetPage() {
   };
 
   if (loading || loadingDataset) {
-    return (
-      <div className={`flex items-center justify-center min-h-screen ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}>
-        <p className={`text-lg ${darkMode ? "text-white" : "text-gray-900"}`}>Yükleniyor...</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">Yükleniyor...</p>;
   }
 
   if (!user) {
     return null;
   }
 
-  const bgClass = darkMode ? "bg-gray-900" : "bg-gray-50";
-  const cardBgClass = darkMode ? "bg-gray-800" : "bg-white";
-  const textClass = darkMode ? "text-white" : "text-gray-900";
-  const textSecondaryClass = darkMode ? "text-gray-400" : "text-gray-600";
-  const borderClass = darkMode ? "border-gray-700" : "border-gray-300";
-
   return (
-    <div className={`min-h-screen ${bgClass}`}>
-      {/* Header */}
-      <div className={`${cardBgClass} border-b ${borderClass} sticky top-0 z-10`}>
-        <div className="max-w-7xl mx-auto p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <h1 className={`text-2xl sm:text-3xl font-bold ${textClass}`}>Veri Seti Düzenle</h1>
-              <p className={`${textSecondaryClass} text-sm sm:text-base mt-1`}>
-                Veri setini düzenleyin ve güncelleyin
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className={`p-2 sm:p-3 rounded-lg ${cardBgClass} border ${borderClass} hover:opacity-80`}
-              >
-                {darkMode ? "☀️" : "🌙"}
-              </button>
-              <button
-                onClick={() => router.push("/admin/poll/datasets")}
-                className={`px-4 py-2 rounded-lg ${cardBgClass} border ${borderClass} ${textClass} hover:opacity-80 text-sm sm:text-base`}
-              >
-                ← Veri Setleri
-              </button>
-            </div>
-          </div>
-        </div>
+    <div>
+      <PageHeader
+        title="Veri Seti Düzenle"
+        description="Veri setini düzenleyin ve güncelleyin"
+        actions={
+          <Button variant="outline" onClick={() => router.push("/admin/poll/datasets")}>
+            <ArrowLeft aria-hidden="true" />
+            Veri Setleri
+          </Button>
+        }
+      />
+
+      {/* Dataset Info */}
+      <div className="max-w-3xl">
+        <Field id="dataset-name" label="Veri Seti Adı *">
+          <Input
+            type="text"
+            value={datasetName}
+            onChange={(e) => setDatasetName(e.target.value)}
+            placeholder="Örn: En İyi Futbolcular"
+          />
+        </Field>
+
+        <Field id="dataset-description" label="Açıklama">
+          <Textarea
+            value={datasetDescription}
+            onChange={(e) => setDatasetDescription(e.target.value)}
+            rows={3}
+            placeholder="Veri seti hakkında kısa açıklama"
+          />
+        </Field>
       </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto p-4 sm:p-6">
-        <div className={`${cardBgClass} rounded-2xl p-6 sm:p-8 border ${borderClass}`}>
-          {/* Dataset Info */}
-          <div className="space-y-4 mb-6">
-            <div>
-              <label className={`block ${textClass} mb-2 font-semibold`}>
-                Veri Seti Adı *
-              </label>
-              <input
-                type="text"
-                value={datasetName}
-                onChange={(e) => setDatasetName(e.target.value)}
-                className={`w-full px-4 py-2 rounded-lg border ${borderClass} ${cardBgClass} ${textClass}`}
-                placeholder="Örn: En İyi Futbolcular"
-              />
-            </div>
+      {/* Add Item Section */}
+      <Section title="Yeni Öğe Ekle" className="max-w-3xl">
+        <div className="grid gap-x-4 md:grid-cols-2">
+          <Field id="dataset-item-name" label="Öğe Adı *">
+            <Input
+              type="text"
+              value={currentItemName}
+              onChange={(e) => setCurrentItemName(e.target.value)}
+              placeholder="Örn: Lionel Messi"
+            />
+          </Field>
 
-            <div>
-              <label className={`block ${textClass} mb-2 font-semibold`}>
-                Açıklama
-              </label>
-              <textarea
-                value={datasetDescription}
-                onChange={(e) => setDatasetDescription(e.target.value)}
-                className={`w-full px-4 py-2 rounded-lg border ${borderClass} ${cardBgClass} ${textClass}`}
-                rows={3}
-                placeholder="Veri seti hakkında kısa açıklama"
-              />
-            </div>
-          </div>
-
-          {/* Add Item Section */}
-          <div className={`border ${borderClass} rounded-xl p-4 mb-6`}>
-            <h3 className={`text-lg font-bold ${textClass} mb-4`}>Yeni Öğe Ekle</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className={`block ${textClass} mb-2`}>Öğe Adı *</label>
-                <input
-                  type="text"
-                  value={currentItemName}
-                  onChange={(e) => setCurrentItemName(e.target.value)}
-                  className={`w-full px-4 py-2 rounded-lg border ${borderClass} ${cardBgClass} ${textClass}`}
-                  placeholder="Örn: Lionel Messi"
-                />
-              </div>
-
-              <div>
-                <label className={`block ${textClass} mb-2`}>Açıklama</label>
-                <input
-                  type="text"
-                  value={currentItemDescription}
-                  onChange={(e) => setCurrentItemDescription(e.target.value)}
-                  className={`w-full px-4 py-2 rounded-lg border ${borderClass} ${cardBgClass} ${textClass}`}
-                  placeholder="Örn: 8 Ballon d'Or"
-                />
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <label className={`block ${textClass} mb-2`}>Resim *</label>
-              <input
-                id="item-image-input"
-                type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
-                className={`w-full ${textClass}`}
-              />
-              {currentItemImage && (
-                <p className={`${textSecondaryClass} text-sm mt-2`}>
-                  ✓ {currentItemImage.name}
-                </p>
-              )}
-            </div>
-
-            <button
-              onClick={handleAddItem}
-              className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold"
-            >
-              Öğe Ekle
-            </button>
-          </div>
-
-          {/* Items List */}
-          <div className="mb-6">
-            <h3 className={`text-lg font-bold ${textClass} mb-4`}>
-              Mevcut Öğeler ({items.length})
-            </h3>
-
-            {items.length === 0 ? (
-              <p className={`${textSecondaryClass} text-sm text-center py-8`}>
-                Henüz öğe yok. En az 8 öğe olmalı.
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`border ${borderClass} rounded-lg p-3`}
-                  >
-                    {editingItemId === item.id ? (
-                      // Edit Mode
-                      <div className="space-y-3">
-                        <div className="aspect-square relative rounded overflow-hidden mb-2">
-                          <img
-                            src={editItemImage ? URL.createObjectURL(editItemImage) : (item.imageUrl || (item.imageFile ? URL.createObjectURL(item.imageFile) : ""))}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          value={editItemName}
-                          onChange={(e) => setEditItemName(e.target.value)}
-                          className={`w-full px-2 py-1 rounded border ${borderClass} ${cardBgClass} ${textClass} text-sm`}
-                          placeholder="Öğe adı"
-                        />
-                        <input
-                          type="text"
-                          value={editItemDescription}
-                          onChange={(e) => setEditItemDescription(e.target.value)}
-                          className={`w-full px-2 py-1 rounded border ${borderClass} ${cardBgClass} ${textClass} text-sm`}
-                          placeholder="Açıklama"
-                        />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleEditImageSelect}
-                          className={`w-full text-xs ${textClass}`}
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={handleSaveEdit}
-                            className="flex-1 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
-                          >
-                            Kaydet
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="flex-1 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm"
-                          >
-                            İptal
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      // View Mode
-                      <>
-                        <div className="aspect-square relative rounded overflow-hidden mb-2">
-                          <img
-                            src={item.imageUrl || (item.imageFile ? URL.createObjectURL(item.imageFile) : "")}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <p className={`${textClass} font-semibold text-sm truncate`}>
-                          {item.name}
-                        </p>
-                        {item.description && (
-                          <p className={`${textSecondaryClass} text-xs truncate mb-2`}>
-                            {item.description}
-                          </p>
-                        )}
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() => handleStartEdit(item)}
-                            className="flex-1 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
-                          >
-                            Düzenle
-                          </button>
-                          <button
-                            onClick={() => handleRemoveItem(item.id)}
-                            className="flex-1 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
-                          >
-                            Sil
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-4">
-            <button
-              onClick={() => router.push("/admin/poll/datasets")}
-              className={`flex-1 py-3 rounded-lg border ${borderClass} ${textClass} hover:opacity-80 font-semibold`}
-            >
-              İptal
-            </button>
-            <button
-              onClick={handleUpdateDataset}
-              disabled={items.length < 8 || updatingDataset}
-              className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {updatingDataset ? "Güncelleniyor..." : "Veri Setini Güncelle"}
-            </button>
-          </div>
+          <Field id="dataset-item-description" label="Açıklama">
+            <Input
+              type="text"
+              value={currentItemDescription}
+              onChange={(e) => setCurrentItemDescription(e.target.value)}
+              placeholder="Örn: 8 Ballon d'Or"
+            />
+          </Field>
         </div>
+
+        <div className="mb-4 flex flex-col gap-1.5">
+          <Label htmlFor="item-image-input">Resim *</Label>
+          <input
+            id="item-image-input"
+            type="file"
+            accept="image/*"
+            onChange={handleImageSelect}
+            className="block w-full text-sm text-muted-foreground file:mr-4 file:h-9 file:cursor-pointer file:rounded file:border-0 file:bg-primary file:px-4 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-brand-hover"
+          />
+          {currentItemImage && (
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Check className="h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+              <span className="min-w-0 truncate">{currentItemImage.name}</span>
+            </p>
+          )}
+        </div>
+
+        <Button variant="outline" className="w-full sm:w-auto" onClick={handleAddItem}>
+          Öğe Ekle
+        </Button>
+      </Section>
+
+      {/* Items List */}
+      <Section title={`Mevcut Öğeler (${items.length})`}>
+        {items.length === 0 ? (
+          <p className="border-y border-rule py-6 text-sm text-muted-foreground">
+            Henüz öğe yok. En az 8 öğe olmalı.
+          </p>
+        ) : (
+          <div className="grid grid-cols-[repeat(1,minmax(0,1fr))] gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))] md:grid-cols-[repeat(3,minmax(0,1fr))] lg:grid-cols-[repeat(4,minmax(0,1fr))]">
+            {items.map((item) => (
+              <div key={item.id} className="min-w-0 rounded-lg border border-rule p-3">
+                {editingItemId === item.id ? (
+                  // Edit Mode
+                  <div className="space-y-1">
+                    <div className="relative mb-3 aspect-square overflow-hidden rounded">
+                      <img
+                        src={editItemImage ? URL.createObjectURL(editItemImage) : (item.imageUrl || (item.imageFile ? URL.createObjectURL(item.imageFile) : ""))}
+                        alt={item.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <Field id={`edit-item-name-${item.id}`} label="Öğe Adı *">
+                      <Input
+                        type="text"
+                        value={editItemName}
+                        onChange={(e) => setEditItemName(e.target.value)}
+                        placeholder="Öğe adı"
+                      />
+                    </Field>
+                    <Field id={`edit-item-description-${item.id}`} label="Açıklama">
+                      <Input
+                        type="text"
+                        value={editItemDescription}
+                        onChange={(e) => setEditItemDescription(e.target.value)}
+                        placeholder="Açıklama"
+                      />
+                    </Field>
+                    <div className="flex flex-col gap-1.5 pb-3">
+                      <Label htmlFor={`edit-item-image-${item.id}`}>Resim</Label>
+                      <input
+                        id={`edit-item-image-${item.id}`}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleEditImageSelect}
+                        className="block w-full text-xs text-muted-foreground file:mr-3 file:h-9 file:cursor-pointer file:rounded file:border-0 file:bg-primary file:px-3 file:text-xs file:font-medium file:text-primary-foreground hover:file:bg-brand-hover"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="flex-1" onClick={handleSaveEdit}>
+                        Kaydet
+                      </Button>
+                      <Button size="sm" variant="outline" className="flex-1" onClick={handleCancelEdit}>
+                        İptal
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  // View Mode
+                  <>
+                    <div className="relative mb-3 aspect-square overflow-hidden rounded">
+                      <img
+                        src={item.imageUrl || (item.imageFile ? URL.createObjectURL(item.imageFile) : "")}
+                        alt={item.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <p className="truncate text-sm font-semibold">{item.name}</p>
+                    {item.description && (
+                      <p className="truncate text-xs text-muted-foreground">{item.description}</p>
+                    )}
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleStartEdit(item)}
+                      >
+                        Düzenle
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="flex-1"
+                        onClick={() => handleRemoveItem(item.id)}
+                      >
+                        Sil
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* Actions */}
+      <div className="mt-10 flex flex-col-reverse gap-3 border-t border-rule pt-6 sm:flex-row sm:justify-end">
+        <Button variant="outline" onClick={() => router.push("/admin/poll/datasets")}>
+          İptal
+        </Button>
+        <Button onClick={handleUpdateDataset} disabled={items.length < 8 || updatingDataset}>
+          {updatingDataset ? "Güncelleniyor..." : "Veri Setini Güncelle"}
+        </Button>
       </div>
 
       <ToastContainer
@@ -483,7 +427,7 @@ export default function EditDatasetPage() {
         hideProgressBar={false}
         newestOnTop
         closeOnClick
-        theme={darkMode ? "dark" : "light"}
+        theme="light"
       />
     </div>
   );

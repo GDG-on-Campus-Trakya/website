@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { logger } from "@/utils/logger";
+import { Button } from "@/components/ui/button";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -19,18 +20,14 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex flex-col items-center justify-center p-8 bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-white mb-2">Bir şeyler ters gitti</h2>
-          <p className="text-[#d1d1e0] text-center mb-4">
+        <div role="alert" className="border-y border-rule py-10">
+          <h2 className="font-display text-lg font-semibold text-ink">Bir şeyler ters gitti</h2>
+          <p className="mt-1 max-w-measure text-sm text-muted-foreground">
             Bu bölümde bir hata oluştu. Sayfayı yenilemeyi deneyin.
           </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Sayfayı Yenile
-          </button>
+          <div className="mt-4">
+            <Button onClick={() => window.location.reload()}>Sayfayı Yenile</Button>
+          </div>
         </div>
       );
     }

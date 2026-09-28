@@ -19,7 +19,24 @@ import {
 import { useRouter } from "@/i18n/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { motion, AnimatePresence } from "framer-motion";
+import { Heart, Eye, MessageSquare, RefreshCw, Trash2, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input, fieldClasses } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ui/field";
+import { PageHeader, Section, EmptyState } from "@/components/ui/page";
+import { Stat } from "@/components/ui/stat";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 import { uploadImage, StoragePaths } from "@/utils/storageUtils";
 import UserMentionInput from "@/components/UserMentionInput";
 
@@ -350,638 +367,507 @@ export default function AdminProjectsPage() {
   };
 
   if (loading || loadingProjects) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-gray-200">Loading...</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">Loading...</p>;
   }
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-red-500">Access Denied</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        Access Denied
+      </p>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4 sm:p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-100">
-              Projeler Yönetimi
-            </h1>
-            <p className="text-gray-300 mt-1">
-              Tüm projeleri görüntüleyin ve yönetin
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Link
-              href="/admin"
-              className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              ← Admin Paneli
-            </Link>
-            <Link
-              href="/projects"
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              Projeler Sayfası
-            </Link>
-            <button
+    <div>
+      <PageHeader
+        title="Projeler Yönetimi"
+        description="Tüm projeleri görüntüleyin ve yönetin"
+        actions={
+          <>
+            <Button asChild variant="outline">
+              <Link href="/projects">Projeler Sayfası</Link>
+            </Button>
+            <Button
+              type="button"
               onClick={() => showAddForm ? handleCancelEdit() : setShowAddForm(true)}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
             >
               {showAddForm ? "İptal" : "Yeni Proje Ekle"}
-            </button>
-          </div>
-        </div>
+            </Button>
+          </>
+        }
+      />
 
-        {/* Projects Stats */}
-        <div className="bg-gray-800/70 backdrop-blur-sm shadow-md rounded-lg p-6 mb-6 border border-gray-700/50">
-          <h2 className="text-xl font-semibold mb-4 text-gray-200">
-            İstatistikler
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-blue-900/30 p-4 rounded-lg border border-blue-700/50">
-              <h3 className="text-lg font-medium text-blue-200">Toplam Proje</h3>
-              <p className="text-2xl font-bold text-blue-400">{projects.length}</p>
+      {/* Projects Stats */}
+      <Section title="İstatistikler">
+        <dl className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <Stat label="Toplam Proje" value={projects.length} />
+          <Stat
+            label="İşbirlikçili Projeler"
+            value={projects.filter(p => p.collaborators && p.collaborators.length > 0).length}
+          />
+          <Stat
+            label="GitHub Linkli"
+            value={projects.filter(p => p.githubLink).length}
+          />
+        </dl>
+      </Section>
+
+      {/* Add Project Form */}
+      {showAddForm && (
+        <Section title={editingProject ? "Proje Düzenle" : "Yeni Proje Ekle"}>
+          <form onSubmit={handleSubmit} className="max-w-2xl space-y-2">
+            <Field id="project-title" label="Proje Başlığı *">
+              <Input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                required
+                placeholder="Proje başlığını girin"
+              />
+            </Field>
+            <Field id="project-title-en" label="English Project Title">
+              <Input
+                type="text"
+                name="titleEn"
+                value={formData.titleEn}
+                onChange={handleInputChange}
+                placeholder="Enter the English project title"
+              />
+            </Field>
+
+            <Field id="project-description" label="Açıklama *">
+              <Textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                required
+                rows={4}
+                placeholder="Proje hakkında kısa bir açıklama yazın"
+              />
+            </Field>
+            <Field id="project-description-en" label="English Description">
+              <Textarea
+                name="descriptionEn"
+                value={formData.descriptionEn}
+                onChange={handleInputChange}
+                rows={4}
+                placeholder="Write a short English description for the project"
+              />
+            </Field>
+
+            <Field id="project-github" label="GitHub Linki">
+              <Input
+                type="url"
+                name="githubLink"
+                value={formData.githubLink}
+                onChange={handleInputChange}
+                placeholder="https://github.com/username/project"
+              />
+            </Field>
+
+            <div className="flex flex-col gap-1.5 pb-2">
+              <Label htmlFor="project-image">Proje Görseli</Label>
+              {editingProject?.imageUrl && (
+                <div className="mb-1">
+                  <p className="mb-2 text-sm text-muted-foreground">Mevcut görsel:</p>
+                  <img
+                    src={editingProject.imageUrl}
+                    alt="Mevcut proje görseli"
+                    className="aspect-[4/3] w-32 rounded border border-rule object-cover"
+                  />
+                </div>
+              )}
+              <Input
+                id="project-image"
+                type="file"
+                accept="image/*,image/heic,image/heif"
+                onChange={handleImageChange}
+                className="h-auto py-2"
+              />
+              {editingProject?.imageUrl && (
+                <p className="text-sm text-muted-foreground">
+                  Yeni bir görsel seçerseniz mevcut görsel değiştirilecektir.
+                </p>
+              )}
             </div>
-            <div className="bg-green-900/30 p-4 rounded-lg border border-green-700/50">
-              <h3 className="text-lg font-medium text-green-200">İşbirlikçili Projeler</h3>
-              <p className="text-2xl font-bold text-green-400">
-                {projects.filter(p => p.collaborators && p.collaborators.length > 0).length}
-              </p>
+
+            <div className="pb-4">
+              <p className="mb-1.5 text-sm font-medium leading-none">İşbirlikçiler</p>
+              <UserMentionInput
+                onUserSelect={handleUserSelect}
+                selectedUsers={formData.collaborators}
+                placeholder="Kullanıcı emaili ile ara ve ekle..."
+              />
+
+              {/* Selected Collaborators */}
+              {formData.collaborators.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-sm text-muted-foreground">Seçilen işbirlikçiler:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.collaborators.map((collab) => (
+                      <div
+                        key={collab.uid}
+                        className="flex items-center gap-2 rounded border border-rule bg-secondary py-1 pl-2 pr-1 text-sm"
+                      >
+                        <img
+                          src={collab.photoURL || "/logo.svg"}
+                          alt={collab.name}
+                          className="h-5 w-5 rounded-full object-cover"
+                        />
+                        <span>{collab.name || collab.email}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeCollaborator(collab.uid)}
+                          className="flex h-6 w-6 items-center justify-center rounded-sm text-muted-foreground transition-colors duration-micro hover:bg-paper-3 hover:text-ink"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="bg-purple-900/30 p-4 rounded-lg border border-purple-700/50">
-              <h3 className="text-lg font-medium text-purple-200">GitHub Linkli</h3>
-              <p className="text-2xl font-bold text-purple-400">
-                {projects.filter(p => p.githubLink).length}
-              </p>
+
+            <div className="grid grid-cols-1 items-start gap-x-4 gap-y-2 md:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="project-status">Proje Durumu</Label>
+                <select
+                  id="project-status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  className={cn(fieldClasses, "h-control py-2")}
+                >
+                  <option value="active">Aktif</option>
+                  <option value="completed">Tamamlanmış</option>
+                  <option value="paused">Beklemede</option>
+                </select>
+              </div>
+
+              <div className="flex min-h-control items-center md:mt-6">
+                <label className="flex cursor-pointer items-center gap-3 text-sm font-medium">
+                  <input
+                    type="checkbox"
+                    name="archived"
+                    checked={formData.archived}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      archived: e.target.checked
+                    }))}
+                    className="h-5 w-5 shrink-0 rounded-sm border border-input accent-brand"
+                  />
+                  Projeyi Arşivle
+                </label>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Add Project Form */}
-        <AnimatePresence>
-          {showAddForm && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-gray-800/70 backdrop-blur-sm shadow-md rounded-lg p-6 mb-6 border border-gray-700/50"
-            >
-              <h2 className="text-xl font-semibold mb-4 text-gray-200">
-                {editingProject ? "Proje Düzenle" : "Yeni Proje Ekle"}
-              </h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
-                    Proje Başlığı *
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Proje başlığını girin"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
-                    English Project Title
-                  </label>
-                  <input
-                    type="text"
-                    name="titleEn"
-                    value={formData.titleEn}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter the English project title"
-                  />
-                </div>
+            <div className="flex flex-col gap-3 pt-4 sm:flex-row">
+              <Button type="submit" disabled={uploading}>
+                {uploading ?
+                  (editingProject ? "Güncelleniyor..." : "Ekleniyor...") :
+                  (editingProject ? "Proje Güncelle" : "Proje Ekle")
+                }
+              </Button>
+              <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                İptal
+              </Button>
+            </div>
+          </form>
+        </Section>
+      )}
 
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
-                    Açıklama *
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    required
-                    rows={4}
-                    className="w-full px-4 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Proje hakkında kısa bir açıklama yazın"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
-                    English Description
-                  </label>
-                  <textarea
-                    name="descriptionEn"
-                    value={formData.descriptionEn}
-                    onChange={handleInputChange}
-                    rows={4}
-                    className="w-full px-4 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Write a short English description for the project"
-                  />
-                </div>
-
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
-                    GitHub Linki
-                  </label>
-                  <input
-                    type="url"
-                    name="githubLink"
-                    value={formData.githubLink}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="https://github.com/username/project"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
-                    Proje Görseli
-                  </label>
-                  {editingProject?.imageUrl && (
-                    <div className="mb-3">
-                      <p className="text-sm text-gray-300 mb-2">Mevcut görsel:</p>
-                      <img
-                        src={editingProject.imageUrl}
-                        alt="Mevcut proje görseli"
-                        className="w-32 h-24 object-cover rounded-lg border"
-                      />
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*,image/heic,image/heif"
-                    onChange={handleImageChange}
-                    className="w-full px-4 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {editingProject?.imageUrl && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      Yeni bir görsel seçerseniz mevcut görsel değiştirilecektir.
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
-                    İşbirlikçiler
-                  </label>
-                  <UserMentionInput
-                    onUserSelect={handleUserSelect}
-                    selectedUsers={formData.collaborators}
-                    placeholder="Kullanıcı emaili ile ara ve ekle..."
-                  />
-                  
-                  {/* Selected Collaborators */}
-                  {formData.collaborators.length > 0 && (
-                    <div className="mt-3 space-y-2">
-                      <p className="text-sm text-gray-300">Seçilen işbirlikçiler:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {formData.collaborators.map((collab) => (
-                          <div
-                            key={collab.uid}
-                            className="flex items-center gap-2 bg-blue-900/30 text-blue-200 px-3 py-1 rounded-full text-sm border border-blue-700/50"
+      {/* Projects Table */}
+      <Section title={`Tüm Projeler (${projects.length})`}>
+        {projects.length === 0 ? (
+          <EmptyState
+            title="Henüz proje bulunmuyor."
+            action={
+              <Button asChild>
+                <Link href="/projects">İlk Projeyi Ekle</Link>
+              </Button>
+            }
+          />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Proje</TableHead>
+                <TableHead>İşbirlikçiler</TableHead>
+                <TableHead>Sosyal Veriler</TableHead>
+                <TableHead>Tarih</TableHead>
+                <TableHead>İşlemler</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {projects.map((project) => (
+                <TableRow key={project.id}>
+                  <TableCell className="whitespace-nowrap">
+                    <div className="flex items-center gap-4">
+                      {project.imageUrl && (
+                        <img
+                          src={project.imageUrl}
+                          alt={project.title}
+                          className="h-12 w-12 shrink-0 rounded object-cover"
+                        />
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium">
+                          {project.title}
+                        </div>
+                        <div className="max-w-xs truncate text-sm text-muted-foreground">
+                          {project.description}
+                        </div>
+                        {project.githubLink && (
+                          <a
+                            href={project.githubLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-brand underline underline-offset-4 hover:decoration-2"
                           >
+                            GitHub ↗
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center gap-1">
+                      {project.collaborators && project.collaborators.length > 0 ? (
+                        project.collaborators.slice(0, 3).map((collab, index) => (
+                          <Badge key={index}>
                             <img
                               src={collab.photoURL || "/logo.svg"}
                               alt={collab.name}
-                              className="w-5 h-5 rounded-full object-cover"
+                              className="h-4 w-4 rounded-full object-cover"
                             />
-                            <span>{collab.name || collab.email}</span>
-                            <button
-                              type="button"
-                              onClick={() => removeCollaborator(collab.uid)}
-                              className="ml-1 text-blue-300 hover:text-blue-100"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-200 mb-2">
-                      Proje Durumu
-                    </label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="active">Aktif</option>
-                      <option value="completed">Tamamlanmış</option>
-                      <option value="paused">Beklemede</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center">
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-200">
-                      <input
-                        type="checkbox"
-                        name="archived"
-                        checked={formData.archived}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          archived: e.target.checked
-                        }))}
-                        className="w-4 h-4 text-blue-400 bg-gray-900 border-gray-500 rounded focus:ring-blue-500"
-                      />
-                      Projeyi Arşivle
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <button
-                    type="submit"
-                    disabled={uploading}
-                    className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors disabled:opacity-50"
-                  >
-                    {uploading ? 
-                      (editingProject ? "Güncelleniyor..." : "Ekleniyor...") : 
-                      (editingProject ? "Proje Güncelle" : "Proje Ekle")
-                    }
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelEdit}
-                    className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-colors"
-                  >
-                    İptal
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Projects Table */}
-        <div className="bg-gray-800/70 backdrop-blur-sm shadow-md rounded-lg overflow-hidden border border-gray-700/50">
-          <div className="px-6 py-4 border-b border-gray-600">
-            <h2 className="text-xl font-semibold text-gray-200">
-              Tüm Projeler ({projects.length})
-            </h2>
-          </div>
-          
-          {projects.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-gray-400 text-lg">Henüz proje bulunmuyor.</p>
-              <Link
-                href="/projects"
-                className="inline-block mt-4 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                İlk Projeyi Ekle
-              </Link>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-700">
-                <thead className="bg-gradient-to-r from-gray-800 to-gray-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Proje
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      İşbirlikçiler
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Sosyal Veriler
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Tarih
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      İşlemler
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-gray-800/50 divide-y divide-gray-700">
-                  {projects.map((project) => (
-                    <motion.tr
-                      key={project.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="hover:bg-gray-700/60"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          {project.imageUrl && (
-                            <img
-                              src={project.imageUrl}
-                              alt={project.title}
-                              className="w-12 h-12 rounded-lg object-cover mr-4"
-                            />
-                          )}
-                          <div>
-                            <div className="text-sm font-medium text-gray-100">
-                              {project.title}
-                            </div>
-                            <div className="text-sm text-gray-400 max-w-xs truncate">
-                              {project.description}
-                            </div>
-                            {project.githubLink && (
-                              <a
-                                href={project.githubLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-400 hover:text-blue-800"
-                              >
-                                GitHub ↗
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-wrap gap-1">
-                          {project.collaborators && project.collaborators.length > 0 ? (
-                            project.collaborators.slice(0, 3).map((collab, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center gap-1 bg-blue-900/30 px-2 py-1 rounded-full text-xs border border-blue-700/50"
-                              >
-                                <img
-                                  src={collab.photoURL || "/logo.svg"}
-                                  alt={collab.name}
-                                  className="w-4 h-4 rounded-full object-cover"
-                                />
-                                <span className="text-blue-200">
-                                  {collab.name?.split(' ')[0] || collab.email.split('@')[0]}
-                                </span>
-                              </div>
-                            ))
-                          ) : (
-                            <span className="text-gray-400 text-sm">-</span>
-                          )}
-                          {project.collaborators && project.collaborators.length > 3 && (
-                            <span className="text-xs text-gray-400">
-                              +{project.collaborators.length - 3}
+                            <span>
+                              {collab.name?.split(' ')[0] || collab.email.split('@')[0]}
                             </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-4 text-xs text-gray-300">
-                            <div className="flex items-center gap-1">
-                              <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                              </svg>
-                              <span>{project.likes?.length || 0}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M21 6h-2l-9-4-9 4v2h2l9-4 9 4v2zm-9 5.5c-2.49 0-4.5 2.01-4.5 4.5s2.01 4.5 4.5 4.5 4.5-2.01 4.5-4.5-2.01-4.5-4.5-4.5zm0 7c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                              </svg>
-                              <span>{project.views || 0}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h11c.55 0 1-.45 1-1z"/>
-                              </svg>
-                              <span>{project.comments?.length || 0}</span>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => handleManageSocial(project)}
-                            className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-2 py-1 rounded transition-colors"
-                          >
-                            Yönet
-                          </button>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                        {project.createdAt ? (
-                          new Date(project.createdAt.toDate()).toLocaleDateString('tr-TR')
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => handleEditProject(project)}
-                            className="text-blue-400 hover:text-blue-900 transition-colors"
-                          >
-                            Düzenle
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProject(project.id, project.title)}
-                            className="text-red-400 hover:text-red-900 transition-colors"
-                          >
-                            Sil
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Social Data Management Modal */}
-      <AnimatePresence>
-        {showSocialModal && selectedProject && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-            onClick={() => setShowSocialModal(false)}
-            style={{ overscrollBehavior: 'contain' }}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden"
-              style={{ overscrollBehavior: 'contain' }}
-            >
-              {/* Modal Header */}
-              <div className="p-6 border-b border-gray-600">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-100">
-                      Sosyal Veri Yönetimi
-                    </h3>
-                    <p className="text-gray-300 mt-1">{selectedProject.title}</p>
-                  </div>
-                  <button
-                    onClick={() => setShowSocialModal(false)}
-                    className="text-gray-400 hover:text-gray-300 transition-colors"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              {/* Modal Content */}
-              <div 
-                className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]"
-                style={{ 
-                  overscrollBehavior: 'contain',
-                  WebkitOverflowScrolling: 'touch'
-                }}
-              >
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Stats and Actions */}
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="text-lg font-medium text-gray-100 mb-4">İstatistikler ve İşlemler</h4>
-                      
-                      {/* Stats Cards */}
-                      <div className="grid grid-cols-3 gap-4 mb-6">
-                        <div className="bg-red-900/30 p-4 rounded-lg text-center border border-red-700/50">
-                          <div className="flex items-center justify-center mb-2">
-                            <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                          </div>
-                          <p className="text-2xl font-bold text-red-400">{selectedProject.likes?.length || 0}</p>
-                          <p className="text-xs text-red-300">Beğeni</p>
-                        </div>
-                        
-                        <div className="bg-blue-900/30 p-4 rounded-lg text-center border border-blue-700/50">
-                          <div className="flex items-center justify-center mb-2">
-                            <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M21 6h-2l-9-4-9 4v2h2l9-4 9 4v2zm-9 5.5c-2.49 0-4.5 2.01-4.5 4.5s2.01 4.5 4.5 4.5 4.5-2.01 4.5-4.5-2.01-4.5-4.5-4.5zm0 7c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                            </svg>
-                          </div>
-                          <p className="text-2xl font-bold text-blue-400">{selectedProject.views || 0}</p>
-                          <p className="text-xs text-blue-300">Görüntülenme</p>
-                        </div>
-                        
-                        <div className="bg-green-900/30 p-4 rounded-lg text-center border border-green-700/50">
-                          <div className="flex items-center justify-center mb-2">
-                            <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h11c.55 0 1-.45 1-1z"/>
-                            </svg>
-                          </div>
-                          <p className="text-2xl font-bold text-green-400">{selectedProject.comments?.length || 0}</p>
-                          <p className="text-xs text-green-300">Yorum</p>
-                        </div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="space-y-3">
-                        <button
-                          onClick={() => handleResetViews(selectedProject.id)}
-                          className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
-                          Görüntülenme Sayısını Sıfırla
-                        </button>
-                        
-                        <button
-                          onClick={() => handleResetLikes(selectedProject.id)}
-                          className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                          Tüm Beğenileri Sil
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Comments Management */}
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-100 mb-4">Yorumlar ({selectedProject.comments?.length || 0})</h4>
-                    
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                      {selectedProject.comments && selectedProject.comments.length > 0 ? (
-                        selectedProject.comments
-                          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                          .map((comment) => (
-                          <div key={comment.id} className="bg-gray-700/60 p-4 rounded-lg border border-gray-600/50">
-                            <div className="flex items-start gap-3">
-                              <img
-                                src={comment.userPhoto || "/logo.svg"}
-                                alt={comment.userName}
-                                className="w-8 h-8 rounded-full object-cover"
-                              />
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between mb-2">
-                                  <div>
-                                    <p className="font-medium text-gray-100 text-sm">{comment.userName}</p>
-                                    <p className="text-xs text-gray-400">
-                                      {new Date(comment.createdAt).toLocaleDateString('tr-TR', {
-                                        year: 'numeric',
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      })}
-                                    </p>
-                                  </div>
-                                  <button
-                                    onClick={() => handleDeleteComment(selectedProject.id, comment.id)}
-                                    className="text-red-500 hover:text-red-700 transition-colors"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                  </button>
-                                </div>
-                                <p className="text-gray-200 text-sm leading-relaxed">{comment.text}</p>
-                              </div>
-                            </div>
-                          </div>
+                          </Badge>
                         ))
                       ) : (
-                        <div className="text-center py-8">
-                          <p className="text-gray-400">Henüz yorum bulunmuyor.</p>
-                        </div>
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
+                      {project.collaborators && project.collaborators.length > 3 && (
+                        <span className="font-outlier text-xs tabular-nums text-muted-foreground">
+                          +{project.collaborators.length - 3}
+                        </span>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-4 font-outlier text-xs tabular-nums text-ink-2">
+                        <div className="flex items-center gap-1">
+                          <Heart className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>{project.likes?.length || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>{project.views || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>{project.comments?.length || 0}</span>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleManageSocial(project)}
+                      >
+                        Yönet
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap font-outlier tabular-nums text-ink-2">
+                    {project.createdAt ? (
+                      new Date(project.createdAt.toDate()).toLocaleDateString('tr-TR')
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditProject(project)}
+                      >
+                        Düzenle
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteProject(project.id, project.title)}
+                      >
+                        Sil
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Section>
+
+      {/* Social Data Management Modal */}
+      {showSocialModal && selectedProject && (
+        <div
+          className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4 animate-in fade-in-0 duration-short"
+          onClick={() => setShowSocialModal(false)}
+          style={{ overscrollBehavior: 'contain' }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="social-modal-title"
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg border border-rule bg-background text-foreground"
+            style={{ overscrollBehavior: 'contain' }}
+          >
+            {/* Modal Header */}
+            <div className="border-b border-rule p-4 sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h3 id="social-modal-title" className="font-display text-xl font-bold">
+                    Sosyal Veri Yönetimi
+                  </h3>
+                  <p className="mt-1 break-words text-ink-2">{selectedProject.title}</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Kapat"
+                  onClick={() => setShowSocialModal(false)}
+                  className="-mr-2 -mt-2 shrink-0"
+                >
+                  <X aria-hidden="true" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div
+              className="max-h-[calc(90vh-140px)] overflow-y-auto p-4 sm:p-6"
+              style={{
+                overscrollBehavior: 'contain',
+                WebkitOverflowScrolling: 'touch'
+              }}
+            >
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                {/* Stats and Actions */}
+                <div>
+                  <h4 className="mb-4 font-display text-lg font-semibold">İstatistikler ve İşlemler</h4>
+
+                  {/* Stats */}
+                  <dl className="mb-6 grid grid-cols-3 gap-4 border-y border-rule py-4">
+                    <Stat label="Beğeni" value={selectedProject.likes?.length || 0} />
+                    <Stat label="Görüntülenme" value={selectedProject.views || 0} />
+                    <Stat label="Yorum" value={selectedProject.comments?.length || 0} />
+                  </dl>
+
+                  {/* Action Buttons */}
+                  <div className="space-y-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleResetViews(selectedProject.id)}
+                      className="h-auto min-h-control w-full whitespace-normal py-2"
+                    >
+                      <RefreshCw aria-hidden="true" />
+                      Görüntülenme Sayısını Sıfırla
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => handleResetLikes(selectedProject.id)}
+                      className="h-auto min-h-control w-full whitespace-normal py-2"
+                    >
+                      <Trash2 aria-hidden="true" />
+                      Tüm Beğenileri Sil
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Comments Management */}
+                <div className="min-w-0">
+                  <h4 className="mb-4 font-display text-lg font-semibold">Yorumlar ({selectedProject.comments?.length || 0})</h4>
+
+                  <div className="max-h-96 overflow-y-auto border-t border-rule">
+                    {selectedProject.comments && selectedProject.comments.length > 0 ? (
+                      selectedProject.comments
+                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                        .map((comment) => (
+                        <div key={comment.id} className="border-b border-rule py-3">
+                          <div className="flex items-start gap-3">
+                            <img
+                              src={comment.userPhoto || "/logo.svg"}
+                              alt={comment.userName}
+                              className="h-8 w-8 shrink-0 rounded-full object-cover"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="mb-1 flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="break-words text-sm font-medium">{comment.userName}</p>
+                                  <p className="font-outlier text-xs tabular-nums text-muted-foreground">
+                                    {new Date(comment.createdAt).toLocaleDateString('tr-TR', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </p>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label="Sil"
+                                  onClick={() => handleDeleteComment(selectedProject.id, comment.id)}
+                                  className="-mr-2 -mt-2 shrink-0 text-error"
+                                >
+                                  <Trash2 aria-hidden="true" />
+                                </Button>
+                              </div>
+                              <p className="break-words text-sm leading-relaxed text-ink-2">{comment.text}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="py-6 text-sm text-muted-foreground">Henüz yorum bulunmuyor.</p>
+                    )}
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Modal Footer */}
-              <div className="p-6 border-t border-gray-600">
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setShowSocialModal(false)}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors"
-                  >
-                    Kapat
-                  </button>
-                </div>
+            {/* Modal Footer */}
+            <div className="border-t border-rule p-4 sm:p-6">
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowSocialModal(false)}
+                >
+                  Kapat
+                </Button>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ToastContainer
         position="top-right"
@@ -993,7 +879,7 @@ export default function AdminProjectsPage() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
+        theme="light"
       />
     </div>
   );

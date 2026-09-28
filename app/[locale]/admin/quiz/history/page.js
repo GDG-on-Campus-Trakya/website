@@ -16,6 +16,30 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { checkUserRole, ROLES } from "@/utils/roleUtils";
 import { Link } from "@/i18n/navigation";
+import {
+  ArrowLeft,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  ListChecks,
+  Timer,
+  Trophy,
+  User,
+  Users
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Stat } from "@/components/ui/stat";
+import { PageHeader, EmptyState } from "@/components/ui/page";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell
+} from "@/components/ui/table";
 
 export default function GameHistoryPage() {
   const [user, loading] = useAuthState(auth);
@@ -101,252 +125,217 @@ export default function GameHistoryPage() {
   const myGames = gameResults.filter((g) => g.hostId === user?.email).length;
 
   if (loading || loadingResults) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-white">Yükleniyor...</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">Yükleniyor...</p>;
   }
 
   if (!userRole) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Erişim Reddedildi</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        Erişim Reddedildi
+      </p>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-3 sm:p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2">Oyun Geçmişi</h1>
-            <p className="text-sm sm:text-base text-gray-300">Tamamlanan Quiz oyunlarının detaylı sonuçları</p>
-          </div>
-          <Link
-            href="/admin/quiz/manage"
-            className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-center text-sm sm:text-base"
-          >
-            ← Quiz Yönetimine Dön
-          </Link>
-        </div>
+    <div>
+      <PageHeader
+        title="Oyun Geçmişi"
+        description="Tamamlanan Quiz oyunlarının detaylı sonuçları"
+        actions={
+          <Button asChild variant="outline">
+            <Link href="/admin/quiz/manage">
+              <ArrowLeft aria-hidden="true" />
+              Quiz Yönetimine Dön
+            </Link>
+          </Button>
+        }
+      />
 
-        {/* Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/20">
-            <div className="text-gray-400 text-xs sm:text-sm mb-1">Toplam Oyun</div>
-            <div className="text-xl sm:text-3xl font-bold text-white">{totalGames}</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/20">
-            <div className="text-gray-400 text-xs sm:text-sm mb-1">Toplam Oyuncu</div>
-            <div className="text-xl sm:text-3xl font-bold text-purple-400">{totalPlayers}</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/20">
-            <div className="text-gray-400 text-xs sm:text-sm mb-1">Ort. Oyuncu</div>
-            <div className="text-xl sm:text-3xl font-bold text-blue-400">{averagePlayersPerGame}</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/20">
-            <div className="text-gray-400 text-xs sm:text-sm mb-1">Benim Oyunlarım</div>
-            <div className="text-xl sm:text-3xl font-bold text-green-400">{myGames}</div>
-          </div>
-        </div>
+      {/* Statistics */}
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-4 md:gap-x-8">
+        <Stat label="Toplam Oyun" value={totalGames} />
+        <Stat label="Toplam Oyuncu" value={totalPlayers} />
+        <Stat label="Ort. Oyuncu" value={averagePlayersPerGame} />
+        <Stat label="Benim Oyunlarım" value={myGames} />
+      </dl>
 
-        {/* Filter */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20 mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <button
-              onClick={() => setFilterHost("all")}
-              className={`w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm ${
-                filterHost === "all"
-                  ? "bg-purple-600 text-white"
-                  : "bg-white/5 text-gray-400 hover:bg-white/10"
-              }`}
+      {/* Filter */}
+      <div className="mt-10 flex flex-wrap items-center gap-3">
+        <Button
+          variant={filterHost === "all" ? "default" : "outline"}
+          aria-pressed={filterHost === "all"}
+          onClick={() => setFilterHost("all")}
+        >
+          Tüm Oyunlar
+        </Button>
+        <Button
+          variant={filterHost === "me" ? "default" : "outline"}
+          aria-pressed={filterHost === "me"}
+          onClick={() => setFilterHost("me")}
+        >
+          Benim Oyunlarım
+        </Button>
+      </div>
+
+      {/* Results List */}
+      {filteredResults.length === 0 ? (
+        <EmptyState className="mt-6" title="Henüz tamamlanmış oyun yok" />
+      ) : (
+        <ul className="mt-6 border-t-2 border-ink">
+          {filteredResults.map((result) => (
+            <li
+              key={result.id}
+              className="cursor-pointer border-b border-rule py-5 transition-colors duration-micro hover:bg-secondary"
+              onClick={() => setSelectedGame(selectedGame?.id === result.id ? null : result)}
             >
-              Tüm Oyunlar
-            </button>
-            <button
-              onClick={() => setFilterHost("me")}
-              className={`w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm ${
-                filterHost === "me"
-                  ? "bg-purple-600 text-white"
-                  : "bg-white/5 text-gray-400 hover:bg-white/10"
-              }`}
-            >
-              Benim Oyunlarım
-            </button>
-          </div>
-        </div>
-
-        {/* Results List */}
-        {filteredResults.length === 0 ? (
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-8 sm:p-12 border border-white/20 text-center">
-            <p className="text-gray-400 text-base sm:text-lg">Henüz tamamlanmış oyun yok</p>
-          </div>
-        ) : (
-          <div className="space-y-3 sm:space-y-4">
-            {filteredResults.map((result) => (
-              <div
-                key={result.id}
-                className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20 hover:bg-white/15 transition-colors cursor-pointer"
-                onClick={() => setSelectedGame(selectedGame?.id === result.id ? null : result)}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <h3 className="text-lg sm:text-2xl font-bold text-white">{result.quizTitle}</h3>
-                      <span className="px-2 sm:px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs sm:text-sm font-semibold">
-                        {result.gameCode}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">
-                      <span>🎮 {result.stats?.totalPlayers || 0}</span>
-                      <span>📝 {result.totalQuestions}</span>
-                      <span>⏱ {formatDuration(result.duration)}</span>
-                      <span className="hidden sm:inline">👤 {result.hostName}</span>
-                      <span className="hidden sm:inline">📅 {formatDate(result.finishedAt)}</span>
-                    </div>
-
-                    {/* Winner */}
-                    {result.winner && (
-                      <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-yellow-500/20 border border-yellow-500 rounded-lg inline-flex">
-                        <span className="text-xl sm:text-2xl">🏆</span>
-                        <div>
-                          <div className="text-yellow-400 font-bold text-sm sm:text-base">{result.winner.name}</div>
-                          <div className="text-yellow-200 text-xs sm:text-sm">
-                            {result.winner.score} puan • {result.winner.correctAnswers} doğru
-                          </div>
-                        </div>
-                      </div>
-                    )}
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="mr-1 min-w-0 break-words font-display text-lg font-bold md:text-xl">
+                      {result.quizTitle}
+                    </h2>
+                    <Badge className="font-outlier">{result.gameCode}</Badge>
                   </div>
 
-                  <button
-                    className="text-white hover:text-purple-400 transition-colors ml-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedGame(selectedGame?.id === result.id ? null : result);
-                    }}
-                  >
-                    {selectedGame?.id === result.id ? "▲" : "▼"}
-                  </button>
+                  <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="font-outlier tabular-nums">{result.stats?.totalPlayers || 0}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <ListChecks className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="font-outlier tabular-nums">{result.totalQuestions}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Timer className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="font-outlier tabular-nums">{formatDuration(result.duration)}</span>
+                    </span>
+                    <span className="hidden items-center gap-1.5 sm:inline-flex">
+                      <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      {result.hostName}
+                    </span>
+                    <span className="hidden items-center gap-1.5 sm:inline-flex">
+                      <Calendar className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="font-outlier tabular-nums">{formatDate(result.finishedAt)}</span>
+                    </span>
+                  </div>
+
+                  {/* Winner */}
+                  {result.winner && (
+                    <div className="mt-4 inline-flex max-w-full items-center gap-3 rounded border border-ink bg-warning px-3 py-2 text-ink">
+                      <Trophy className="h-5 w-5 shrink-0" aria-hidden="true" />
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold">{result.winner.name}</div>
+                        <div className="text-sm">
+                          <span className="tabular-nums">{result.winner.score}</span> puan •{" "}
+                          <span className="tabular-nums">{result.winner.correctAnswers}</span> doğru
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Detailed Stats */}
-                {selectedGame?.id === result.id && (
-                  <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white/20">
-                    {/* Top 3 */}
-                    {result.topThree && result.topThree.length > 0 && (
-                      <div className="mb-4 sm:mb-6">
-                        <h4 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">🏅 İlk 3</h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                          {result.topThree.map((player, index) => (
-                            <div
-                              key={player.userId}
-                              className={`p-3 sm:p-4 rounded-lg ${
-                                index === 0
-                                  ? "bg-yellow-500/20 border-2 border-yellow-500"
-                                  : index === 1
-                                  ? "bg-gray-400/20 border-2 border-gray-400"
-                                  : "bg-orange-500/20 border-2 border-orange-500"
-                              }`}
-                            >
-                              <div className="text-center">
-                                <div className="text-3xl sm:text-4xl mb-2">
-                                  {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
-                                </div>
-                                <div className="text-white font-bold text-sm sm:text-lg truncate">{player.name}</div>
-                                <div className="text-xl sm:text-2xl font-bold text-white mt-1">
-                                  {player.score}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* All Players */}
-                    <div>
-                      <h4 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">
-                        👥 Tüm Oyuncular ({result.players?.length || 0})
-                      </h4>
-                      <div className="bg-white/5 rounded-xl overflow-x-auto">
-                        <table className="w-full min-w-[500px]">
-                          <thead className="bg-white/10">
-                            <tr>
-                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-gray-300 text-xs sm:text-sm">Sıra</th>
-                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-gray-300 text-xs sm:text-sm">İsim</th>
-                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-gray-300 text-xs sm:text-sm hidden sm:table-cell">Bölüm</th>
-                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-center text-gray-300 text-xs sm:text-sm">Doğru</th>
-                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-center text-gray-300 text-xs sm:text-sm hidden sm:table-cell">Ort. Süre</th>
-                              <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-gray-300 text-xs sm:text-sm">Puan</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {result.players?.map((player, index) => (
-                              <tr
-                                key={player.userId}
-                                className={`border-t border-white/10 ${
-                                  index < 3 ? "bg-purple-500/10" : ""
-                                }`}
-                              >
-                                <td className="px-2 sm:px-4 py-2 sm:py-3 text-white font-bold text-xs sm:text-base">#{player.rank}</td>
-                                <td className="px-2 sm:px-4 py-2 sm:py-3 text-white text-xs sm:text-base truncate max-w-[120px]">{player.name}</td>
-                                <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-400 text-xs sm:text-sm hidden sm:table-cell">
-                                  {player.department || "-"}
-                                </td>
-                                <td className="px-2 sm:px-4 py-2 sm:py-3 text-center text-green-400 text-xs sm:text-base">
-                                  {player.correctAnswers}/{player.totalAnswers}
-                                </td>
-                                <td className="px-2 sm:px-4 py-2 sm:py-3 text-center text-gray-400 text-xs sm:text-base hidden sm:table-cell">
-                                  {player.averageTimeSpent}s
-                                </td>
-                                <td className="px-2 sm:px-4 py-2 sm:py-3 text-right text-white font-bold text-xs sm:text-base">
-                                  {player.score}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {/* Stats Summary */}
-                    <div className="mt-4 sm:mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                      <div className="bg-white/5 p-3 sm:p-4 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">En Yüksek</div>
-                        <div className="text-lg sm:text-2xl font-bold text-white">
-                          {result.stats?.highestScore || 0}
-                        </div>
-                      </div>
-                      <div className="bg-white/5 p-3 sm:p-4 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">En Düşük</div>
-                        <div className="text-lg sm:text-2xl font-bold text-white">
-                          {result.stats?.lowestScore || 0}
-                        </div>
-                      </div>
-                      <div className="bg-white/5 p-3 sm:p-4 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Ortalama</div>
-                        <div className="text-lg sm:text-2xl font-bold text-white">
-                          {result.stats?.averageScore || 0}
-                        </div>
-                      </div>
-                      <div className="bg-white/5 p-3 sm:p-4 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Ort. Doğru</div>
-                        <div className="text-lg sm:text-2xl font-bold text-white">
-                          {result.stats?.averageCorrectAnswers || 0}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  aria-expanded={selectedGame?.id === result.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedGame(selectedGame?.id === result.id ? null : result);
+                  }}
+                >
+                  {selectedGame?.id === result.id ? (
+                    <ChevronUp aria-hidden="true" />
+                  ) : (
+                    <ChevronDown aria-hidden="true" />
+                  )}
+                </Button>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+
+              {/* Detailed Stats */}
+              {selectedGame?.id === result.id && (
+                <div className="mt-6 border-t border-rule pt-6">
+                  {/* Top 3 */}
+                  {result.topThree && result.topThree.length > 0 && (
+                    <div className="mb-8">
+                      <h3 className="mb-3 font-display text-lg font-bold">İlk 3</h3>
+                      <ol className="border-t border-ink">
+                        {result.topThree.map((player, index) => (
+                          <li
+                            key={player.userId}
+                            className="flex items-center gap-4 border-b border-rule py-3"
+                          >
+                            <span
+                              className={cn(
+                                "flex h-9 w-9 shrink-0 items-center justify-center rounded font-outlier text-sm font-semibold tabular-nums",
+                                index === 0 ? "bg-warning text-ink" : "bg-paper-3 text-ink"
+                              )}
+                            >
+                              {index + 1}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate font-semibold">{player.name}</span>
+                            <span className="font-display text-xl font-extrabold tabular-nums">
+                              {player.score}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
+                  {/* All Players */}
+                  <div>
+                    <h3 className="mb-3 font-display text-lg font-bold">
+                      Tüm Oyuncular ({result.players?.length || 0})
+                    </h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead>Sıra</TableHead>
+                          <TableHead>İsim</TableHead>
+                          <TableHead className="hidden sm:table-cell">Bölüm</TableHead>
+                          <TableHead className="text-center">Doğru</TableHead>
+                          <TableHead className="hidden text-center sm:table-cell">Ort. Süre</TableHead>
+                          <TableHead className="text-right">Puan</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {result.players?.map((player, index) => (
+                          <TableRow key={player.userId} className={index < 3 ? "bg-paper-2" : ""}>
+                            <TableCell className="font-outlier font-semibold tabular-nums">#{player.rank}</TableCell>
+                            <TableCell className="max-w-[120px] truncate sm:max-w-none">{player.name}</TableCell>
+                            <TableCell className="hidden text-muted-foreground sm:table-cell">
+                              {player.department || "-"}
+                            </TableCell>
+                            <TableCell className="text-center tabular-nums text-success">
+                              {player.correctAnswers}/{player.totalAnswers}
+                            </TableCell>
+                            <TableCell className="hidden text-center tabular-nums text-muted-foreground sm:table-cell">
+                              {player.averageTimeSpent}s
+                            </TableCell>
+                            <TableCell className="text-right font-semibold tabular-nums">
+                              {player.score}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Stats Summary */}
+                  <dl className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 border-t border-rule pt-6 md:grid-cols-4 md:gap-x-8">
+                    <Stat label="En Yüksek" value={result.stats?.highestScore || 0} />
+                    <Stat label="En Düşük" value={result.stats?.lowestScore || 0} />
+                    <Stat label="Ortalama" value={result.stats?.averageScore || 0} />
+                    <Stat label="Ort. Doğru" value={result.stats?.averageCorrectAnswers || 0} />
+                  </dl>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
 
       <ToastContainer
         position="top-right"
@@ -354,7 +343,7 @@ export default function GameHistoryPage() {
         hideProgressBar={false}
         newestOnTop
         closeOnClick
-        theme="dark"
+        theme="light"
       />
     </div>
   );

@@ -9,16 +9,13 @@ import AnnouncementPostCard from "@/components/AnnouncementPostCard";
 import AnnouncementForm from "@/components/AnnouncementForm";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  Search,
-  Filter,
-  Plus,
-  BarChart3,
-  Eye,
-  EyeOff,
-  ArrowLeft,
-} from "lucide-react";
+import { Search, Plus, Eye, EyeOff } from "lucide-react";
 import { logger } from "@/utils/logger";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input, fieldClasses } from "@/components/ui/input";
+import { PageHeader, EmptyState, Skeleton } from "@/components/ui/page";
+import { Stat } from "@/components/ui/stat";
 
 export default function AdminDuyurularPage() {
   const [user, loading] = useAuthState(auth);
@@ -197,220 +194,142 @@ export default function AdminDuyurularPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-gray-200">Loading...</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">Loading...</p>;
   }
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Access Denied</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        Access Denied
+      </p>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-4 mb-4">
-            <button
-              onClick={() => router.push("/admin")}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-100 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Admin Panel</span>
-            </button>
-            <div className="border-l border-gray-500 h-8"></div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-100 mb-2">
-                Duyurular Yönetimi
-              </h1>
-              <p className="text-gray-300">
-                Duyuruları oluşturun, düzenleyin ve yönetin
-              </p>
-            </div>
-          </div>
-        </div>
+    <div>
+      <PageHeader
+        title="Duyurular Yönetimi"
+        description="Duyuruları oluşturun, düzenleyin ve yönetin"
+        actions={
+          <Button
+            onClick={() => {
+              setSelectedAnnouncement(null);
+              setShowForm(true);
+            }}
+          >
+            <Plus aria-hidden="true" />
+            <span>Yeni Duyuru</span>
+          </Button>
+        }
+      />
 
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <BarChart3 className="w-8 h-8 text-blue-400" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-300">
-                    Toplam Duyuru
-                  </p>
-                  <p className="text-2xl font-bold text-gray-100">
-                    {stats.totalAnnouncements}
-                  </p>
-                </div>
-              </div>
-            </div>
+      {/* Stats */}
+      {stats && (
+        <dl className="mb-10 grid grid-cols-3 gap-x-6 gap-y-4 border-b border-rule pb-8 md:max-w-xl">
+          <Stat label="Toplam Duyuru" value={stats.totalAnnouncements} />
+          <Stat label="Yayında" value={stats.publishedAnnouncements} />
+          <Stat label="Taslak" value={stats.draftAnnouncements} />
+        </dl>
+      )}
 
-            <div className="bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <Eye className="w-8 h-8 text-green-400" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-300">
-                    Yayında
-                  </p>
-                  <p className="text-2xl font-bold text-gray-100">
-                    {stats.publishedAnnouncements}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <EyeOff className="w-8 h-8 text-yellow-400" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-300">Taslak</p>
-                  <p className="text-2xl font-bold text-gray-100">
-                    {stats.draftAnnouncements}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Controls */}
-        <div className="bg-gray-800 rounded-lg shadow p-6 mb-8">
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            {/* Search */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Duyuru ara..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-700/60 text-gray-100 placeholder-gray-400 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Filter */}
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="px-4 py-2 bg-gray-700/60 text-gray-100 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            >
-              <option value="all">
-                Tümü ({announcements.length})
-              </option>
-              <option value="published">
-                Yayında ({announcements.filter((a) => a.isPublished).length})
-              </option>
-              <option value="draft">
-                Taslak ({announcements.filter((a) => !a.isPublished).length})
-              </option>
-            </select>
-
-            {/* Create Button */}
-            <button
-              onClick={() => {
-                setSelectedAnnouncement(null);
-                setShowForm(true);
-              }}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 font-medium"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Yeni Duyuru</span>
-            </button>
-          </div>
-
-          {/* Bulk Actions */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => bulkTogglePublish(true)}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 text-sm"
-            >
-              <Eye className="w-4 h-4" />
-              <span>Taslakları Yayınla</span>
-            </button>
-
-            <button
-              onClick={() => bulkTogglePublish(false)}
-              className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors flex items-center space-x-2 text-sm"
-            >
-              <EyeOff className="w-4 h-4" />
-              <span>Yayındakileri Taslağa Al</span>
-            </button>
-
-            <button
-              onClick={loadAllAnnouncements}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm"
-            >
-              Yenile
-            </button>
-          </div>
-        </div>
-
-        {/* Announcements Grid */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAnnouncements.length > 0 ? (
-              filteredAnnouncements.map((announcement) => (
-                <AnnouncementPostCard
-                  key={announcement.id}
-                  announcement={announcement}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  showAdminActions={true}
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <div className="bg-gray-800 rounded-lg p-8">
-                  <h3 className="text-xl font-semibold text-gray-100 mb-2">
-                    Duyuru bulunamadı
-                  </h3>
-                  <p className="text-gray-300">
-                    Arama kriterlerinizi değiştirmeyi deneyin veya yeni bir
-                    duyuru oluşturun.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Announcement Form Modal */}
-        {showForm && (
-          <AnnouncementForm
-            announcement={selectedAnnouncement}
-            onClose={handleFormClose}
-            onSuccess={handleFormSuccess}
+      {/* Controls */}
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative min-w-0 flex-1">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
           />
-        )}
+          <Input
+            type="text"
+            placeholder="Duyuru ara..."
+            aria-label="Duyuru ara..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
 
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className={cn(fieldClasses, "h-control sm:w-auto")}
+        >
+          <option value="all">
+            Tümü ({announcements.length})
+          </option>
+          <option value="published">
+            Yayında ({announcements.filter((a) => a.isPublished).length})
+          </option>
+          <option value="draft">
+            Taslak ({announcements.filter((a) => !a.isPublished).length})
+          </option>
+        </select>
       </div>
+
+      {/* Bulk Actions */}
+      <div className="mb-10 flex flex-wrap items-center gap-3">
+        <Button variant="outline" size="sm" onClick={() => bulkTogglePublish(true)}>
+          <Eye aria-hidden="true" />
+          <span>Taslakları Yayınla</span>
+        </Button>
+
+        <Button variant="outline" size="sm" onClick={() => bulkTogglePublish(false)}>
+          <EyeOff aria-hidden="true" />
+          <span>Yayındakileri Taslağa Al</span>
+        </Button>
+
+        <Button variant="ghost" size="sm" onClick={loadAllAnnouncements}>
+          Yenile
+        </Button>
+      </div>
+
+      {/* Announcements Grid */}
+      {isLoading ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="status">
+          <Skeleton className="h-64" />
+          <Skeleton className="hidden h-64 md:block" />
+          <Skeleton className="hidden h-64 lg:block" />
+        </div>
+      ) : filteredAnnouncements.length > 0 ? (
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredAnnouncements.map((announcement) => (
+            <AnnouncementPostCard
+              key={announcement.id}
+              announcement={announcement}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              showAdminActions={true}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="Duyuru bulunamadı"
+          description="Arama kriterlerinizi değiştirmeyi deneyin veya yeni bir duyuru oluşturun."
+        />
+      )}
+
+      {/* Announcement Form Modal */}
+      {showForm && (
+        <AnnouncementForm
+          announcement={selectedAnnouncement}
+          onClose={handleFormClose}
+          onSuccess={handleFormSuccess}
+        />
+      )}
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }

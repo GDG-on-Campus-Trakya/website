@@ -9,6 +9,15 @@ import "react-toastify/dist/ReactToastify.css";
 import { logger } from "@/utils/logger";
 import { useLocale } from "next-intl";
 import { formatLocalizedDate } from "@/utils/localeUtils";
+import { Paperclip, RotateCcw, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { fieldClasses } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { PageHeader, EmptyState } from "@/components/ui/page";
+import { Stat } from "@/components/ui/stat";
 
 export default function AdminTicketsPage() {
   const locale = useLocale();
@@ -496,16 +505,16 @@ export default function AdminTicketsPage() {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusVariant = (status) => {
     switch (status) {
       case "open":
-        return "bg-yellow-900/50 text-yellow-300 border border-yellow-700";
+        return "warning";
       case "closed":
-        return "bg-green-900/50 text-green-300 border border-green-700";
+        return "success";
       case "in_progress":
-        return "bg-blue-900/50 text-blue-300 border border-blue-700";
+        return "accent";
       default:
-        return "bg-gray-700/50 text-gray-300 border border-gray-600";
+        return "neutral";
     }
   };
 
@@ -526,331 +535,292 @@ export default function AdminTicketsPage() {
   });
 
   if (loading || isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#000000] flex items-center justify-center">
-        <div className="text-white text-lg">{copy.loading}</div>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">{copy.loading}</p>;
   }
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#000000] flex items-center justify-center">
-        <p className="text-lg text-red-400">{copy.accessDenied}</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        {copy.accessDenied}
+      </p>
     );
   }
 
+  const rowAction = "h-11 md:h-9";
+  const selectClass = cn(fieldClasses, "h-control");
+
   return (
-    <div className="flex flex-col min-h-screen font-sans bg-gradient-to-b from-[#1a1a2e] to-[#000000] text-white p-4 sm:p-6">
-      {/* Header */}
-      <div className="text-center mb-8 pt-8">
-        <div className="inline-block">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#4285F4] via-[#DB4437] via-[#F4B400] to-[#0F9D58] animate-gradient-x mb-2">
-            {copy.title}
-          </h1>
-        </div>
-        <p className="text-gray-300 mt-4 text-lg">
-          {copy.subtitle}
-        </p>
-      </div>
+    <div>
+      <PageHeader title={copy.title} description={copy.subtitle} />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-6">
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-300">{copy.stats.total}</p>
-            <p className="text-3xl font-bold text-blue-400">{tickets.length}</p>
-          </div>
-        </div>
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-6">
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-300">{copy.stats.open}</p>
-            <p className="text-3xl font-bold text-yellow-400">
-              {tickets.filter((t) => t.status === "open").length}
-            </p>
-          </div>
-        </div>
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-6">
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-300">{copy.stats.closed}</p>
-            <p className="text-3xl font-bold text-green-400">
-              {tickets.filter((t) => t.status === "closed").length}
-            </p>
-          </div>
-        </div>
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-6">
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-300">{copy.stats.complaints}</p>
-            <p className="text-3xl font-bold text-red-400">
-              {tickets.filter((t) => t.category === "complaint").length}
-            </p>
-          </div>
-        </div>
-      </div>
+      <dl className="mb-10 grid grid-cols-2 gap-x-6 gap-y-6 border-b border-rule pb-8 sm:grid-cols-4 md:max-w-3xl">
+        <Stat label={copy.stats.total} value={tickets.length} />
+        <Stat
+          label={copy.stats.open}
+          value={tickets.filter((t) => t.status === "open").length}
+        />
+        <Stat
+          label={copy.stats.closed}
+          value={tickets.filter((t) => t.status === "closed").length}
+        />
+        <Stat
+          label={copy.stats.complaints}
+          value={tickets.filter((t) => t.category === "complaint").length}
+        />
+      </dl>
 
       {/* Filters */}
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-6 mb-8">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              {copy.filters.status}
-            </label>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-            >
-              <option value="all">{copy.filters.allStatuses}</option>
-              <option value="open">{copy.statuses.open}</option>
-              <option value="closed">{copy.statuses.closed}</option>
-              <option value="in_progress">{copy.statuses.in_progress}</option>
-            </select>
-          </div>
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              {copy.filters.category}
-            </label>
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-            >
-              <option value="all">{copy.filters.allCategories}</option>
-              <option value="complaint">{copy.categories.complaint}</option>
-              <option value="suggestion">{copy.categories.suggestion}</option>
-              <option value="technical">{copy.categories.technical}</option>
-              <option value="other">{copy.categories.other}</option>
-            </select>
-          </div>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end">
+        <div className="flex flex-1 flex-col gap-1.5 sm:max-w-xs">
+          <Label htmlFor="ticket-filter-status">{copy.filters.status}</Label>
+          <select
+            id="ticket-filter-status"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className={selectClass}
+          >
+            <option value="all">{copy.filters.allStatuses}</option>
+            <option value="open">{copy.statuses.open}</option>
+            <option value="closed">{copy.statuses.closed}</option>
+            <option value="in_progress">{copy.statuses.in_progress}</option>
+          </select>
+        </div>
+        <div className="flex flex-1 flex-col gap-1.5 sm:max-w-xs">
+          <Label htmlFor="ticket-filter-category">{copy.filters.category}</Label>
+          <select
+            id="ticket-filter-category"
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className={selectClass}
+          >
+            <option value="all">{copy.filters.allCategories}</option>
+            <option value="complaint">{copy.categories.complaint}</option>
+            <option value="suggestion">{copy.categories.suggestion}</option>
+            <option value="technical">{copy.categories.technical}</option>
+            <option value="other">{copy.categories.other}</option>
+          </select>
         </div>
       </div>
 
       {/* Tickets List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredTickets.length === 0 ? (
-          <div className="col-span-full bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-8 text-center">
-            <p className="text-gray-300 text-lg">
-              {copy.emptyFiltered}
-            </p>
-          </div>
-        ) : (
-          filteredTickets.map((ticket) => (
-            <div
+      {filteredTickets.length === 0 ? (
+        <EmptyState title={copy.emptyFiltered} />
+      ) : (
+        <ul className="border-t-2 border-ink">
+          {filteredTickets.map((ticket) => (
+            <li
               key={ticket.id}
-              className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-6 hover:border-gray-600/60 transition-colors cursor-pointer"
+              className="grid cursor-pointer gap-4 border-b border-rule py-5 transition-colors duration-micro hover:bg-secondary lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-8"
               onClick={() => setSelectedTicket(ticket)}
             >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white mb-2">
+              <div className="min-w-0">
+                <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <h3 className="min-w-0 break-words text-lg font-semibold">
                     {ticket.subject}
                   </h3>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                        ticket.status
-                      )}`}
-                    >
-                      {getStatusText(ticket.status)}
-                    </span>
-                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-700 text-gray-300">
-                      {getCategoryText(ticket.category)}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-400 mb-1">
-                    <strong>{copy.user}:</strong> {ticket.userName}
+                  <Badge variant={getStatusVariant(ticket.status)}>
+                    {getStatusText(ticket.status)}
+                  </Badge>
+                  <Badge>{getCategoryText(ticket.category)}</Badge>
+                  {ticket.ticketNumber && (
+                    <Badge className="font-outlier tabular-nums">
+                      #{ticket.ticketNumber}
+                    </Badge>
+                  )}
+                </div>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>
+                    <strong className="font-semibold text-ink-2">{copy.user}:</strong> {ticket.userName}
                   </p>
-                  <p className="text-sm text-gray-400 mb-1">
-                    <strong>{copy.createdAt}:</strong> {formatDateTime(ticket.createdAt)}
+                  <p>
+                    <strong className="font-semibold text-ink-2">{copy.createdAt}:</strong> {formatDateTime(ticket.createdAt)}
                   </p>
                   {ticket.status === "closed" && ticket.closedAt && (
-                    <p className="text-sm text-green-400 mb-1">
-                      <strong>{copy.closedAt}:</strong> {formatDateTime(ticket.closedAt)}{" "}
+                    <p className="text-success">
+                      <strong className="font-semibold">{copy.closedAt}:</strong> {formatDateTime(ticket.closedAt)}{" "}
                       {ticket.closedBy && `(${ticket.closedBy})`}
                     </p>
                   )}
-                  {ticket.reopenedAt && (
-                    <div className="mt-2 p-2 bg-orange-900/30 rounded-lg border border-orange-700/50">
-                      <p className="text-sm text-orange-300 mb-1">
-                        <strong>↻ {copy.reopenedAt}:</strong> {formatDateTime(ticket.reopenedAt)}
-                      </p>
-                      {ticket.reopenReason && (
-                        <p className="text-sm text-orange-200">
-                          <strong>{copy.reopenReason}:</strong> {ticket.reopenReason}
-                        </p>
-                      )}
-                    </div>
-                  )}
                   {ticket.assignedTo && (
-                    <p className="text-sm text-purple-400 mb-1">
-                      <strong>{copy.assignedAdmin}:</strong> {ticket.assignedTo}
+                    <p>
+                      <strong className="font-semibold text-ink-2">{copy.assignedAdmin}:</strong> {ticket.assignedTo}
                     </p>
                   )}
-                  {ticket.ticketNumber && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="px-2 py-1 bg-blue-600 text-white text-xs font-mono rounded">
-                        #{ticket.ticketNumber}
+                </div>
+                {ticket.reopenedAt && (
+                  <div className="mt-3 rounded-sm bg-warning px-3 py-2 text-sm text-ink">
+                    <p className="flex items-center gap-1.5">
+                      <RotateCcw className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span>
+                        <strong>{copy.reopenedAt}:</strong> {formatDateTime(ticket.reopenedAt)}
                       </span>
-                    </div>
+                    </p>
+                    {ticket.reopenReason && (
+                      <p>
+                        <strong>{copy.reopenReason}:</strong> {ticket.reopenReason}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <p className="mt-3 max-w-measure text-sm text-ink-2">{ticket.message}</p>
+
+                {/* Conversation moved into modal */}
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {/* Action Buttons */}
+                <div
+                  className="flex flex-wrap gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Button
+                    size="sm"
+                    className={rowAction}
+                    onClick={() => setSelectedTicket(ticket)}
+                  >
+                    {copy.reply}
+                  </Button>
+                  {ticket.status === "open" ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={rowAction}
+                      onClick={() => handleStatusChange(ticket.id, "close")}
+                    >
+                      {copy.close}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={rowAction}
+                      onClick={() => handleStatusChange(ticket.id, "reopen")}
+                    >
+                      {copy.reopen}
+                    </Button>
                   )}
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className={rowAction}
+                    onClick={() => handleDeleteTicket(ticket.id)}
+                    title={copy.deleteTitle}
+                  >
+                    {copy.delete}
+                  </Button>
+                </div>
+
+                {/* Admin Assignment */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {copy.adminLabel}:
+                  </span>
+                  <select
+                    value={ticket.assignedTo || ""}
+                    onChange={(e) => handleAssignAdmin(ticket.id, e.target.value)}
+                    className={cn(fieldClasses, "h-11 min-w-0 flex-1 text-sm md:h-9")}
+                  >
+                    <option value="">{copy.unassigned}</option>
+                    {availableAdmins.map((admin) => (
+                      <option key={admin.email} value={admin.email}>
+                        {admin.email}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
-
-              <p className="text-gray-300 mb-4 text-sm">{ticket.message}</p>
-
-              {/* Conversation moved into modal */}
-
-              {/* Action Buttons */}
-              <div
-                className="flex flex-wrap gap-2 mb-4"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  onClick={() => setSelectedTicket(ticket)}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
-                >
-                  {copy.reply}
-                </button>
-                {ticket.status === "open" ? (
-                  <button
-                    onClick={() => handleStatusChange(ticket.id, "close")}
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
-                  >
-                    {copy.close}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleStatusChange(ticket.id, "reopen")}
-                    className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
-                  >
-                    {copy.reopen}
-                  </button>
-                )}
-                <button
-                  onClick={() => handleDeleteTicket(ticket.id)}
-                  className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
-                  title={copy.deleteTitle}
-                >
-                  {copy.delete}
-                </button>
-              </div>
-
-              {/* Admin Assignment */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400 font-medium">
-                  {copy.adminLabel}:
-                </span>
-                <select
-                  value={ticket.assignedTo || ""}
-                  onChange={(e) => handleAssignAdmin(ticket.id, e.target.value)}
-                  className="px-2 py-1 bg-gray-700/50 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
-                >
-                  <option value="">{copy.unassigned}</option>
-                  {availableAdmins.map((admin) => (
-                    <option key={admin.email} value={admin.email}>
-                      {admin.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {/* Chat Modal */}
       {selectedTicket && (
-        <div 
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4 animate-in fade-in-0 duration-short"
           style={{ overscrollBehavior: 'contain' }}
         >
-          <div 
-            className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-5xl h-[90vh] overflow-hidden shadow-2xl flex flex-col"
+          <div
+            className="flex h-[90dvh] w-full max-w-5xl flex-col overflow-hidden rounded-lg border border-rule bg-background text-foreground"
             style={{ overscrollBehavior: 'contain' }}
           >
             {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-700 flex-shrink-0">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-white">
-                    {copy.ticketPrefix} #{selectedTicket.ticketNumber || selectedTicket.id}
+            <div className="flex-shrink-0 border-b border-rule px-6 py-4">
+              <div className="mb-3 flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h2 className="font-display text-lg font-bold">
+                    {copy.ticketPrefix} <span className="font-outlier">#{selectedTicket.ticketNumber || selectedTicket.id}</span>
                   </h2>
-                  <p className="text-sm text-gray-400">
+                  <p className="break-words text-sm text-muted-foreground">
                     {selectedTicket.subject} - {selectedTicket.userName}
                   </p>
                 </div>
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="-mr-2 -mt-2 shrink-0"
                   onClick={() => setSelectedTicket(null)}
-                  className="text-gray-400 hover:text-gray-200 flex-shrink-0"
                 >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
+                  <X aria-hidden="true" />
+                </Button>
               </div>
-              
+
               {/* Mobile-only info */}
-              <div className="lg:hidden grid grid-cols-2 gap-3 text-xs">
+              <div className="grid grid-cols-2 gap-3 text-sm lg:hidden">
                 <div>
-                  <span className="text-gray-400">{copy.status}:</span>{" "}
-                  <span className="text-gray-200">{getStatusText(selectedTicket.status)}</span>
+                  <span className="text-muted-foreground">{copy.status}:</span>{" "}
+                  <span>{getStatusText(selectedTicket.status)}</span>
                 </div>
                 <div>
-                  <span className="text-gray-400">{copy.category}:</span>{" "}
-                  <span className="text-gray-200">{getCategoryText(selectedTicket.category)}</span>
+                  <span className="text-muted-foreground">{copy.category}:</span>{" "}
+                  <span>{getCategoryText(selectedTicket.category)}</span>
                 </div>
                 {selectedTicket.assignedTo && (
-                  <div className="col-span-2">
-                    <span className="text-gray-400">{copy.assigned}:</span>{" "}
-                    <span className="text-gray-200">{selectedTicket.assignedTo}</span>
+                  <div className="col-span-2 break-words">
+                    <span className="text-muted-foreground">{copy.assigned}:</span>{" "}
+                    <span>{selectedTicket.assignedTo}</span>
                   </div>
                 )}
               </div>
             </div>
             {/* Body */}
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr,320px] gap-0 overflow-hidden min-h-0">
+            <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] gap-0 overflow-hidden lg:grid-cols-[minmax(0,1fr)_20rem]">
               {/* Conversation */}
-              <div className="flex flex-col h-full overflow-hidden">
-                <div 
+              <div className="flex h-full min-h-0 flex-col overflow-hidden">
+                <div
                   ref={conversationRef}
-                  className="flex-1 overflow-y-auto p-6 space-y-3 bg-gray-900"
-                  style={{ 
+                  className="flex-1 space-y-3 overflow-y-auto p-6"
+                  style={{
                     overscrollBehavior: 'contain',
                     WebkitOverflowScrolling: 'touch'
                   }}
                 >
                   {/* Original ticket message */}
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-green-700 flex items-center justify-center text-white text-xs font-bold">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-paper-3 text-xs font-bold text-ink-2">
                       K
                     </div>
-                    <div className="max-w-xl bg-gray-800/70 border border-gray-700 rounded-2xl px-4 py-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-semibold text-green-300">
+                    <div className="min-w-0 max-w-xl rounded-lg border border-rule bg-paper-2 px-4 py-3">
+                      <div className="mb-1 flex items-center gap-2">
+                        <span className="text-xs font-semibold text-ink-2">
                           {copy.requester}
                         </span>
-                        <span className="text-[10px] text-gray-400">
+                        <span className="font-outlier text-xs text-muted-foreground">
                           {formatMessageDateTime(selectedTicket.createdAt)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-200 whitespace-pre-wrap">
+                      <p className="whitespace-pre-wrap break-words text-sm">
                         {selectedTicket.message}
                       </p>
                       {/* Attachments */}
                       {selectedTicket.attachments && selectedTicket.attachments.length > 0 ? (
-                        <div className="mt-3 pt-3 border-t border-gray-600">
-                          <p className="text-xs text-gray-400 mb-2">{copy.attachments}:</p>
+                        <div className="mt-3 border-t border-rule pt-3">
+                          <p className="mb-2 text-xs text-muted-foreground">{copy.attachments}:</p>
                           <div className="space-y-2">
                             {selectedTicket.attachments.map((attachment, idx) => (
                               <a
@@ -858,11 +828,9 @@ export default function AdminTicketsPage() {
                                 href={attachment.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 bg-gray-700/50 px-2 py-1 rounded"
+                                className="flex items-center gap-2 break-all text-xs text-brand underline underline-offset-4 decoration-1 hover:decoration-2"
                               >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                </svg>
+                                <Paperclip className="h-3 w-3 shrink-0" aria-hidden="true" />
                                 {attachment.name}
                               </a>
                             ))}
@@ -870,12 +838,12 @@ export default function AdminTicketsPage() {
                         </div>
                       ) : (
                         selectedTicket.attachments ? (
-                          <div className="mt-3 pt-3 border-t border-gray-600">
-                            <p className="text-xs text-gray-400">{copy.noAttachments}</p>
+                          <div className="mt-3 border-t border-rule pt-3">
+                            <p className="text-xs text-muted-foreground">{copy.noAttachments}</p>
                           </div>
                         ) : (
-                          <div className="mt-3 pt-3 border-t border-gray-600">
-                            <p className="text-xs text-gray-400">{copy.noAttachments}</p>
+                          <div className="mt-3 border-t border-rule pt-3">
+                            <p className="text-xs text-muted-foreground">{copy.noAttachments}</p>
                           </div>
                         )
                       )}
@@ -894,27 +862,25 @@ export default function AdminTicketsPage() {
                         }`}
                       >
                         {!isAdmin && (
-                          <div className="w-8 h-8 rounded-lg bg-green-700 flex items-center justify-center text-white text-xs font-bold">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-paper-3 text-xs font-bold text-ink-2">
                             {isSystem ? "S" : "K"}
                           </div>
                         )}
                         <div
-                          className={`max-w-xl ${
+                          className={`min-w-0 max-w-xl ${
                             isAdmin
-                              ? "bg-blue-900/40 border-blue-700"
-                              : isSystem
-                              ? "bg-gray-800/70 border-gray-600"
-                              : "bg-gray-800/70 border-gray-700"
-                          } border rounded-2xl px-4 py-3`}
+                              ? "border-ink bg-background"
+                              : "border-rule bg-paper-2"
+                          } rounded-lg border px-4 py-3`}
                         >
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="mb-1 flex items-center gap-2">
                             <span
                               className={`text-xs font-semibold ${
                                 isSystem
-                                  ? "text-gray-300"
+                                  ? "text-muted-foreground"
                                   : isUser
-                                  ? "text-green-300"
-                                  : "text-blue-300"
+                                  ? "text-ink-2"
+                                  : "text-brand"
                               }`}
                             >
                               {isSystem
@@ -923,16 +889,16 @@ export default function AdminTicketsPage() {
                                 ? copy.requester
                                 : copy.adminLabel}
                             </span>
-                            <span className="text-[10px] text-gray-400">
+                            <span className="font-outlier text-xs text-muted-foreground">
                               {formatMessageDateTime(response.createdAt)}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-200 whitespace-pre-wrap">
+                          <p className="whitespace-pre-wrap break-words text-sm">
                             {response.message}
                           </p>
                         </div>
                         {isAdmin && (
-                          <div className="w-8 h-8 rounded-lg bg-blue-700 flex items-center justify-center text-white text-xs font-bold">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-bold text-brand-ink">
                             A
                           </div>
                         )}
@@ -940,42 +906,45 @@ export default function AdminTicketsPage() {
                     );
                   })}
                 </div>
-                
+
                 {/* Mobile Admin Actions */}
-                <div className="lg:hidden p-4 border-t border-gray-700 bg-gray-800 space-y-3">
-                  <div className="flex gap-2 flex-wrap">
+                <div className="space-y-3 border-t border-rule bg-paper-2 p-4 lg:hidden">
+                  <div className="flex flex-wrap gap-2">
                     {selectedTicket.status === "open" ? (
-                      <button
+                      <Button
+                        variant="outline"
+                        className="flex-1"
                         onClick={() =>
                           handleStatusChange(selectedTicket.id, "close")
                         }
-                        className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium"
                       >
                         {copy.close}
-                      </button>
+                      </Button>
                     ) : (
-                      <button
+                      <Button
+                        variant="outline"
+                        className="flex-1"
                         onClick={() =>
                           handleStatusChange(selectedTicket.id, "reopen")
                         }
-                        className="flex-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-sm font-medium"
                       >
                         {copy.reopen}
-                      </button>
+                      </Button>
                     )}
-                    <button
+                    <Button
+                      variant="destructive"
+                      className="flex-1"
                       onClick={() => handleDeleteTicket(selectedTicket.id)}
-                      className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium"
                     >
                       {copy.delete}
-                    </button>
+                    </Button>
                   </div>
                   <select
                     value={selectedTicket.assignedTo || ""}
                     onChange={(e) =>
                       handleAssignAdmin(selectedTicket.id, e.target.value)
                     }
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                    className={selectClass}
                   >
                     <option value="">{copy.unassigned}</option>
                     {availableAdmins.map((admin) => (
@@ -985,128 +954,132 @@ export default function AdminTicketsPage() {
                     ))}
                   </select>
                 </div>
-                
+
                 {/* Composer */}
                 <form
                   onSubmit={handleResponse}
-                  className="p-4 border-t border-gray-700 bg-gray-900 flex-shrink-0"
+                  className="flex-shrink-0 border-t border-rule p-4"
                 >
                   <div className="flex gap-3">
-                    <textarea
+                    <Textarea
                       value={responseMessage}
                       onChange={(e) => setResponseMessage(e.target.value)}
                       rows={2}
-                      className="flex-1 px-4 py-3 bg-gray-800/70 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-white placeholder-gray-400 resize-none"
+                      className="min-w-0 flex-1 resize-none"
                       placeholder={copy.replyPlaceholder}
+                      aria-label={copy.reply}
                       required
                     />
-                    <button
+                    <Button
                       type="submit"
                       disabled={isSubmitting || !responseMessage.trim()}
-                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="self-end"
                     >
                       {isSubmitting ? copy.sending : copy.send}
-                    </button>
+                    </Button>
                   </div>
                 </form>
               </div>
               {/* Sidebar */}
-              <div className="hidden lg:flex lg:flex-col border-l border-gray-800 bg-gray-900 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
-                <div className="p-6 space-y-4">
+              <div className="hidden overflow-y-auto border-l border-rule lg:flex lg:flex-col" style={{ overscrollBehavior: 'contain' }}>
+                <div className="space-y-6 p-6">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-200 mb-2">
+                    <h3 className="mb-2 text-sm font-semibold">
                       {copy.infoTitle}
                     </h3>
-                    <div className="text-sm text-gray-300 space-y-1">
-                    <p>
-                      <span className="text-gray-400">{copy.status}:</span>{" "}
-                      {getStatusText(selectedTicket.status)}
-                    </p>
-                    <p>
-                      <span className="text-gray-400">{copy.category}:</span>{" "}
-                      {getCategoryText(selectedTicket.category)}
-                    </p>
-                    {selectedTicket.assignedTo && (
+                    <div className="space-y-1 text-sm">
                       <p>
-                        <span className="text-gray-400">{copy.assigned}:</span>{" "}
-                        {selectedTicket.assignedTo}
+                        <span className="text-muted-foreground">{copy.status}:</span>{" "}
+                        {getStatusText(selectedTicket.status)}
                       </p>
-                    )}
-                    <p>
-                      <span className="text-gray-400">{copy.createdAt}:</span>{" "}
-                      {formatDateTime(selectedTicket.createdAt)}
-                    </p>
-                    {selectedTicket.closedAt && (
-                      <p className="text-green-400">
-                        <span className="text-gray-400">{copy.closedAt}:</span>{" "}
-                        {formatDateTime(selectedTicket.closedAt)}
+                      <p>
+                        <span className="text-muted-foreground">{copy.category}:</span>{" "}
+                        {getCategoryText(selectedTicket.category)}
                       </p>
-                    )}
-                    {selectedTicket.reopenedAt && (
-                      <p className="text-orange-300">
-                        <span className="text-gray-400">{copy.reopenedAt}:</span>{" "}
-                        {formatDateTime(selectedTicket.reopenedAt)}
+                      {selectedTicket.assignedTo && (
+                        <p className="break-words">
+                          <span className="text-muted-foreground">{copy.assigned}:</span>{" "}
+                          {selectedTicket.assignedTo}
+                        </p>
+                      )}
+                      <p>
+                        <span className="text-muted-foreground">{copy.createdAt}:</span>{" "}
+                        {formatDateTime(selectedTicket.createdAt)}
                       </p>
-                    )}
-                    {selectedTicket.reopenReason && (
-                      <p className="text-orange-200">
-                        <span className="text-gray-400">{copy.reopenReason}:</span>{" "}
-                        {selectedTicket.reopenReason}
-                      </p>
-                    )}
+                      {selectedTicket.closedAt && (
+                        <p className="text-success">
+                          <span className="text-muted-foreground">{copy.closedAt}:</span>{" "}
+                          {formatDateTime(selectedTicket.closedAt)}
+                        </p>
+                      )}
+                      {selectedTicket.reopenedAt && (
+                        <p>
+                          <span className="text-muted-foreground">{copy.reopenedAt}:</span>{" "}
+                          {formatDateTime(selectedTicket.reopenedAt)}
+                        </p>
+                      )}
+                      {selectedTicket.reopenReason && (
+                        <p>
+                          <span className="text-muted-foreground">{copy.reopenReason}:</span>{" "}
+                          {selectedTicket.reopenReason}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-200 mb-2">
-                    {copy.actionsTitle}
-                  </h3>
-                  <div className="flex gap-2">
-                    {selectedTicket.status === "open" ? (
-                      <button
-                        onClick={() =>
-                          handleStatusChange(selectedTicket.id, "close")
-                        }
-                        className="px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium"
+                  <div>
+                    <h3 className="mb-2 text-sm font-semibold">
+                      {copy.actionsTitle}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedTicket.status === "open" ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleStatusChange(selectedTicket.id, "close")
+                          }
+                        >
+                          {copy.close}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleStatusChange(selectedTicket.id, "reopen")
+                          }
+                        >
+                          {copy.reopen}
+                        </Button>
+                      )}
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteTicket(selectedTicket.id)}
                       >
-                        {copy.close}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() =>
-                          handleStatusChange(selectedTicket.id, "reopen")
-                        }
-                        className="px-3 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-sm font-medium"
-                      >
-                        {copy.reopen}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDeleteTicket(selectedTicket.id)}
-                      className="px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium"
+                        {copy.delete}
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="mb-2 text-sm font-semibold">
+                      {copy.assignmentTitle}
+                    </h3>
+                    <select
+                      value={selectedTicket.assignedTo || ""}
+                      onChange={(e) =>
+                        handleAssignAdmin(selectedTicket.id, e.target.value)
+                      }
+                      className={selectClass}
                     >
-                      {copy.delete}
-                    </button>
+                      <option value="">{copy.unassigned}</option>
+                      {availableAdmins.map((admin) => (
+                        <option key={admin.email} value={admin.email}>
+                          {admin.email}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-200 mb-2">
-                    {copy.assignmentTitle}
-                  </h3>
-                  <select
-                    value={selectedTicket.assignedTo || ""}
-                    onChange={(e) =>
-                      handleAssignAdmin(selectedTicket.id, e.target.value)
-                    }
-                    className="w-full px-3 py-2 bg-gray-800/70 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="">{copy.unassigned}</option>
-                    {availableAdmins.map((admin) => (
-                      <option key={admin.email} value={admin.email}>
-                        {admin.email}
-                      </option>
-                    ))}
-                  </select>
-                </div>
                 </div>
               </div>
             </div>
@@ -1124,7 +1097,7 @@ export default function AdminTicketsPage() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
+        theme="light"
       />
     </div>
   );

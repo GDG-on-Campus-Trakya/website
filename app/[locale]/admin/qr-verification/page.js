@@ -19,6 +19,9 @@ import { Link } from "@/i18n/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLocale } from "next-intl";
+import { AlertCircle, ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page";
 
 export default function AdminQRVerificationPage() {
   const locale = useLocale();
@@ -275,84 +278,82 @@ export default function AdminQRVerificationPage() {
   }, []);
 
   if (loading) {
-    return (
-        <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-gray-200">{copy.loading}</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">{copy.loading}</p>;
   }
 
   if (!isAdmin) {
     return (
-        <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-red-500">{copy.accessDenied}</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        {copy.accessDenied}
+      </p>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
-      {/* Back to Admin Panel Button */}
-      <div className="mb-6">
-        <Link
-          href="/admin"
-          className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-        >
-          ← {copy.backToAdmin}
-        </Link>
-      </div>
+    <div>
+      <PageHeader
+        title={copy.title}
+        actions={
+          <Button asChild variant="outline">
+            <Link href="/admin">
+              <ArrowLeft aria-hidden="true" />
+              {copy.backToAdmin}
+            </Link>
+          </Button>
+        }
+      />
 
-      <h1 className="text-3xl font-bold text-center mb-8 text-gray-100">
-        {copy.title}
-      </h1>
-
-      <div className="max-w-md mx-auto bg-gray-800 rounded-lg p-6 shadow-md">
+      <div className="max-w-md">
         {error && (
-          <div className="mb-4 p-3 bg-red-500/20 text-red-700 rounded-md">
-            {error}
+          <div
+            role="alert"
+            className="mb-4 flex items-start gap-2 border-l-2 border-error pl-3 text-sm text-error"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p>{error}</p>
           </div>
         )}
 
         <div id="qr-reader" className="w-full"></div>
 
         {!scanning && (
-          <button
-            onClick={startScanning}
-            className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors mt-4"
-          >
+          <Button onClick={startScanning} className="mt-4 w-full">
             {copy.scanStart}
-          </button>
+          </Button>
         )}
 
         {scanning && (
-          <button
-            onClick={stopScanning}
-            className="w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600 transition-colors mt-4"
-          >
+          <Button onClick={stopScanning} variant="destructive" className="mt-4 w-full">
             {copy.scanStop}
-          </button>
+          </Button>
         )}
 
         {qrCodeData && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-md">
-            <h2 className="font-semibold text-gray-200">{copy.scannedCode}:</h2>
-            <p className="text-gray-300 break-all">{qrCodeData}</p>
+          <div className="mt-6 border-t border-rule pt-4">
+            <h2 className="text-sm font-semibold text-ink">{copy.scannedCode}:</h2>
+            <p className="mt-1 break-all font-outlier text-sm text-ink-2">{qrCodeData}</p>
           </div>
         )}
 
         {verificationResult && (
           <div
-            className={`mt-4 p-3 rounded-md ${
+            role="status"
+            className={`mt-4 flex items-start gap-2 border-t-2 pt-4 text-sm font-medium ${
               verificationResult.startsWith(copy.verifiedPrefix)
-                ? "bg-green-500/20 text-green-700"
-                : "bg-red-500/20 text-red-700"
+                ? "border-success text-success"
+                : "border-error text-error"
             }`}
           >
-            <p>{verificationResult}</p>
+            {verificationResult.startsWith(copy.verifiedPrefix) ? (
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            ) : (
+              <XCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            )}
+            <p className="min-w-0 break-words">{verificationResult}</p>
           </div>
         )}
       </div>
-      <ToastContainer theme="dark" />
+      <ToastContainer theme="light" />
     </div>
   );
 }

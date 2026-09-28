@@ -8,6 +8,13 @@ import "react-toastify/dist/ReactToastify.css";
 import { createPoll, getPollResults } from "@/utils/pollUtils";
 import { logger } from "@/utils/logger";
 import { getAllDatasets } from "@/utils/datasetUtils";
+import { ArrowLeft, Check, Folder, Trophy } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { fieldClasses } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PageHeader, Section, EmptyState } from "@/components/ui/page";
 
 export default function PollAdminPage() {
   const [user, loading] = useAuthState(auth);
@@ -157,11 +164,7 @@ export default function PollAdminPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-white">Yükleniyor...</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">Yükleniyor...</p>;
   }
 
   if (!user) {
@@ -169,265 +172,219 @@ export default function PollAdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">Poll Yönetim Paneli</h1>
-              <p className="text-gray-400 text-sm sm:text-base mt-1">
-                Poll oluşturun ve geçmişi görüntüleyin
-              </p>
-            </div>
-            <button
-              onClick={() => router.push("/admin")}
-              className="px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white hover:opacity-80 text-sm sm:text-base"
-            >
-              ← Admin Panel
-            </button>
-          </div>
+    <div>
+      <PageHeader
+        title="Poll Yönetim Paneli"
+        description="Poll oluşturun ve geçmişi görüntüleyin"
+        actions={
+          <Button variant="outline" onClick={() => router.push("/admin")}>
+            <ArrowLeft aria-hidden="true" />
+            Admin Panel
+          </Button>
+        }
+      />
 
-          {/* Tabs */}
-          <div className="flex gap-2 mt-6 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab("create")}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold whitespace-nowrap text-sm sm:text-base ${
-                activeTab === "create"
-                  ? "bg-purple-600 text-white"
-                  : "bg-gray-800 text-white border border-gray-700"
-              }`}
-            >
-              Poll Oluştur
-            </button>
-            <button
-              onClick={() => setActiveTab("history")}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold whitespace-nowrap text-sm sm:text-base ${
-                activeTab === "history"
-                  ? "bg-purple-600 text-white"
-                  : "bg-gray-800 text-white border border-gray-700"
-              }`}
-            >
-              Geçmiş
-            </button>
-          </div>
-        </div>
+      {/* Tabs */}
+      <div className="mb-10 flex flex-wrap gap-3">
+        <Button
+          variant={activeTab === "create" ? "default" : "outline"}
+          aria-pressed={activeTab === "create"}
+          onClick={() => setActiveTab("create")}
+        >
+          Poll Oluştur
+        </Button>
+        <Button
+          variant={activeTab === "history" ? "default" : "outline"}
+          aria-pressed={activeTab === "history"}
+          onClick={() => setActiveTab("history")}
+        >
+          Geçmiş
+        </Button>
       </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto p-4 sm:p-6">
-        {/* Create Poll Tab */}
-        {activeTab === "create" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Upload Dataset */}
-            <div className="bg-gray-800 rounded-xl p-6 sm:p-8 border border-gray-700">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl sm:text-2xl font-bold text-white">1. Veri Seti Seç</h2>
-                <button
-                  onClick={() => router.push("/admin/poll/datasets")}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-sm"
+      {/* Create Poll Tab */}
+      {activeTab === "create" && (
+        <div className="grid gap-x-10 gap-y-10 lg:grid-cols-2">
+          {/* Upload Dataset */}
+          <Section
+            title="1. Veri Seti Seç"
+            className="mt-0 md:mt-0"
+            action={
+              <Button variant="outline" size="sm" onClick={() => router.push("/admin/poll/datasets")}>
+                <Folder aria-hidden="true" />
+                Veri Setleri
+              </Button>
+            }
+          >
+            <div className="space-y-4">
+              {/* Saved Datasets Selection */}
+              <Field id="poll-saved-dataset" label="Kayıtlı Veri Seti Seç">
+                <select
+                  value={selectedDatasetId}
+                  onChange={(e) => handleDatasetSelect(e.target.value)}
+                  className={cn(fieldClasses, "h-control")}
                 >
-                  📁 Veri Setleri
-                </button>
+                  <option value="">-- Veri Seti Seçin --</option>
+                  {savedDatasets.map((dataset) => (
+                    <option key={dataset.id} value={dataset.id}>
+                      {dataset.name} ({dataset.items?.length || 0} öğe)
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <div className="flex items-center gap-4">
+                <div className="flex-1 border-t border-rule"></div>
+                <span className="text-sm text-muted-foreground">VEYA</span>
+                <div className="flex-1 border-t border-rule"></div>
               </div>
 
-              <div className="space-y-4">
-                {/* Saved Datasets Selection */}
-                <div>
-                  <label className="block text-white mb-2 font-semibold text-sm sm:text-base">
-                    Kayıtlı Veri Seti Seç
-                  </label>
-                  <select
-                    value={selectedDatasetId}
-                    onChange={(e) => handleDatasetSelect(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm sm:text-base"
-                  >
-                    <option value="">-- Veri Seti Seçin --</option>
-                    {savedDatasets.map((dataset) => (
-                      <option key={dataset.id} value={dataset.id}>
-                        {dataset.name} ({dataset.items?.length || 0} öğe)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="flex-1 border-t border-gray-700"></div>
-                  <span className="text-gray-400 text-sm">VEYA</span>
-                  <div className="flex-1 border-t border-gray-700"></div>
-                </div>
-
-                {/* JSON File Upload */}
-                <div>
-                  <label className="block text-white mb-2 font-semibold text-sm sm:text-base">
-                    JSON Dosyası Yükle
-                  </label>
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleFileUpload}
-                    className="w-full text-white text-sm sm:text-base"
-                  />
-                  <p className="text-gray-400 text-xs sm:text-sm mt-2">
-                    En az 8 öğe içeren JSON dosyası yükleyin
-                  </p>
-                </div>
-
-                {datasetData && (
-                  <div className="border border-gray-700 rounded-lg p-4 bg-green-500/10">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="font-bold text-white text-sm sm:text-base">
-                          {datasetData.name}
-                        </div>
-                        <div className="text-gray-400 text-xs sm:text-sm">
-                          {datasetData.items.length} öğe
-                        </div>
-                      </div>
-                      <span className="text-green-500 text-xl sm:text-2xl">✓</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Configure Poll */}
-            <div className="bg-gray-800 rounded-xl p-6 sm:p-8 border border-gray-700">
-              <h2 className="text-xl sm:text-2xl font-bold text-white mb-6">2. Ayarları Yapılandır</h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-white mb-2 font-semibold text-sm sm:text-base">
-                    Turnuva Boyutu
-                  </label>
-                  <select
-                    value={bracketSize}
-                    onChange={(e) => setBracketSize(Number(e.target.value))}
-                    className="w-full px-4 py-2 sm:py-3 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm sm:text-base"
-                  >
-                    <option value={8}>8 öğe</option>
-                    <option value={16}>16 öğe</option>
-                    <option value={32}>32 öğe</option>
-                    <option value={64}>64 öğe</option>
-                    <option value={128}>128 öğe</option>
-                  </select>
-                  <p className="text-gray-400 text-xs sm:text-sm mt-2">
-                    Toplam {Math.log2(bracketSize)} raund olacak
-                  </p>
-                </div>
-
-                <button
-                  onClick={handleCreatePoll}
-                  disabled={!datasetData || creating}
-                  className="w-full py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-                >
-                  {creating ? "Oluşturuluyor..." : "Poll Oluştur"}
-                </button>
-              </div>
-            </div>
-
-            {/* Poll Created Success */}
-            {pollCode && (
-              <div className="lg:col-span-2">
-                <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500 rounded-xl p-6 sm:p-8">
-                  <div className="text-center">
-                    <div className="text-4xl sm:text-6xl mb-4">🎉</div>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                      Poll Oluşturuldu!
-                    </h3>
-                    <div className="text-4xl sm:text-6xl font-bold text-white mb-6 tracking-widest">
-                      {pollCode}
-                    </div>
-                    <p className="text-gray-400 mb-6 text-sm sm:text-base">
-                      Oyuncular bu kodu kullanarak poll'a katılabilir
-                    </p>
-                    <button
-                      onClick={handleManagePoll}
-                      className="px-6 sm:px-8 py-3 sm:py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-base sm:text-lg"
-                    >
-                      Poll'u Yönet
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* History Tab */}
-        {activeTab === "history" && (
-          <div className="space-y-6">
-            {loadingHistory ? (
-              <div className="text-center py-12">
-                <p className="text-white">Geçmiş yükleniyor...</p>
-              </div>
-            ) : pollHistory.length === 0 ? (
-              <div className="bg-gray-800 rounded-xl p-12 border border-gray-700 text-center">
-                <div className="text-4xl sm:text-6xl mb-4">📊</div>
-                <p className="text-gray-400 text-sm sm:text-base">
-                  Henüz tamamlanmış poll yok
+              {/* JSON File Upload */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="poll-json-file">JSON Dosyası Yükle</Label>
+                <input
+                  id="poll-json-file"
+                  type="file"
+                  accept=".json"
+                  onChange={handleFileUpload}
+                  className="block w-full text-sm text-muted-foreground file:mr-4 file:h-9 file:cursor-pointer file:rounded file:border-0 file:bg-primary file:px-4 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-brand-hover"
+                />
+                <p className="text-sm text-muted-foreground">
+                  En az 8 öğe içeren JSON dosyası yükleyin
                 </p>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {pollHistory.map((poll) => (
-                  <div
-                    key={poll.id}
-                    className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-purple-500 transition-colors cursor-pointer"
-                    onClick={() => setSelectedPoll(selectedPoll?.id === poll.id ? null : poll)}
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg sm:text-xl font-bold text-white">
-                          {poll.datasetName}
-                        </h3>
-                        <p className="text-gray-400 text-xs sm:text-sm">
-                          Kod: {poll.pollCode}
-                        </p>
-                      </div>
-                      <div className="text-xs sm:text-sm text-gray-400">
-                        {poll.finishedAt?.toDate?.()?.toLocaleDateString() || "N/A"}
-                      </div>
-                    </div>
 
-                    <div className="space-y-2 text-xs sm:text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Kazanan:</span>
-                        <span className="text-white font-semibold">
-                          {poll.winner?.name || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Oyuncu Sayısı:</span>
-                        <span className="text-white">{poll.totalPlayers}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Toplam Eşleşme:</span>
-                        <span className="text-white">{poll.stats.totalMatches}</span>
-                      </div>
+              {datasetData && (
+                <div className="flex items-start justify-between gap-3 rounded border border-success p-4">
+                  <div className="min-w-0">
+                    <div className="break-words font-semibold">{datasetData.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-outlier tabular-nums">{datasetData.items.length}</span> öğe
                     </div>
-
-                    {selectedPoll?.id === poll.id && poll.winner && (
-                      <div className="mt-4 pt-4 border-t border-gray-700">
-                        <div className="aspect-square relative rounded-lg overflow-hidden mb-3">
-                          <img
-                            src={poll.winner.imageUrl}
-                            alt={poll.winner.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="text-center text-white font-bold text-sm sm:text-base">
-                          🏆 {poll.winner.name}
-                        </div>
-                      </div>
-                    )}
                   </div>
-                ))}
+                  <Check className="h-5 w-5 shrink-0 text-success" aria-hidden="true" />
+                </div>
+              )}
+            </div>
+          </Section>
+
+          {/* Configure Poll */}
+          <Section title="2. Ayarları Yapılandır" className="mt-0 md:mt-0">
+            <div className="space-y-4">
+              <Field
+                id="poll-bracket-size"
+                label="Turnuva Boyutu"
+                help={`Toplam ${Math.log2(bracketSize)} raund olacak`}
+              >
+                <select
+                  value={bracketSize}
+                  onChange={(e) => setBracketSize(Number(e.target.value))}
+                  className={cn(fieldClasses, "h-control")}
+                >
+                  <option value={8}>8 öğe</option>
+                  <option value={16}>16 öğe</option>
+                  <option value={32}>32 öğe</option>
+                  <option value={64}>64 öğe</option>
+                  <option value={128}>128 öğe</option>
+                </select>
+              </Field>
+
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={handleCreatePoll}
+                disabled={!datasetData || creating}
+              >
+                {creating ? "Oluşturuluyor..." : "Poll Oluştur"}
+              </Button>
+            </div>
+          </Section>
+
+          {/* Poll Created Success */}
+          {pollCode && (
+            <div className="border-t-2 border-success pt-6 lg:col-span-2">
+              <h2 className="font-display text-xl font-bold">Poll Oluşturuldu!</h2>
+              <div className="mt-4 font-outlier text-5xl font-semibold tracking-widest sm:text-6xl">
+                {pollCode}
               </div>
-            )}
-          </div>
-        )}
-      </div>
+              <p className="mt-4 text-sm text-muted-foreground">
+                Oyuncular bu kodu kullanarak poll'a katılabilir
+              </p>
+              <Button size="lg" className="mt-6" onClick={handleManagePoll}>
+                Poll'u Yönet
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* History Tab */}
+      {activeTab === "history" && (
+        <div>
+          {loadingHistory ? (
+            <p className="py-12 text-ink-2">Geçmiş yükleniyor...</p>
+          ) : pollHistory.length === 0 ? (
+            <EmptyState title="Henüz tamamlanmış poll yok" />
+          ) : (
+            <ul className="max-w-3xl border-t-2 border-ink">
+              {pollHistory.map((poll) => (
+                <li
+                  key={poll.id}
+                  className="cursor-pointer border-b border-rule py-5 transition-colors duration-micro hover:bg-secondary"
+                  onClick={() => setSelectedPoll(selectedPoll?.id === poll.id ? null : poll)}
+                >
+                  <div className="mb-4 flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <h2 className="break-words font-display text-lg font-bold">
+                        {poll.datasetName}
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Kod: <span className="font-outlier">{poll.pollCode}</span>
+                      </p>
+                    </div>
+                    <div className="shrink-0 font-outlier text-sm text-muted-foreground">
+                      {poll.finishedAt?.toDate?.()?.toLocaleDateString() || "N/A"}
+                    </div>
+                  </div>
+
+                  <dl className="space-y-2 text-sm">
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted-foreground">Kazanan:</dt>
+                      <dd className="min-w-0 break-words text-right font-semibold">
+                        {poll.winner?.name || "N/A"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted-foreground">Oyuncu Sayısı:</dt>
+                      <dd className="tabular-nums">{poll.totalPlayers}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted-foreground">Toplam Eşleşme:</dt>
+                      <dd className="tabular-nums">{poll.stats.totalMatches}</dd>
+                    </div>
+                  </dl>
+
+                  {selectedPoll?.id === poll.id && poll.winner && (
+                    <div className="mt-4 border-t border-rule pt-4">
+                      <div className="relative mb-3 aspect-square max-w-xs overflow-hidden rounded">
+                        <img
+                          src={poll.winner.imageUrl}
+                          alt={poll.winner.name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 font-semibold">
+                        <Trophy className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        {poll.winner.name}
+                      </div>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <ToastContainer
         position="top-right"
@@ -435,7 +392,7 @@ export default function PollAdminPage() {
         hideProgressBar={false}
         newestOnTop
         closeOnClick
-        theme="dark"
+        theme="light"
       />
     </div>
   );
