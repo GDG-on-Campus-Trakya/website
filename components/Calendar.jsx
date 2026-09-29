@@ -1,10 +1,17 @@
 import React from "react";
 import { useLocale } from "next-intl";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { getLocaleCode } from "@/utils/localeUtils";
 
 const DAY_LABELS = {
   tr: ["Pzr", "Pzt", "Sal", "Çrş", "Prş", "Cum", "Cmt"],
   en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+};
+
+const NAV_LABELS = {
+  tr: { previous: "Önceki ay", next: "Sonraki ay" },
+  en: { previous: "Previous month", next: "Next month" },
 };
 
 const formatDate = (date) => {
@@ -66,28 +73,34 @@ const Calendar = ({
   }
 
   return (
-    <div className="rounded-lg bg-gray-800 p-4 shadow-lg">
-      <div className="mb-3 flex items-center justify-between">
-        <button
-          className="rounded bg-gray-700 px-3 py-1 text-white transition-colors hover:bg-gray-600"
+    <div className="border-t-2 border-ink pt-3">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          aria-label={NAV_LABELS[locale].previous}
           onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}
         >
-          &lt;
-        </button>
-        <h3 className="text-lg text-white">
+          <ChevronLeft aria-hidden="true" />
+        </Button>
+        <h2 className="font-display text-lg font-bold capitalize">
           {currentMonth.toLocaleString(getLocaleCode(locale), { month: "long" })}{" "}
-          {year}
-        </h3>
-        <button
-          className="rounded bg-gray-700 px-3 py-1 text-white transition-colors hover:bg-gray-600"
+          <span className="tabular-nums">{year}</span>
+        </h2>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          aria-label={NAV_LABELS[locale].next}
           onClick={() => setCurrentMonth(new Date(year, month + 1, 1))}
         >
-          &gt;
-        </button>
+          <ChevronRight aria-hidden="true" />
+        </Button>
       </div>
-      <div className="mb-2 grid grid-cols-7 gap-1">
+      <div className="mb-1 grid grid-cols-7 gap-1">
         {DAY_LABELS[locale].map((day) => (
-          <div key={day} className="text-center text-sm text-gray-400">
+          <div key={day} className="text-center text-xs text-muted-foreground">
             {day}
           </div>
         ))}
@@ -119,19 +132,27 @@ const Calendar = ({
                 date.toDateString() === selectedDate.toDateString();
 
               const isClickable = isCurrentMonth && hasEvent;
+              const Cell = isClickable ? "button" : "div";
 
               return (
-                <div
+                <Cell
+                  {...(isClickable ? { type: "button", "aria-pressed": !!isSelected } : {})}
                   key={`day-${weekIndex}-${dayIndex}`}
-                  className={`flex h-10 w-10 items-center justify-center rounded text-sm ${
-                    hasEvent && isCurrentMonth ? "bg-blue-500 text-white" : ""
-                  } ${isSelected ? "border-2 border-white" : ""} ${
-                    !isCurrentMonth ? "cursor-default text-gray-500" : "text-white"
-                  } ${isClickable ? "cursor-pointer hover:bg-blue-600" : "cursor-default"}`}
+                  className={`flex h-11 items-center justify-center rounded border-2 font-outlier text-sm tabular-nums ${
+                    hasEvent && isCurrentMonth
+                      ? "bg-brand font-medium text-brand-ink"
+                      : ""
+                  } ${isSelected ? "border-ink" : "border-transparent"} ${
+                    !isCurrentMonth
+                      ? "cursor-default text-muted-foreground opacity-50"
+                      : hasEvent
+                        ? ""
+                        : "text-ink"
+                  } ${isClickable ? "cursor-pointer hover:bg-brand-hover" : "cursor-default"}`}
                   onClick={() => isClickable && handleDateClick(day)}
                 >
                   {day}
-                </div>
+                </Cell>
               );
             })}
           </React.Fragment>

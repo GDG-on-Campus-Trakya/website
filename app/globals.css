@@ -1,88 +1,104 @@
+@import "../tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Base styles */
-html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  min-width: 100%;
-  max-width: 100%;
-  height: 100%;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
-}
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-rule);
+  }
 
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  min-width: 100%;
-  max-width: 100%;
-  min-height: 100vh;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
-  overflow-y: auto; /* Allow vertical scrolling */
-  background: linear-gradient(
-    to bottom,
-    #111827,
-    #1f2937
-  ); /* Dark gradient to prevent white flash */
-  /* Extend background to cover any potential white space */
-  background-attachment: fixed;
-  background-size: 100% 100%;
-  position: relative;
-}
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overflow-x: clip;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-edge) transparent;
+  }
 
-/* Prevent body scroll when modal is open */
-body.modal-open {
-  overflow: hidden !important;
-  position: fixed;
-  width: 100%;
-  height: 100%;
-}
-
-/* Prevent white space on zoom out - Background overlay */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(to bottom, #111827, #1f2937);
-  z-index: -1;
-}
-
-/* iPhone Safe Area Support - Prevents content from hiding behind notch/home indicator */
-@supports (padding: env(safe-area-inset-top)) {
   body {
-    padding-top: env(safe-area-inset-top);
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: clip;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Notch and home-indicator safe areas. The top inset is handled by the header. */
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
 }
 
-/* Mobile touch optimization */
-* {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 
-/* Re-enable text selection for content */
-p, span, h1, h2, h3, h4, h5, h6, input, textarea {
-  -webkit-user-select: text;
-  -khtml-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
+/* Prevent body scroll while a modal is open */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
-/* Prevent iOS auto-zoom on input focus */
+/* Scroll containers inside modals do not chain to the page */
+.modal-content,
+.overflow-y-auto,
+.overflow-y-scroll {
+  overscroll-behavior: contain;
+}
+
+/* Touch devices get the 44px hit target. Pointer devices keep the design size. */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  select,
+  input:not([type="checkbox"]):not([type="radio"]) {
+    min-height: 44px;
+  }
+}
+
+/* iOS zooms into inputs below 16px */
 input[type="text"],
 input[type="email"],
 input[type="number"],
@@ -92,359 +108,36 @@ input[type="search"],
 input[type="password"],
 textarea,
 select {
-  font-size: 16px !important; /* iOS Safari won't zoom if font-size >= 16px */
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+  font-size: 16px;
 }
 
-/* Prevent scroll chaining - when scrolling in modal, don't scroll background */
-.modal-content,
-.overflow-y-auto,
-.overflow-y-scroll {
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Specific fix for fixed modals */
-.fixed {
-  overscroll-behavior: none;
-}
-
-/* Touch manipulation for interactive elements */
-.touch-manipulation {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
-}
-
-/* Better mobile click targets */
-button, a, [role="button"] {
-  min-height: 44px;
-  min-width: 44px;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
-}
-
-/* Navbar specific mobile fixes */
-nav {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
-}
-
-/* Mobile menu z-index fix */
-@media (max-width: 768px) {
-  .mobile-menu {
-    position: fixed !important;
-    z-index: 9999 !important;
-  }
-}
-
-/* iPhone SE and small screens optimization */
-@media (max-width: 375px) {
-  /* Move button container higher on the page */
-  .iphone-se-buttons {
-    margin-top: -1.5rem !important;
-  }
-
-  .max-w-\[280px\] {
-    margin-top: -1rem !important;
-  }
-
-  .space-y-3 > * + * {
-    margin-top: 1rem !important;
-  }
-
-  /* Optimize text sizes for better button spacing */
-  .text-4xl {
-    font-size: 1.875rem !important;
-    margin-bottom: 0.75rem !important;
-  }
-
-  .text-lg {
-    font-size: 1rem !important;
-    margin-bottom: 1.25rem !important;
-  }
-}
-
-/* Very small screen optimizations */
-@media (max-width: 320px) {
-  .text-2xl {
-    font-size: 1.25rem !important;
-  }
-  .text-3xl {
-    font-size: 1.5rem !important;
-  }
-  .text-4xl {
-    font-size: 1.75rem !important;
-  }
-  .text-5xl {
-    font-size: 2rem !important;
-  }
-  .px-8 {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-  }
-  .gap-8 {
-    gap: 0.75rem !important;
-  }
-  .gap-2 {
-    gap: 0.5rem !important;
-  }
-
-  /* Button container fixes */
-  .max-w-\[280px\] {
-    max-width: 260px !important;
-  }
-
-  .space-y-3 > * + * {
-    margin-top: 0.875rem !important;
-  }
-
-  /* Button optimizations for very small screens */
-  button {
-    min-height: 40px !important;
-    font-size: 0.875rem !important;
-    padding: 0.625rem 1rem !important;
-    word-break: keep-all !important;
-    line-height: 1.25 !important;
-  }
-}
-
-/* Prevent text overflow on very small screens */
-@media (max-width: 280px) {
-  h1,
-  h2,
-  h3 {
-    word-break: break-word;
-    hyphens: auto;
-  }
-
-  .px-8 {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
-
-  .px-4 {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-  }
-
-  .px-3 {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
-
-  .px-2 {
-    padding-left: 0.375rem !important;
-    padding-right: 0.375rem !important;
-  }
-
-  /* Ultra small button fixes */
-  .max-w-\[280px\] {
-    max-width: 240px !important;
-  }
-
-  .space-y-3 > * + * {
-    margin-top: 1rem !important;
-  }
-
-  button {
-    min-height: 38px !important;
-    font-size: 0.8rem !important;
-    padding: 0.5rem 0.75rem !important;
-    line-height: 1.2 !important;
-  }
-}
-
-/* Tailwind layers and root variables remain the same */
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --color-dark-gray: #1a1a1a;
-    --color-medium-gray: #2c3e50;
-    --color-blue: #3498db;
-    --color-light-blue: #4a90e2;
-    --color-footer-gradient-start: #2c3e50;
-    --color-footer-gradient-end: #3498db;
-    --color-navbar-gradient-start: #1a1a1a;
-    --color-navbar-gradient-end: #3498db;
-  }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
-}
-
-/* First, remove ALL existing scrollbar styles */
-
-/* Then add these new minimal styles */
-* {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-*::-webkit-scrollbar {
-  width: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: rgba(90, 90, 90, 0.4);
-  border-radius: 8px;
-}
-
-/* Drawer specific styles */
-.drawer-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.drawer-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.drawer-content::-webkit-scrollbar-thumb {
-  background: rgba(90, 90, 90, 0.4);
-  border-radius: 8px;
-}
-
-/* Keep only essential drawer styles */
-@layer components {
-  .drawer {
-    background: transparent;
-  }
-
-  .drawer-content {
-    --tw-translate-x: 100%;
-    margin-left: auto;
-    background: transparent !important;
-    border: none !important;
-    transition-property: transform;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
-  }
-
-  .drawer-content[data-state="open"] {
-    --tw-translate-x: 0;
-    transform: translate(var(--tw-translate-x));
-  }
-
-  .drawer-content[data-state="closed"] {
-    --tw-translate-x: 100%;
-    transform: translate(var(--tw-translate-x));
-  }
-}
-
-/* Performance-optimized CSS animations for personality and typing tests */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInScaleUp {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out forwards;
-  will-change: opacity, transform;
-}
-
-.animate-fadeInScaleUp {
-  animation: fadeInScaleUp 0.4s ease-out forwards;
-  will-change: opacity, transform;
-}
-
-/* Hardware-accelerated animations */
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 20px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-.animate-slideUp {
-  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  will-change: transform, opacity;
-}
-
-/* Reduce animation on low-end devices */
+/* Reduced motion: spatial motion collapses to a short crossfade */
 @media (prefers-reduced-motion: reduce) {
-  .animate-fadeIn,
-  .animate-slideUp {
-    animation: none;
-    opacity: 1;
-    transform: none;
+  *,
+  ::before,
+  ::after {
+    animation-duration: 150ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 150ms !important;
+    scroll-behavior: auto !important;
   }
+}
+
+/* react-toastify on paper: every toast container uses theme="light" */
+.Toastify {
+  --toastify-color-light: var(--color-paper);
+  --toastify-text-color-light: var(--color-ink);
+  --toastify-color-success: var(--color-success);
+  --toastify-color-error: var(--color-error);
+  --toastify-color-warning: var(--color-warning);
+  --toastify-color-info: var(--color-accent);
+  --toastify-toast-min-height: 3rem;
+  --toastify-font-family: var(--font-body);
+  --toastify-z-index: var(--z-toast);
+}
+
+.Toastify__toast {
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-whisper);
 }

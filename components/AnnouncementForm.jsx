@@ -9,6 +9,10 @@ import { toast } from "react-toastify";
 import { logger } from "@/utils/logger";
 import Image from "next/image";
 import { useLocale } from "next-intl";
+import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function AnnouncementForm({ announcement = null, onClose, onSuccess }) {
   const locale = useLocale();
@@ -202,31 +206,35 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
   };
 
   return (
-    <div className="fixed inset-0 bg-black/75 z-50 flex items-start sm:items-center justify-center overflow-y-auto">
-      <div className="relative bg-gray-800/95 backdrop-blur-md rounded-t-2xl sm:rounded-2xl p-4 sm:p-6 max-w-2xl w-full shadow-2xl border border-gray-700 min-h-screen sm:min-h-0 sm:my-8">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="announcement-form-title"
+      className="fixed inset-0 z-modal flex items-start justify-center overflow-y-auto bg-ink/60 animate-in fade-in-0 duration-short sm:items-center"
+    >
+      <div className="relative min-h-dvh w-full max-w-2xl rounded-t-lg border border-rule bg-background p-4 text-foreground sm:my-8 sm:min-h-0 sm:rounded-lg sm:p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-gray-800/95 backdrop-blur-md pb-3 sm:pb-0 sm:static z-10">
-          <h2 className="text-xl sm:text-2xl font-bold text-white">
+        <div className="sticky top-0 z-raised -mx-4 mb-4 flex items-center justify-between gap-4 border-b border-rule bg-background px-4 pb-3 sm:static sm:mx-0 sm:mb-6 sm:px-0">
+          <h2 id="announcement-form-title" className="font-display text-xl font-bold sm:text-2xl">
             {announcement ? "Duyuruyu Düzenle" : "Yeni Duyuru Oluştur"}
           </h2>
           {onClose && (
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors p-2 -mr-2"
-            >
-              <X className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
+            <Button type="button" variant="ghost" size="icon" onClick={onClose} className="-mr-2">
+              <X className="h-5 w-5" aria-hidden="true" />
+            </Button>
           )}
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-2">
           {/* Title */}
-          <div>
-            <label className="block text-white text-sm font-medium mb-1.5 sm:mb-2">
-              Başlık *
-            </label>
-            <input
+          <Field
+            id="announcement-title"
+            label="Başlık"
+            required
+            help={`${formData.title.length}/200 karakter`}
+          >
+            <Input
               type="text"
               name="title"
               value={formData.title}
@@ -234,113 +242,89 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
               placeholder="Duyuru başlığı..."
               required
               maxLength={200}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-gray-400 text-xs mt-1">
-              {formData.title.length}/200 karakter
-            </p>
-          </div>
+          </Field>
 
-          <div>
-            <label className="block text-white text-sm font-medium mb-1.5 sm:mb-2">
-              {copy.englishTitle}
-            </label>
-            <input
+          <Field id="announcement-title-en" label={copy.englishTitle}>
+            <Input
               type="text"
               name="titleEn"
               value={formData.titleEn}
               onChange={handleInputChange}
               placeholder={copy.englishTitlePlaceholder}
               maxLength={200}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
+          </Field>
 
           {/* Description */}
-          <div>
-            <label className="block text-white text-sm font-medium mb-1.5 sm:mb-2">
-              Kısa Açıklama (İsteğe Bağlı)
-            </label>
-            <textarea
+          <Field
+            id="announcement-description"
+            label="Kısa Açıklama (İsteğe Bağlı)"
+            help={`${formData.description.length}/300 karakter`}
+          >
+            <Textarea
               name="description"
               value={formData.description}
               onChange={handleInputChange}
               placeholder="Duyuru hakkında kısa bir açıklama..."
               rows={2}
               maxLength={300}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="resize-none"
             />
-            <p className="text-gray-400 text-xs mt-1">
-              {formData.description.length}/300 karakter
-            </p>
-          </div>
+          </Field>
 
-          <div>
-            <label className="block text-white text-sm font-medium mb-1.5 sm:mb-2">
-              {copy.englishDescription}
-            </label>
-            <textarea
+          <Field id="announcement-description-en" label={copy.englishDescription}>
+            <Textarea
               name="descriptionEn"
               value={formData.descriptionEn}
               onChange={handleInputChange}
               placeholder={copy.englishDescriptionPlaceholder}
               rows={2}
               maxLength={300}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="resize-none"
             />
-          </div>
+          </Field>
 
           {/* Content */}
-          <div>
-            <label className="block text-white text-sm font-medium mb-1.5 sm:mb-2">
-              İçerik
-            </label>
-            <textarea
+          <Field
+            id="announcement-content"
+            label="İçerik"
+            help={`${formData.content.length}/5000 karakter`}
+          >
+            <Textarea
               name="content"
               value={formData.content}
               onChange={handleInputChange}
               placeholder="Duyuru içeriğini buraya yazın..."
               rows={5}
               maxLength={5000}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="resize-none"
             />
-            <p className="text-gray-400 text-xs mt-1">
-              {formData.content.length}/5000 karakter
-            </p>
-          </div>
+          </Field>
 
-          <div>
-            <label className="block text-white text-sm font-medium mb-1.5 sm:mb-2">
-              {copy.englishContent}
-            </label>
-            <textarea
+          <Field id="announcement-content-en" label={copy.englishContent}>
+            <Textarea
               name="contentEn"
               value={formData.contentEn}
               onChange={handleInputChange}
               placeholder={copy.englishContentPlaceholder}
               rows={5}
               maxLength={5000}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="resize-none"
             />
-          </div>
+          </Field>
 
           {/* Image Upload */}
-          <div>
-            <label className="block text-white text-sm font-medium mb-1.5 sm:mb-2">
-              Resim (İsteğe Bağlı)
-            </label>
+          <div className="flex flex-col gap-1.5 pb-4">
+            <span className="text-sm font-medium leading-none">Resim (İsteğe Bağlı)</span>
             {!imagePreview ? (
               <div
-                className="border-2 border-dashed border-gray-600 rounded-lg p-6 sm:p-8 text-center cursor-pointer hover:border-blue-500 transition-colors"
+                className="cursor-pointer rounded border border-dashed border-input p-6 text-center transition-colors duration-micro hover:bg-secondary sm:p-8"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <ImageIcon className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-                <p className="text-gray-300 text-base sm:text-lg mb-1 sm:mb-2">
-                  Resim seç veya sürükle
-                </p>
-                <p className="text-gray-400 text-xs sm:text-sm">
-                  JPG, PNG, HEIC (Max 10MB)
-                </p>
+                <ImageIcon className="mx-auto mb-3 h-8 w-8 text-muted-foreground" aria-hidden="true" />
+                <p className="mb-1 text-base text-ink">Resim seç veya sürükle</p>
+                <p className="text-sm text-muted-foreground">JPG, PNG, HEIC (Max 10MB)</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -356,62 +340,62 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
                   alt="Preview"
                   width={600}
                   height={400}
-                  className="w-full h-48 sm:h-64 object-cover rounded-lg"
+                  className="aspect-[16/9] w-full rounded object-cover"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="icon"
                   onClick={selectedImage ? clearImage : removeExistingImage}
-                  className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 sm:p-2 hover:bg-red-700 transition-colors shadow-lg"
+                  className="absolute right-2 top-2 bg-background"
                 >
-                  <X className="w-4 h-4" />
-                </button>
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </Button>
               </div>
             )}
           </div>
 
           {/* Publish Status */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-3 pb-2">
             <input
               type="checkbox"
               id="isPublished"
               name="isPublished"
               checked={formData.isPublished}
               onChange={handleInputChange}
-              className="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+              className="h-5 w-5 shrink-0 accent-brand"
             />
-            <label htmlFor="isPublished" className="text-white text-sm">
+            <label htmlFor="isPublished" className="text-sm">
               Duyuruyu hemen yayınla
             </label>
           </div>
 
           {/* Submit Buttons */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4 pb-4 sm:pb-0 sticky sm:static bottom-0 bg-gray-800/95 backdrop-blur-md -mx-4 sm:mx-0 px-4 sm:px-0">
+          <div className="sticky bottom-0 -mx-4 flex flex-col gap-2 border-t border-rule bg-background px-4 pb-4 pt-3 sm:static sm:mx-0 sm:flex-row sm:gap-3 sm:px-0 sm:pb-0 sm:pt-4">
             {onClose && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={onClose}
-                className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm sm:text-base order-2 sm:order-1"
+                className="order-2 flex-1 sm:order-1"
               >
                 İptal
-              </button>
+              </Button>
             )}
-            <button
+            <Button
               type="submit"
-              disabled={isSubmitting}
-              className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed transition-all font-medium text-sm sm:text-base flex items-center justify-center gap-2 order-1 sm:order-2"
+              loading={isSubmitting}
+              className="order-1 flex-1 sm:order-2"
             >
               {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent"></div>
-                  <span>Kaydediliyor...</span>
-                </>
+                <span>Kaydediliyor...</span>
               ) : (
                 <>
-                  <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Upload aria-hidden="true" />
                   <span>{announcement ? "Güncelle" : "Oluştur"}</span>
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

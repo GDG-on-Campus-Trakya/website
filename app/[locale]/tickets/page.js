@@ -8,6 +8,30 @@ import "react-toastify/dist/ReactToastify.css";
 import { logger } from "@/utils/logger";
 import { useLocale } from "next-intl";
 import { formatLocalizedDate } from "@/utils/localeUtils";
+import {
+  Download,
+  FileText,
+  Image as ImageIcon,
+  Loader2,
+  MessageSquare,
+  Paperclip,
+  Plus,
+  RotateCcw,
+  Send,
+  X,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Field } from "@/components/ui/field";
+import { Input, fieldClasses } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  PageContainer,
+  PageHeader,
+  Section,
+  EmptyState,
+} from "@/components/ui/page";
 
 export default function TicketsPage() {
   const locale = useLocale();
@@ -663,16 +687,16 @@ export default function TicketsPage() {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusVariant = (status) => {
     switch (status) {
       case "open":
-        return "bg-yellow-900/50 text-yellow-300 border border-yellow-700";
+        return "warning";
       case "closed":
-        return "bg-green-900/50 text-green-300 border border-green-700";
+        return "success";
       case "in_progress":
-        return "bg-blue-900/50 text-blue-300 border border-blue-700";
+        return "accent";
       default:
-        return "bg-gray-700/50 text-gray-300 border border-gray-600";
+        return "neutral";
     }
   };
 
@@ -686,668 +710,315 @@ export default function TicketsPage() {
 
   if (loading || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#000000] flex items-center justify-center">
-        <div className="text-white text-lg">{copy.loading}</div>
-      </div>
+      <PageContainer>
+        <p role="status" className="py-16 text-md text-muted-foreground">
+          {copy.loading}
+        </p>
+      </PageContainer>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#000000] flex items-center justify-center">
-        <p className="text-lg text-red-400">{copy.authRequired}</p>
-      </div>
+      <PageContainer>
+        <p role="alert" className="py-16 text-md text-error">
+          {copy.authRequired}
+        </p>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#000000] text-white">
-      <div className="container mx-auto px-4 pt-20 sm:pt-24 md:pt-28 pb-8">
-        {/* Header Section */}
-        <div className="text-center mb-8 sm:mb-12 md:mb-16">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#4285F4] via-[#DB4437] via-[#F4B400] to-[#0F9D58] mb-4 sm:mb-6 px-2 py-2 leading-tight">
-            {copy.title}
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-6 sm:mb-8 md:mb-12 max-w-3xl mx-auto px-4">
-            {copy.subtitle}
-          </p>
-
-          {/* Action Button */}
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base md:text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-500/30"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              {showForm ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              )}
-            </svg>
+    <PageContainer>
+      <PageHeader
+        title={copy.title}
+        description={copy.subtitle}
+        actions={
+          <Button onClick={() => setShowForm(!showForm)}>
+            {showForm ? (
+              <X aria-hidden="true" />
+            ) : (
+              <Plus aria-hidden="true" />
+            )}
             {showForm ? copy.hideForm : copy.showForm}
-          </button>
-        </div>
+          </Button>
+        }
+      />
 
-        {/* Ticket Form */}
-        {showForm && (
-          <div className="bg-gray-800/30 backdrop-blur-md border border-gray-700/50 rounded-2xl p-4 sm:p-6 md:p-8 mb-8 sm:mb-12 md:mb-16 max-w-3xl mx-auto shadow-2xl">
-            <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
-                <svg
-                  className="w-4 h-4 sm:w-6 sm:h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
-                {copy.formTitle}
-              </h2>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 md:space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-200 mb-3 flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-blue-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a2 2 0 012-2z"
-                      />
-                    </svg>
-                    {copy.category}
-                  </label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                    className="w-full px-4 py-4 bg-gray-700/30 border border-gray-600/50 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-white transition-all duration-200 [&>option]:bg-gray-800 [&>option]:text-white"
-                    required
-                  >
-                    <option value="complaint" className="bg-gray-800 text-white">
-                      🚨 {copy.categoryOptions.complaint}
-                    </option>
-                    <option value="suggestion" className="bg-gray-800 text-white">
-                      💡 {copy.categoryOptions.suggestion}
-                    </option>
-                    <option value="technical" className="bg-gray-800 text-white">
-                      🔧 {copy.categoryOptions.technical}
-                    </option>
-                    <option value="other" className="bg-gray-800 text-white">
-                      📝 {copy.categoryOptions.other}
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-200 mb-3 flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-blue-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                      />
-                    </svg>
-                    {copy.subject}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.subject}
-                    onChange={(e) =>
-                      setFormData({ ...formData, subject: e.target.value })
-                    }
-                    className="w-full px-4 py-4 bg-gray-700/30 border border-gray-600/50 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-white placeholder-gray-400 transition-all duration-200"
-                    placeholder={copy.subjectPlaceholder}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-200 mb-3 flex items-center gap-2">
-                  <svg
-                    className="w-4 h-4 text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  {copy.message}
-                </label>
-                <textarea
-                  value={formData.message}
+      {/* Ticket Form */}
+      {showForm && (
+        <Section title={copy.formTitle}>
+          <form onSubmit={handleSubmit} className="max-w-2xl pt-2">
+            <div className="grid gap-x-6 md:grid-cols-2">
+              <Field id="ticket-category" label={copy.category}>
+                <select
+                  value={formData.category}
                   onChange={(e) =>
-                    setFormData({ ...formData, message: e.target.value })
+                    setFormData({ ...formData, category: e.target.value })
                   }
-                  rows={6}
-                  className="w-full px-4 py-4 bg-gray-700/30 border border-gray-600/50 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-white placeholder-gray-400 resize-none transition-all duration-200"
-                  placeholder={copy.messagePlaceholder}
+                  className={cn(fieldClasses, "h-control py-2")}
+                  required
+                >
+                  <option value="complaint">
+                    {copy.categoryOptions.complaint}
+                  </option>
+                  <option value="suggestion">
+                    {copy.categoryOptions.suggestion}
+                  </option>
+                  <option value="technical">
+                    {copy.categoryOptions.technical}
+                  </option>
+                  <option value="other">{copy.categoryOptions.other}</option>
+                </select>
+              </Field>
+
+              <Field id="ticket-subject" label={copy.subject}>
+                <Input
+                  type="text"
+                  value={formData.subject}
+                  onChange={(e) =>
+                    setFormData({ ...formData, subject: e.target.value })
+                  }
+                  placeholder={copy.subjectPlaceholder}
                   required
                 />
-              </div>
-
-              {/* File Upload */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-200 mb-3 flex items-center gap-2">
-                  <svg
-                    className="w-4 h-4 text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                    />
-                  </svg>
-                  {copy.attachments}
-                </label>
-                <div className="border-2 border-dashed border-gray-600/50 rounded-xl p-6 bg-gray-700/20 hover:bg-gray-700/30 transition-all duration-200">
-                  <input
-                    type="file"
-                    multiple
-                    accept=".jpg,.jpeg,.png,.gif,.pdf,.txt"
-                    onChange={handleFileSelect}
-                    className="w-full px-4 py-3 bg-gray-700/30 border border-gray-600/50 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-blue-600 file:to-blue-700 file:text-white hover:file:from-blue-700 hover:file:to-blue-800 transition-all duration-200"
-                  />
-                  <div className="flex items-center justify-center mt-4 text-gray-400">
-                    <svg
-                      className="w-8 h-8 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
-                    <span className="text-sm">
-                      {copy.attachmentHint}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Selected Files */}
-              {selectedFiles.length > 0 && (
-                <div className="bg-blue-900/10 rounded-xl p-6 border border-blue-500/20">
-                  <label className="block text-sm font-semibold text-blue-200 mb-4 flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {copy.selectedFiles} ({selectedFiles.length}/3)
-                  </label>
-                  <div className="space-y-3">
-                    {selectedFiles.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between bg-gray-800/50 rounded-xl p-4 border border-gray-700/30"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
-                            <svg
-                              className="w-5 h-5 text-white"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                              />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-white">
-                              {file.name}
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              {(file.size / 1024 / 1024).toFixed(2)} MB
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="w-8 h-8 flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isSubmitting || uploadingFiles}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 rounded-xl font-semibold text-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:transform-none flex items-center justify-center gap-3"
-              >
-                {uploadingFiles ? (
-                  <>
-                    <svg
-                      className="w-5 h-5 animate-spin"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    {copy.filesUploading}
-                  </>
-                ) : isSubmitting ? (
-                  <>
-                    <svg
-                      className="w-5 h-5 animate-spin"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    {copy.submitting}
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                      />
-                    </svg>
-                    {copy.submit}
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Tickets List */}
-        <div className="max-w-6xl mx-auto px-2 sm:px-4">
-          <div className="text-center mb-6 sm:mb-8 md:mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4 flex items-center justify-center gap-2 sm:gap-3">
-              <svg
-                className="w-8 h-8 text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              {copy.yourTickets}
-            </h2>
-            {tickets.length > 0 && (
-              <p className="text-gray-400">{copy.totalTickets(tickets.length)}</p>
-            )}
-          </div>
-
-          {tickets.length === 0 ? (
-            <div className="bg-gray-800/30 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6 sm:p-8 md:p-12 text-center">
-              <svg
-                className="w-16 h-16 text-gray-500 mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">
-                {copy.emptyTitle}
-              </h3>
-              <p className="text-gray-400 mb-6">
-                {copy.emptyDescription}
-              </p>
-              <button
-                onClick={() => setShowForm(true)}
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                {copy.createFirst}
-              </button>
+              </Field>
             </div>
-          ) : (
-            <div className="grid gap-4 sm:gap-6">
-              {tickets.map((ticket) => (
-                <div
-                  key={ticket.id}
-                  className="bg-gray-800/30 backdrop-blur-md border border-gray-700/50 rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:border-gray-600/50 cursor-pointer"
-                  onClick={() => handleReplyClick(ticket)}
-                >
-                  {/* Ticket Header */}
-                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
-                    <div className="flex-1 w-full">
-                      <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <svg
-                            className="w-6 h-6 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
-                            <h3 className="text-base sm:text-lg md:text-xl font-bold text-white break-words">
-                              {ticket.subject}
-                            </h3>
-                            {ticket.ticketNumber && (
-                              <span className="px-2 sm:px-3 py-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs sm:text-sm font-mono rounded-lg border border-blue-500/30">
-                                #{ticket.ticketNumber}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap gap-2 sm:gap-3 mb-2 sm:mb-3">
-                            <span
-                              className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold ${getStatusColor(
-                                ticket.status
-                              )}`}
-                            >
-                              {getStatusText(ticket.status)}
-                            </span>
-                            <span className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold bg-gray-700/50 text-gray-200 border border-gray-600/30">
-                              {getCategoryText(ticket.category)}
-                            </span>
-                            {ticket.assignedTo && (
-                              <span className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold bg-purple-900/50 text-purple-200 border border-purple-600/30">
-                                👤 {copy.assignedAdmin}
-                              </span>
-                            )}
-                          </div>
-                          {ticket.status === "closed" && (
-                            <div className="flex items-center gap-2 sm:gap-3 mt-2 sm:mt-3">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleReopenClick(ticket.id);
-                                }}
-                                className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 shadow-md hover:shadow-lg"
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                  />
-                                </svg>
-                                {copy.reopen}
-                              </button>
-                            </div>
-                          )}
-                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm text-gray-400 mt-2">
-                            <div className="flex items-center gap-1">
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0h6v10a2 2 0 01-2 2H10a2 2 0 01-2-2V7z"
-                                />
-                              </svg>
-                              {formatLocalizedDate(ticket.createdAt, locale, {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </div>
-                            {ticket.responses?.length > 0 && (
-                              <div className="flex items-center gap-1 text-green-400">
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                                  />
-                                </svg>
-                                {copy.responseCount(ticket.responses.length)}
-                              </div>
-                            )}
-                            {ticket.attachments?.length > 0 && (
-                              <div className="flex items-center gap-1 text-blue-400">
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                                  />
-                                </svg>
-                                {copy.attachmentCount(ticket.attachments.length)}
-                              </div>
-                            )}
-                          </div>
+
+            <Field id="ticket-message" label={copy.message}>
+              <Textarea
+                value={formData.message}
+                onChange={(e) =>
+                  setFormData({ ...formData, message: e.target.value })
+                }
+                rows={6}
+                placeholder={copy.messagePlaceholder}
+                required
+              />
+            </Field>
+
+            {/* File Upload */}
+            <Field
+              id="ticket-files"
+              label={copy.attachments}
+              help={copy.attachmentHint}
+            >
+              <Input
+                type="file"
+                multiple
+                accept=".jpg,.jpeg,.png,.gif,.pdf,.txt"
+                onChange={handleFileSelect}
+                className="cursor-pointer"
+              />
+            </Field>
+
+            {/* Selected Files */}
+            {selectedFiles.length > 0 && (
+              <div className="mb-4">
+                <p className="mb-2 text-sm font-medium">
+                  {copy.selectedFiles}{" "}
+                  <span className="font-outlier tabular-nums text-muted-foreground">
+                    ({selectedFiles.length}/3)
+                  </span>
+                </p>
+                <ul className="border-t border-rule">
+                  {selectedFiles.map((file, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center justify-between gap-3 border-b border-rule py-2"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <FileText
+                          className="h-4 w-4 shrink-0 text-muted-foreground"
+                          aria-hidden="true"
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">
+                            {file.name}
+                          </p>
+                          <p className="font-outlier text-xs tabular-nums text-muted-foreground">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
                         </div>
                       </div>
-                    </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeFile(index)}
+                        aria-label={`${copy.cancel}: ${file.name}`}
+                      >
+                        <X aria-hidden="true" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <Button type="submit" disabled={isSubmitting || uploadingFiles}>
+              {uploadingFiles ? (
+                <>
+                  <Loader2 className="animate-spin" aria-hidden="true" />
+                  {copy.filesUploading}
+                </>
+              ) : isSubmitting ? (
+                <>
+                  <Loader2 className="animate-spin" aria-hidden="true" />
+                  {copy.submitting}
+                </>
+              ) : (
+                <>
+                  <Send aria-hidden="true" />
+                  {copy.submit}
+                </>
+              )}
+            </Button>
+          </form>
+        </Section>
+      )}
+
+      {/* Tickets List */}
+      <Section
+        title={copy.yourTickets}
+        action={
+          tickets.length > 0 ? (
+            <p className="text-sm tabular-nums text-muted-foreground">
+              {copy.totalTickets(tickets.length)}
+            </p>
+          ) : null
+        }
+      >
+        {tickets.length === 0 ? (
+          <EmptyState
+            title={copy.emptyTitle}
+            description={copy.emptyDescription}
+            action={
+              <Button onClick={() => setShowForm(true)}>
+                <Plus aria-hidden="true" />
+                {copy.createFirst}
+              </Button>
+            }
+          />
+        ) : (
+          <ul>
+            {tickets.map((ticket) => (
+              <li
+                key={ticket.id}
+                className="grid cursor-pointer gap-x-8 gap-y-3 border-b border-rule py-5 transition-colors duration-micro ease-out hover:bg-paper-2 md:grid-cols-[12rem_minmax(0,1fr)]"
+                onClick={() => handleReplyClick(ticket)}
+              >
+                {/* Ticket meta */}
+                <div className="min-w-0 space-y-1 font-outlier text-sm text-muted-foreground">
+                  {ticket.ticketNumber && (
+                    <p className="break-all text-ink">#{ticket.ticketNumber}</p>
+                  )}
+                  <p className="capitalize">
+                    <time dateTime={ticket.createdAt || undefined}>
+                      {formatLocalizedDate(ticket.createdAt, locale, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </time>
+                  </p>
+                  {ticket.responses?.length > 0 && (
+                    <p className="flex items-center gap-1.5">
+                      <MessageSquare className="h-4 w-4" aria-hidden="true" />
+                      <span className="tabular-nums">
+                        {copy.responseCount(ticket.responses.length)}
+                      </span>
+                    </p>
+                  )}
+                  {ticket.attachments?.length > 0 && (
+                    <p className="flex items-center gap-1.5">
+                      <Paperclip className="h-4 w-4" aria-hidden="true" />
+                      <span className="tabular-nums">
+                        {copy.attachmentCount(ticket.attachments.length)}
+                      </span>
+                    </p>
+                  )}
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="break-words font-display text-lg font-semibold">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReplyClick(ticket);
+                      }}
+                      className="rounded-sm text-left hover:underline hover:decoration-brand hover:decoration-2 hover:underline-offset-4"
+                    >
+                      {ticket.subject}
+                    </button>
+                  </h3>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge variant={getStatusVariant(ticket.status)}>
+                      {getStatusText(ticket.status)}
+                    </Badge>
+                    <Badge>{getCategoryText(ticket.category)}</Badge>
+                    {ticket.assignedTo && <Badge>{copy.assignedAdmin}</Badge>}
+                    {ticket.status === "closed" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReopenClick(ticket.id);
+                        }}
+                      >
+                        <RotateCcw aria-hidden="true" />
+                        {copy.reopen}
+                      </Button>
+                    )}
                   </div>
 
                   {/* Ticket Content */}
-                  <div className="bg-gray-700/20 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
-                    <h4 className="text-xs sm:text-sm font-semibold text-gray-300 mb-2 sm:mb-3 flex items-center gap-2">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
+                  <div className="mt-4">
+                    <h4 className="text-xs font-medium text-muted-foreground">
                       {copy.messageContent}
                     </h4>
-                    <p className="text-sm sm:text-base text-gray-200 leading-relaxed whitespace-pre-wrap break-words">
+                    <p className="mt-1 max-w-measure whitespace-pre-wrap break-words text-ink-2">
                       {ticket.message}
                     </p>
                   </div>
 
                   {/* Attachments */}
                   {ticket.attachments && ticket.attachments.length > 0 && (
-                    <div className="bg-blue-900/10 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 border border-blue-500/20">
-                      <h4 className="text-xs sm:text-sm font-semibold text-blue-200 mb-3 sm:mb-4 flex items-center gap-2">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                          />
-                        </svg>
-                        {copy.attachedFiles} ({ticket.attachments.length})
+                    <div className="mt-4">
+                      <h4 className="mb-1 text-xs font-medium text-muted-foreground">
+                        {copy.attachedFiles}{" "}
+                        <span className="font-outlier tabular-nums">
+                          ({ticket.attachments.length})
+                        </span>
                       </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <ul className="border-t border-rule">
                         {ticket.attachments.map((attachment, index) => (
-                          <div
+                          <li
                             key={index}
-                            className="flex items-center justify-between bg-gray-800/50 rounded-xl p-3 sm:p-4 border border-gray-700/30"
+                            className="flex items-center justify-between gap-3 border-b border-rule py-2"
                           >
-                            <div className="flex items-center space-x-4 flex-1 min-w-0">
-                              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center flex-shrink-0">
-                                {attachment.type.startsWith("image/") ? (
-                                  <svg
-                                    className="w-5 h-5 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <svg
-                                    className="w-5 h-5 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                    />
-                                  </svg>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-white truncate">
+                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                              {attachment.type.startsWith("image/") ? (
+                                <ImageIcon
+                                  className="h-4 w-4 shrink-0 text-muted-foreground"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <FileText
+                                  className="h-4 w-4 shrink-0 text-muted-foreground"
+                                  aria-hidden="true"
+                                />
+                              )}
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium">
                                   {attachment.name}
                                 </p>
-                                <p className="text-xs text-gray-400">
+                                <p className="font-outlier text-xs tabular-nums text-muted-foreground">
                                   {(attachment.size / 1024 / 1024).toFixed(2)}{" "}
                                   MB
                                 </p>
@@ -1357,303 +1028,246 @@ export default function TicketsPage() {
                               href={attachment.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="ml-3 inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors duration-200"
+                              className="inline-flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap rounded-sm text-sm font-medium text-brand underline decoration-1 underline-offset-4 transition-colors duration-micro ease-out hover:decoration-2"
                             >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                />
-                              </svg>
+                              <Download className="h-4 w-4" aria-hidden="true" />
                               {copy.download}
                             </a>
-                          </div>
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     </div>
                   )}
-
-                  {/* Conversation moved into modal */}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
 
-        {/* Reopen Modal */}
-        {showReopenModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 rounded-2xl p-4 sm:p-6 md:p-8 max-w-md w-full border border-gray-700">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-white">
-                  {copy.reopenTitle}
-                </h3>
-              </div>
+                {/* Conversation moved into modal */}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
 
-              <p className="text-gray-300 mb-6">
-                {copy.reopenDescription}
-              </p>
+      {/* Reopen Modal */}
+      {showReopenModal && (
+        <div className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4 animate-in fade-in-0 duration-short">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reopen-title"
+            className="w-full max-w-md rounded-lg border border-rule bg-background p-6 text-foreground"
+          >
+            <h2 id="reopen-title" className="font-display text-xl font-bold">
+              {copy.reopenTitle}
+            </h2>
 
-              <textarea
-                value={reopenReason}
-                onChange={(e) => setReopenReason(e.target.value)}
-                placeholder={copy.reopenPlaceholder}
-                rows={4}
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-white placeholder-gray-400 resize-none mb-6"
-                required
-              />
+            <p id="reopen-description" className="mt-3 text-sm text-ink-2">
+              {copy.reopenDescription}
+            </p>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={closeReopenModal}
-                  disabled={isReopening}
-                  className="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50"
-                >
-                  {copy.cancel}
-                </button>
-                <button
-                  onClick={handleReopenSubmit}
-                  disabled={isReopening || !reopenReason.trim()}
-                  className="flex-1 px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isReopening ? (
-                    <>
-                      <svg
-                        className="w-4 h-4 animate-spin"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                      </svg>
-                      {copy.reopening}
-                    </>
-                  ) : (
-                    copy.reopen
-                  )}
-                </button>
-              </div>
+            <Textarea
+              value={reopenReason}
+              onChange={(e) => setReopenReason(e.target.value)}
+              placeholder={copy.reopenPlaceholder}
+              rows={4}
+              aria-labelledby="reopen-description"
+              className="mt-3"
+              required
+            />
+
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={closeReopenModal}
+                disabled={isReopening}
+              >
+                {copy.cancel}
+              </Button>
+              <Button
+                onClick={handleReopenSubmit}
+                disabled={isReopening || !reopenReason.trim()}
+              >
+                {isReopening ? (
+                  <>
+                    <Loader2 className="animate-spin" aria-hidden="true" />
+                    {copy.reopening}
+                  </>
+                ) : (
+                  copy.reopen
+                )}
+              </Button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Chat Modal */}
-        {showReplyModal && selectedTicketForReply && (
-          <div 
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50"
-            style={{ overscrollBehavior: 'contain' }}
+      {/* Chat Modal */}
+      {showReplyModal && selectedTicketForReply && (
+        <div
+          className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-2 animate-in fade-in-0 duration-short sm:p-4"
+          style={{ overscrollBehavior: "contain" }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="thread-title"
+            className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-lg border border-rule bg-background text-foreground sm:max-h-[85vh]"
+            style={{ overscrollBehavior: "contain" }}
           >
-            <div 
-              className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden shadow-2xl"
-              style={{ overscrollBehavior: 'contain' }}
-            >
-              {/* Header */}
-              <div className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-gray-700 flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-sm sm:text-base md:text-lg font-semibold text-white truncate">
-                    {copy.ticketPrefix} #
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 border-b border-rule px-4 py-3 md:px-6">
+              <div className="min-w-0 flex-1">
+                <h2
+                  id="thread-title"
+                  className="truncate font-display text-lg font-bold"
+                >
+                  {copy.ticketPrefix}{" "}
+                  <span className="font-outlier text-base font-medium">
+                    #
                     {selectedTicketForReply.ticketNumber ||
                       selectedTicketForReply.id}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-gray-400 truncate">
-                    {selectedTicketForReply.subject}
-                  </p>
-                </div>
-                <button
-                  onClick={closeReplyModal}
-                  className="text-gray-400 hover:text-gray-200"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
+                  </span>
+                </h2>
+                <p className="truncate text-sm text-muted-foreground">
+                  {selectedTicketForReply.subject}
+                </p>
               </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeReplyModal}
+                aria-label={copy.cancel}
+              >
+                <X aria-hidden="true" />
+              </Button>
+            </div>
 
-              {/* Conversation */}
-              <div className="flex flex-col h-[65vh] sm:h-[60vh]">
-                <div 
-                  className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 bg-gray-900"
-                  style={{ 
-                    overscrollBehavior: 'contain',
-                    WebkitOverflowScrolling: 'touch'
-                  }}
-                >
-                  {/* Original ticket message (user) */}
-                  <div className="flex items-start gap-2 sm:gap-3 justify-end">
-                    <div className="max-w-[85%] sm:max-w-xl bg-green-900/30 border border-green-700 rounded-2xl px-3 sm:px-4 py-2 sm:py-3">
-                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
-                        <span className="text-[10px] sm:text-xs font-semibold text-green-300">
-                          {copy.you}
-                        </span>
-                        {selectedTicketForReply.createdAt && (
-                          <span className="text-[9px] sm:text-[10px] text-gray-400">
-                            {formatLocalizedDate(
-                              selectedTicketForReply.createdAt,
-                              locale,
-                              {
-                                month: "short",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs sm:text-sm text-gray-200 whitespace-pre-wrap break-words">
-                        {selectedTicketForReply.message}
-                      </p>
-                    </div>
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-green-700 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold flex-shrink-0">
-                      S
-                    </div>
-                  </div>
-                  {/* Replies */}
-                  {selectedTicketForReply.responses?.map((response, idx) => {
-                    const isSystem = response.isSystemMessage;
-                    const isUserR = response.isUserResponse === true;
-                    const isAdminR = !isSystem && !isUserR;
-                    // On user panel: user's messages should align right, admin left
-                    const alignRight = isUserR && !isSystem;
-                    return (
-                      <div
-                        key={idx}
-                        className={`flex items-start gap-2 sm:gap-3 ${
-                          alignRight ? "justify-end" : "justify-start"
-                        }`}
-                      >
-                        {!alignRight && (
-                          <div
-                            className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg ${
-                              isAdminR ? "bg-blue-700" : "bg-gray-600"
-                            } flex items-center justify-center text-white text-[10px] sm:text-xs font-bold flex-shrink-0`}
-                          >
-                            {isAdminR ? "A" : "S"}
-                          </div>
-                        )}
-                        <div
-                          className={`max-w-[85%] sm:max-w-xl ${
-                            isSystem
-                              ? "bg-gray-800/70 border-gray-600"
-                              : alignRight
-                              ? "bg-green-900/30 border-green-700"
-                              : "bg-blue-900/40 border-blue-700"
-                          } border rounded-2xl px-3 sm:px-4 py-2 sm:py-3`}
-                        >
-                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
-                            <span
-                              className={`text-[10px] sm:text-xs font-semibold ${
-                                isSystem
-                                  ? "text-gray-300"
-                                  : alignRight
-                                  ? "text-green-300"
-                                  : "text-blue-300"
-                              }`}
-                            >
-                              {isSystem
-                                ? copy.systemLabel
-                                : alignRight
-                                ? copy.you
-                                : copy.admin}
-                            </span>
-                            <span className="text-[9px] sm:text-[10px] text-gray-400">
-                              {formatLocalizedDate(response.createdAt, locale, {
-                                month: "short",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </span>
-                          </div>
-                          <p className="text-xs sm:text-sm text-gray-200 whitespace-pre-wrap break-words">
-                            {response.message}
-                          </p>
-                        </div>
-                        {alignRight && (
-                          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-green-700 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold flex-shrink-0">
-                            S
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                {/* Composer */}
-                <div className="p-2 sm:p-3 md:p-4 border-t border-gray-700 bg-gray-900">
-                  <div className="flex gap-2 sm:gap-3">
-                    <textarea
-                      value={replyMessage}
-                      onChange={(e) => setReplyMessage(e.target.value)}
-                      rows={2}
-                      className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-gray-800/70 border border-gray-700 rounded-xl focus:outline-none focus:border-green-500 text-white placeholder-gray-400 resize-none text-xs sm:text-sm"
-                      placeholder={copy.replyPlaceholder}
-                      required
+            {/* Conversation */}
+            <div className="flex h-[65vh] flex-col sm:h-[60vh]">
+              <div
+                className="flex-1 overflow-y-auto px-4 md:px-6"
+                style={{
+                  overscrollBehavior: "contain",
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
+                {/* Original ticket message (user) */}
+                <ThreadEntry
+                  tone="user"
+                  label={copy.you}
+                  date={
+                    selectedTicketForReply.createdAt
+                      ? formatLocalizedDate(
+                          selectedTicketForReply.createdAt,
+                          locale,
+                          {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )
+                      : null
+                  }
+                  message={selectedTicketForReply.message}
+                />
+                {/* Replies */}
+                {selectedTicketForReply.responses?.map((response, idx) => {
+                  const isSystem = response.isSystemMessage;
+                  const isUserR = response.isUserResponse === true;
+                  // On user panel: user's messages are labelled "You", admin replies "Admin"
+                  const alignRight = isUserR && !isSystem;
+                  return (
+                    <ThreadEntry
+                      key={idx}
+                      tone={isSystem ? "system" : alignRight ? "user" : "admin"}
+                      label={
+                        isSystem
+                          ? copy.systemLabel
+                          : alignRight
+                          ? copy.you
+                          : copy.admin
+                      }
+                      date={formatLocalizedDate(response.createdAt, locale, {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                      message={response.message}
                     />
-                    <button
-                      onClick={handleReplySubmit}
-                      disabled={isSubmittingReply || !replyMessage.trim()}
-                      className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap"
-                    >
-                      {isSubmittingReply ? copy.sending : copy.send}
-                    </button>
-                  </div>
+                  );
+                })}
+              </div>
+              {/* Composer */}
+              <div className="border-t border-rule p-3 md:p-4">
+                <div className="flex items-end gap-3">
+                  <Textarea
+                    value={replyMessage}
+                    onChange={(e) => setReplyMessage(e.target.value)}
+                    rows={2}
+                    className="min-h-16 min-w-0 flex-1 text-sm"
+                    placeholder={copy.replyPlaceholder}
+                    aria-label={copy.replyPlaceholder}
+                    required
+                  />
+                  <Button
+                    onClick={handleReplySubmit}
+                    disabled={isSubmittingReply || !replyMessage.trim()}
+                  >
+                    {isSubmittingReply ? copy.sending : copy.send}
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-          className="mt-16"
-        />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        className="mt-16"
+      />
+    </PageContainer>
+  );
+}
+
+// One entry in the ticket thread: author and time on one line, message below, hairline between entries.
+function ThreadEntry({ tone, label, date, message }) {
+  return (
+    <div className="border-b border-rule py-4 last:border-b-0">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+        <span
+          className={cn(
+            "text-sm font-semibold",
+            tone === "admin" && "text-brand",
+            tone === "system" && "text-muted-foreground"
+          )}
+        >
+          {label}
+        </span>
+        {date && (
+          <span className="font-outlier text-xs text-muted-foreground">
+            {date}
+          </span>
+        )}
       </div>
+      <p
+        className={cn(
+          "mt-1 max-w-measure whitespace-pre-wrap break-words text-sm",
+          tone === "system" ? "text-muted-foreground" : "text-ink-2"
+        )}
+      >
+        {message}
+      </p>
     </div>
   );
 }

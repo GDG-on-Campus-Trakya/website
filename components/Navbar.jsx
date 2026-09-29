@@ -6,11 +6,30 @@ import { signInWithPopup, signOut } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import Image from "next/image";
 import { useEffect, useState, useRef, Suspense } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
+import { Menu, X } from "lucide-react";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { logger } from "@/utils/logger";
 import { checkUserRole } from "../utils/roleUtils";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { Button } from "@/components/ui/button";
+
+const linkBase =
+  "whitespace-nowrap rounded-sm font-medium underline-offset-[10px] decoration-2 decoration-brand transition-colors duration-micro ease-out hover:text-ink hover:underline aria-[current=page]:text-ink aria-[current=page]:underline";
+
+function NavLink({ href, active, className = "", children, onClick }) {
+  return (
+    <Link
+      href={href}
+      prefetch={false}
+      aria-current={active ? "page" : undefined}
+      onClick={onClick}
+      className={`${linkBase} ${className}`}
+    >
+      {children}
+    </Link>
+  );
+}
 
 function NavbarContent() {
   const [user, loading] = useAuthState(auth);
@@ -19,6 +38,7 @@ function NavbarContent() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [userProfilePhoto, setUserProfilePhoto] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [today, setToday] = useState("");
   const menuRef = useRef(null);
   const profileMenuRef = useRef(null);
   const router = useRouter();
@@ -26,25 +46,43 @@ function NavbarContent() {
   const locale = useLocale();
   const t = useTranslations("nav");
 
-  const isLandingPage = pathname === "/";
+  const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
 
   const navItems = [
     { href: "/about", label: t("about") },
     { href: "/events", label: t("events") },
     { href: "/announcements", label: t("announcements") },
     { href: "/projects", label: t("projects") },
-    { href: "/personality-test", label: t("personalityTests"), accent: "text-purple-300", hoverColor: "#A78BFA" }
+    { href: "/personality-test", label: t("personalityTests") }
   ];
 
   const authenticatedItems = [
-    { href: "/game", label: t("joinGame"), hoverColor: "#A78BFA" },
-    { href: "/social", label: t("social"), hoverColor: "#F59E0B" },
-    { href: "/tickets", label: t("support"), hoverColor: "#EF4444" }
+    { href: "/game", label: t("joinGame") },
+    { href: "/social", label: t("social") },
+    { href: "/tickets", label: t("support") }
   ];
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Set after mount so statically rendered pages never show a stale date
+  useEffect(() => {
+    setToday(
+      new Intl.DateTimeFormat(locale, {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "Europe/Istanbul"
+      }).format(new Date())
+    );
+  }, [locale]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+    setProfileMenuOpen(false);
+  }, [pathname]);
 
   const loginWithGoogle = async () => {
     try {
@@ -96,24 +134,11 @@ function NavbarContent() {
     try {
       await signOut(auth);
       setProfileMenuOpen(false);
+      setMenuOpen(false);
       router.replace("/");
       router.refresh();
     } catch (error) {
       logger.error("Error during sign-out:", error);
-    }
-  };
-
-  const handleProfileClick = () => {
-    setProfileMenuOpen(false);
-    router.push("/profile");
-  };
-
-  const handleOutsideClick = (event) => {
-    if (menuRef.current && !menuRef.current.contains(event.target)) {
-      setMenuOpen(false);
-    }
-    if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
-      setProfileMenuOpen(false);
     }
   };
 
@@ -146,267 +171,254 @@ function NavbarContent() {
   }, [user, locale]);
 
   useEffect(() => {
-    if (menuOpen || profileMenuOpen) {
-      document.addEventListener("mousedown", handleOutsideClick);
-    } else {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    }
+    if (!menuOpen && !profileMenuOpen) return undefined;
 
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
+    const handleOutsideClick = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        setProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, [menuOpen, profileMenuOpen]);
 
-  return (
-    <motion.div
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      className={`${
-        isLandingPage
-          ? "bg-gradient-to-b from-gray-900 to-gray-900"
-          : "bg-black/70 backdrop-blur-md"
-      } sticky top-0 z-50 transition-all duration-300`}
-      style={{
-        paddingTop: "env(safe-area-inset-top)",
-        paddingLeft: "env(safe-area-inset-left)",
-        paddingRight: "env(safe-area-inset-right)"
-      }}
+  const wordmark = (
+    <Link
+      href="/"
+      aria-label={t("homeAlt")}
+      className="inline-flex items-center gap-3 rounded-sm"
     >
-      <nav className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-14 sm:h-16 md:h-20 text-white">
-        <div className="flex items-center">
-          <div className="md:hidden">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setMenuOpen((prev) => !prev)}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                setMenuOpen((prev) => !prev);
-              }}
-              className="p-2 text-white focus:outline-none touch-manipulation select-none"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {menuOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                )}
-              </svg>
-            </motion.button>
-          </div>
+      <Image
+        src="/logo.svg"
+        alt=""
+        width={48}
+        height={48}
+        className="h-9 w-9 md:h-12 md:w-12"
+        priority
+      />
+      <span className="flex flex-col text-left">
+        <span className="font-display text-xl font-extrabold leading-none tracking-tight md:text-4xl">
+          GDG on Campus
+        </span>
+        <span className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground md:text-sm">
+          {t("university")}
+        </span>
+      </span>
+    </Link>
+  );
 
-          <motion.div whileHover={{ scale: 1.05 }} className="hidden md:flex items-center">
-            <Link href="/">
-              <Image
-                src="/logo.svg"
-                alt={t("homeAlt")}
-                width={80}
-                height={80}
-                className="w-16 h-16 lg:w-20 lg:h-20 cursor-pointer"
-                priority
-              />
-            </Link>
-          </motion.div>
-        </div>
+  const showAuth = isMounted && !loading;
 
-        <div className="hidden md:flex gap-8 text-base font-medium flex-1 justify-center">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} prefetch={false}>
-              <motion.span
-                whileHover={{ scale: 1.1, color: item.hoverColor || "#60A5FA" }}
-                className={`hover:text-blue-400 transition cursor-pointer ${item.accent || ""}`}
-              >
-                {item.label}
-              </motion.span>
-            </Link>
-          ))}
+  return (
+    <header
+      className="sticky top-0 z-sticky border-b border-rule bg-paper md:static md:border-b-0"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
+      <div className="mx-auto w-full max-w-page px-gutter">
+        {/* Utility row (md and up): date on the left, account and language on the right */}
+        <div className="hidden min-h-11 items-center justify-between border-b border-rule text-sm text-muted-foreground md:flex">
+          <p className="min-h-5 font-outlier text-xs capitalize lg:text-sm">
+            {today && <time>{today}</time>}
+            {today && <span aria-hidden="true"> · </span>}
+            {today && <span>Edirne</span>}
+          </p>
 
-          {isMounted &&
-            user &&
-            authenticatedItems.map((item) => (
-              <Link key={item.href} href={item.href} prefetch={false}>
-                <motion.span
-                  whileHover={{ scale: 1.1, color: item.hoverColor }}
-                  className="transition cursor-pointer"
-                >
-                  {item.label}
-                </motion.span>
-              </Link>
-            ))}
-
-          {userRole && (
-            <Link href="/admin" prefetch={false}>
-              <motion.span
-                whileHover={{ scale: 1.1, color: "#10B981" }}
-                className="hover:text-green-400 transition cursor-pointer font-semibold"
-              >
-                {t("admin")}
-              </motion.span>
-            </Link>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3 sm:gap-4">
-          {!isMounted || loading ? (
-            <div className="h-10 w-24 rounded-lg border border-white/10 bg-white/5" aria-hidden="true" />
-          ) : user ? (
-            <div className="relative">
-              <motion.img
-                whileHover={{ scale: 1.1 }}
-                src={userProfilePhoto || "/logo.svg"}
-                alt={t("viewProfile")}
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full shadow cursor-pointer border-2 border-blue-500 touch-manipulation select-none"
-                onClick={() => setProfileMenuOpen((prev) => !prev)}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  setProfileMenuOpen((prev) => !prev);
-                }}
-              />
-              <AnimatePresence>
-                {profileMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    ref={profileMenuRef}
-                    className="absolute top-10 sm:top-12 right-0 bg-gradient-to-b from-gray-800 to-gray-900 text-white rounded-lg shadow-lg py-2 w-48 sm:w-56 z-[9999] border border-gray-700"
-                  >
-                    <div className="px-3 sm:px-4 py-2 border-b border-gray-700">
-                      <p className="font-bold text-blue-400 text-sm sm:text-base truncate">
-                        {user.displayName || t("defaultUser")}
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-400 truncate">{user.email}</p>
-                    </div>
-
-                    <motion.button
-                      whileHover={{ backgroundColor: "#374151" }}
-                      className="block w-full text-left px-3 sm:px-4 py-2 hover:bg-gray-700 transition-colors text-sm touch-manipulation"
-                      onClick={handleProfileClick}
-                    >
-                      {t("viewProfile")}
-                    </motion.button>
-                    {userRole && (
-                      <motion.button
-                        whileHover={{ backgroundColor: "#374151" }}
-                        className="block w-full text-left px-3 sm:px-4 py-2 hover:bg-gray-700 transition-colors text-sm touch-manipulation font-semibold text-green-400"
-                        onClick={() => {
-                          setProfileMenuOpen(false);
-                          router.push("/admin");
-                        }}
-                      >
-                        {t("admin")}
-                      </motion.button>
-                    )}
-                    <motion.button
-                      whileHover={{ backgroundColor: "#374151" }}
-                      className="block w-full text-left px-3 sm:px-4 py-2 hover:bg-gray-700 transition-colors text-sm touch-manipulation"
-                      onClick={handleSignOut}
-                    >
-                      {t("logout")}
-                    </motion.button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => router.push("/login")}
-              className="px-3 sm:px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg shadow-lg text-white font-semibold transition duration-300 text-sm sm:text-base touch-manipulation select-none"
-            >
-              {t("login")}
-            </motion.button>
-          )}
-        </div>
-
-        <AnimatePresence>
-          {menuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              ref={menuRef}
-              className="md:hidden absolute top-full left-0 right-0 bg-gradient-to-b from-gray-800 to-gray-900 shadow-lg z-[9999] border-t border-gray-700"
-            >
-              <div className="px-4 py-4 space-y-2">
-                {navItems.map((item) => (
-                  <motion.button
+          <div className="flex items-center gap-4 lg:gap-6">
+            {showAuth && user && (
+              <nav aria-label={t("account")} className="flex items-center gap-4 lg:gap-6">
+                {authenticatedItems.map((item) => (
+                  <NavLink
                     key={item.href}
-                    whileHover={{ backgroundColor: "#374151" }}
-                    className={`block w-full text-left py-3 px-4 hover:bg-gray-700 transition-colors rounded touch-manipulation ${item.accent || ""}`}
-                    onClick={() => {
-                      setMenuOpen(false);
-                      router.push(item.href);
-                    }}
+                    href={item.href}
+                    active={isActive(item.href)}
+                    className="py-2 text-sm"
                   >
                     {item.label}
-                  </motion.button>
+                  </NavLink>
                 ))}
-
-                {isMounted &&
-                  user &&
-                  authenticatedItems.map((item) => (
-                    <motion.button
-                      key={item.href}
-                      whileHover={{ backgroundColor: "#374151" }}
-                      className="block w-full text-left py-3 px-4 hover:bg-gray-700 transition-colors rounded touch-manipulation"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        router.push(item.href);
-                      }}
-                    >
-                      {item.label}
-                    </motion.button>
-                  ))}
-
                 {userRole && (
-                  <motion.button
-                    whileHover={{ backgroundColor: "#374151" }}
-                    className="block w-full text-left py-3 px-4 hover:bg-gray-700 transition-colors rounded touch-manipulation font-semibold text-green-400"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      router.push("/admin");
-                    }}
-                  >
+                  <NavLink href="/admin" active={isActive("/admin")} className="py-2 text-sm">
                     {t("admin")}
-                  </motion.button>
+                  </NavLink>
                 )}
+              </nav>
+            )}
 
-                {isMounted && !loading && !user && (
-                  <motion.button
-                    whileHover={{ backgroundColor: "#2563EB" }}
-                    className="block w-full text-left py-3 px-4 bg-blue-600 rounded touch-manipulation font-semibold"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      router.push("/login");
-                    }}
+            <LanguageSwitcher />
+
+            {!showAuth ? (
+              <div className="h-9 w-24" aria-hidden="true" />
+            ) : user ? (
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setProfileMenuOpen((prev) => !prev)}
+                  aria-haspopup="menu"
+                  aria-expanded={profileMenuOpen}
+                  aria-label={t("viewProfile")}
+                  className="flex h-11 w-11 items-center justify-center rounded-full"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={userProfilePhoto || "/logo.svg"}
+                    alt=""
+                    className="h-9 w-9 rounded-full border border-edge object-cover"
+                  />
+                </button>
+                {profileMenuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full z-dropdown mt-1 w-60 rounded border border-edge bg-popover py-1 shadow-whisper animate-in fade-in-0 duration-short"
                   >
-                    {t("login")}
-                  </motion.button>
+                    <div className="border-b border-rule px-4 py-3">
+                      <p className="truncate text-sm font-semibold text-ink">
+                        {user.displayName || t("defaultUser")}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                    <Link
+                      href="/profile"
+                      role="menuitem"
+                      className="flex min-h-11 items-center px-4 text-sm hover:bg-secondary"
+                    >
+                      {t("viewProfile")}
+                    </Link>
+                    {userRole && (
+                      <Link
+                        href="/admin"
+                        role="menuitem"
+                        className="flex min-h-11 items-center px-4 text-sm hover:bg-secondary"
+                      >
+                        {t("admin")}
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleSignOut}
+                      className="flex min-h-11 w-full items-center px-4 text-left text-sm hover:bg-secondary"
+                    >
+                      {t("logout")}
+                    </button>
+                  </div>
                 )}
               </div>
-            </motion.div>
+            ) : (
+              <Button asChild size="sm">
+                <Link href="/login">{t("login")}</Link>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Masthead (md and up) */}
+        <div className="hidden justify-center py-6 md:flex">{wordmark}</div>
+
+        {/* Primary links (md and up), closed by a double rule */}
+        <nav
+          aria-label={t("primaryNavigation")}
+          className="hidden items-center justify-center gap-6 pb-3 text-sm text-ink-2 md:flex lg:gap-10 lg:text-base"
+        >
+          {navItems.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              active={isActive(item.href)}
+              className="py-2"
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Compact bar (below md) */}
+        <div className="flex h-14 items-center justify-between md:hidden" ref={menuRef}>
+          {wordmark}
+          <button
+            type="button"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            aria-label={menuOpen ? t("closeMenu") : t("menu")}
+            className="-mr-3 flex h-11 w-11 items-center justify-center rounded"
+          >
+            {menuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
+          </button>
+
+          {menuOpen && (
+            <div
+              id="mobile-menu"
+              className="absolute inset-x-0 top-full z-dropdown max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-b border-rule bg-paper px-gutter pb-6 animate-in fade-in-0 slide-in-from-top-2 duration-short"
+            >
+              <nav aria-label={t("primaryNavigation")} className="flex flex-col">
+                {[...navItems, ...(showAuth && user ? authenticatedItems : [])].map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    prefetch={false}
+                    aria-current={isActive(item.href) ? "page" : undefined}
+                    className="flex min-h-12 items-center border-b border-rule font-display text-lg font-semibold text-ink-2 aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-brand aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[10px]"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+                {showAuth && user && userRole && (
+                  <Link
+                    href="/admin"
+                    className="flex min-h-12 items-center border-b border-rule font-display text-lg font-semibold text-ink-2"
+                  >
+                    {t("admin")}
+                  </Link>
+                )}
+              </nav>
+
+              <div className="mt-4 flex items-center justify-between gap-4">
+                <LanguageSwitcher mobile />
+                {!showAuth ? null : user ? (
+                  <div className="flex items-center gap-2">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href="/profile">{t("viewProfile")}</Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                      {t("logout")}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button asChild>
+                    <Link href="/login">{t("login")}</Link>
+                  </Button>
+                )}
+              </div>
+            </div>
           )}
-        </AnimatePresence>
-      </nav>
-    </motion.div>
+        </div>
+      </div>
+
+      {/* Double rule under the masthead */}
+      <div className="mx-auto hidden w-full max-w-page px-gutter md:block" aria-hidden="true">
+        <div className="h-1 border-y border-rule" />
+      </div>
+    </header>
   );
 }
 
 export default function Navbar() {
-  const t = useTranslations("nav");
-
   return (
-    <Suspense fallback={<div>{t("loading")}</div>}>
+    <Suspense fallback={<div className="h-14 md:h-56" aria-hidden="true" />}>
       <NavbarContent />
     </Suspense>
   );

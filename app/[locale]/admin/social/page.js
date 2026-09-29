@@ -8,7 +8,12 @@ import { socialUtils } from "@/utils/socialUtils";
 import PostCard from "@/components/PostCard";
 import { logger } from "@/utils/logger";
 import PostModal from "@/components/PostModal";
-import { Search, Filter, BarChart3, Eye, EyeOff, Trash2, ArrowLeft } from "lucide-react";
+import { Search, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input, fieldClasses } from "@/components/ui/input";
+import { PageHeader, EmptyState } from "@/components/ui/page";
+import { Stat } from "@/components/ui/stat";
+import { cn } from "@/lib/utils";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -159,203 +164,132 @@ export default function AdminSocialPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-gray-200">Loading...</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">Loading...</p>;
   }
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Access Denied</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        Access Denied
+      </p>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4 sm:p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-4 mb-4">
-            <button
-              onClick={() => router.push('/admin')}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-100 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Admin Panel</span>
-            </button>
-            <div className="border-l border-gray-500 h-8"></div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-100 mb-2">
-                Sosyal Platform Yönetimi
-              </h1>
-              <p className="text-gray-300">
-                Kullanıcı postlarını yönetin ve moderasyon yapın
-              </p>
-            </div>
+    <div>
+      <PageHeader
+        title="Sosyal Platform Yönetimi"
+        description="Kullanıcı postlarını yönetin ve moderasyon yapın"
+      />
+
+      {/* Stats */}
+      {stats && (
+        <dl className="mb-10 grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-4">
+          <Stat label="Toplam Post" value={stats.totalPosts} />
+          <Stat label="Etkinlik Postları" value={stats.eventPosts} />
+          <Stat label="Genel Postlar" value={stats.generalPosts} />
+          <Stat label="Aktif Kullanıcı" value={stats.uniqueUsers} />
+        </dl>
+      )}
+
+      {/* Controls */}
+      <div className="mb-8 flex flex-col gap-4 border-y border-rule py-4">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          {/* Search */}
+          <div className="relative min-w-0 flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              type="text"
+              placeholder="Post, kullanıcı veya etkinlik ara..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
+
+          {/* Filter */}
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className={cn(fieldClasses, "h-control sm:w-auto")}
+          >
+            <option value="all">Tüm Postlar ({posts.length})</option>
+            <option value="visible">Görünür Postlar ({posts.filter(p => !p.isHidden).length})</option>
+            <option value="hidden">Gizli Postlar ({posts.filter(p => p.isHidden).length})</option>
+            <option value="events">Etkinlik Postları ({posts.filter(p => p.isEventPost).length})</option>
+            <option value="general">Genel Postlar ({posts.filter(p => !p.isEventPost).length})</option>
+          </select>
         </div>
 
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <BarChart3 className="w-8 h-8 text-blue-400" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-300">Toplam Post</p>
-                  <p className="text-2xl font-bold text-gray-100">{stats.totalPosts}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <Eye className="w-8 h-8 text-green-400" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-300">Etkinlik Postları</p>
-                  <p className="text-2xl font-bold text-gray-100">{stats.eventPosts}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <Filter className="w-8 h-8 text-purple-400" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-300">Genel Postlar</p>
-                  <p className="text-2xl font-bold text-gray-100">{stats.generalPosts}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <BarChart3 className="w-8 h-8 text-red-400" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-300">Aktif Kullanıcı</p>
-                  <p className="text-2xl font-bold text-gray-100">{stats.uniqueUsers}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Bulk Actions */}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="outline" onClick={bulkHideVisible}>
+            <EyeOff aria-hidden="true" />
+            <span>Tümünü Gizle</span>
+          </Button>
 
-        {/* Controls */}
-        <div className="bg-gray-800 rounded-lg shadow p-6 mb-8">
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            {/* Search */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Post, kullanıcı veya etkinlik ara..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-700/60 text-gray-100 placeholder-gray-400 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                />
-              </div>
-            </div>
+          <Button variant="outline" onClick={bulkShowHidden}>
+            <Eye aria-hidden="true" />
+            <span>Tümünü Göster</span>
+          </Button>
 
-            {/* Filter */}
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="px-4 py-2 bg-gray-700/60 text-gray-100 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            >
-              <option value="all">Tüm Postlar ({posts.length})</option>
-              <option value="visible">Görünür Postlar ({posts.filter(p => !p.isHidden).length})</option>
-              <option value="hidden">Gizli Postlar ({posts.filter(p => p.isHidden).length})</option>
-              <option value="events">Etkinlik Postları ({posts.filter(p => p.isEventPost).length})</option>
-              <option value="general">Genel Postlar ({posts.filter(p => !p.isEventPost).length})</option>
-            </select>
-          </div>
-
-          {/* Bulk Actions */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={bulkHideVisible}
-              className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors flex items-center space-x-2"
-            >
-              <EyeOff className="w-4 h-4" />
-              <span>Tümünü Gizle</span>
-            </button>
-            
-            <button
-              onClick={bulkShowHidden}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-            >
-              <Eye className="w-4 h-4" />
-              <span>Tümünü Göster</span>
-            </button>
-            
-            <button
-              onClick={loadAllPosts}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Yenile
-            </button>
-          </div>
+          <Button variant="secondary" onClick={loadAllPosts}>
+            Yenile
+          </Button>
         </div>
-
-        {/* Posts Grid */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredPosts.length > 0 ? (
-              filteredPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onPostClick={handlePostClick}
-                  onDelete={handlePostDelete}
-                  showAdminActions={true}
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <div className="bg-gray-800 rounded-lg p-8">
-                  <h3 className="text-xl font-semibold text-gray-100 mb-2">
-                    Post bulunamadı
-                  </h3>
-                  <p className="text-gray-300">
-                    Arama kriterlerinizi değiştirmeyi deneyin.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Post Modal */}
-        <PostModal
-          post={selectedPost}
-          isOpen={!!selectedPost}
-          onClose={() => setSelectedPost(null)}
-          onDelete={handlePostDelete}
-          showAdminActions={true}
-        />
-
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
       </div>
+
+      {/* Posts Grid */}
+      {isLoading ? (
+        <div className="flex items-center py-12 text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin" aria-hidden="true" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {filteredPosts.length > 0 ? (
+            filteredPosts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                onPostClick={handlePostClick}
+                onDelete={handlePostDelete}
+                showAdminActions={true}
+              />
+            ))
+          ) : (
+            <EmptyState
+              className="col-span-full"
+              title="Post bulunamadı"
+              description="Arama kriterlerinizi değiştirmeyi deneyin."
+            />
+          )}
+        </div>
+      )}
+
+      {/* Post Modal */}
+      <PostModal
+        post={selectedPost}
+        isOpen={!!selectedPost}
+        onClose={() => setSelectedPost(null)}
+        onDelete={handlePostDelete}
+        showAdminActions={true}
+      />
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }

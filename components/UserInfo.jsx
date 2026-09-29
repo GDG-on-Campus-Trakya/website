@@ -8,6 +8,8 @@ import { db } from "../firebase";
 import { toast } from "react-toastify";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
 import { faculties, facultyDepartments } from "@/constants";
 import { logger } from "@/utils/logger";
 import { localizeAcademicValue } from "@/utils/localeUtils";
@@ -192,13 +194,13 @@ const UserInfo = ({ user }) => {
   };
 
   return (
-    <div className="mx-auto mb-10 flex w-full max-w-2xl flex-col items-center justify-center gap-5">
-      <div className="flex items-center justify-center gap-5">
-        <div className="relative">
+    <div className="flex w-full flex-col gap-6">
+      <div className="flex items-center gap-5">
+        <div className="relative shrink-0">
           <img
             src={profileData.photoURL || user.photoURL || "/logo.svg"}
             alt="Profile"
-            className="h-32 w-32 rounded-full border-4 border-blue-400 object-cover"
+            className="h-24 w-24 rounded-full bg-paper-2 object-cover"
           />
           <ProfileImageUpload
             onImageUpload={handleImageUpload}
@@ -208,26 +210,25 @@ const UserInfo = ({ user }) => {
             isEditing={isEditing}
           />
         </div>
-        <div className="flex flex-col text-left">
-          <h2 className="text-2xl font-semibold">
+        <div className="flex min-w-0 flex-col text-left">
+          <h2 className="break-words font-display text-2xl font-bold">
             {profileData.name || copy.unnamed}
           </h2>
-          <p className="text-gray-400">{user.email}</p>
+          <p className="break-all text-muted-foreground">{user.email}</p>
         </div>
       </div>
 
-      <div className="mt-4 w-full space-y-4">
+      <div className="w-full space-y-4">
         {!isProfileComplete() && !isEditing && (
-          <div className="rounded border-l-4 border-yellow-500 bg-yellow-100 p-4 text-yellow-700">
+          <div className="rounded border border-ink bg-warning p-4 text-ink">
             <p>{copy.incomplete}</p>
           </div>
         )}
 
         {isEditing ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-sm text-gray-300">{copy.name}</label>
+            <div className="grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+              <Field id="profile-name" label={copy.name} className="md:col-span-2">
                 <Input
                   placeholder={copy.name}
                   value={profileData.name}
@@ -237,36 +238,30 @@ const UserInfo = ({ user }) => {
                       name: event.target.value,
                     })
                   }
-                  className="border-gray-600 bg-gray-700 text-white placeholder-gray-400"
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm text-gray-300">{copy.faculty}</label>
+              </Field>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="profile-faculty">{copy.faculty}</Label>
                 <Select value={profileData.faculty} onValueChange={handleFacultyChange}>
-                  <SelectTrigger className="border-gray-600 bg-gray-700 text-white">
+                  <SelectTrigger id="profile-faculty">
                     <SelectValue placeholder={copy.selectFaculty} />
                   </SelectTrigger>
-                  <SelectContent className="border-gray-600 bg-gray-700">
+                  <SelectContent>
                     {faculties.map((faculty) => (
-                      <SelectItem
-                        key={faculty}
-                        value={faculty}
-                        className="text-white hover:bg-gray-600 focus:bg-gray-600"
-                      >
+                      <SelectItem key={faculty} value={faculty}>
                         {localizeAcademicValue(faculty, locale)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm text-gray-300">{copy.department}</label>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="profile-department">{copy.department}</Label>
                 {profileData.faculty && (
                   <Input
                     placeholder={copy.searchDepartment}
                     value={departmentSearch}
                     onChange={(event) => setDepartmentSearch(event.target.value)}
-                    className="mb-2 border-gray-600 bg-gray-700 text-white placeholder-gray-400"
                   />
                 )}
                 <Select
@@ -276,7 +271,7 @@ const UserInfo = ({ user }) => {
                   }
                   disabled={!profileData.faculty}
                 >
-                  <SelectTrigger className="border-gray-600 bg-gray-700 text-white">
+                  <SelectTrigger id="profile-department">
                     <SelectValue
                       placeholder={
                         profileData.faculty
@@ -285,13 +280,9 @@ const UserInfo = ({ user }) => {
                       }
                     />
                   </SelectTrigger>
-                  <SelectContent className="border-gray-600 bg-gray-700">
+                  <SelectContent>
                     {getFilteredDepartments().map((department) => (
-                      <SelectItem
-                        key={department}
-                        value={department}
-                        className="text-white hover:bg-gray-600 focus:bg-gray-600"
-                      >
+                      <SelectItem key={department} value={department}>
                         {localizeAcademicValue(department, locale)}
                       </SelectItem>
                     ))}
@@ -299,53 +290,44 @@ const UserInfo = ({ user }) => {
                 </Select>
               </div>
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
                 onClick={() => setIsEditing(false)}
                 disabled={isLoading}
-                className="border-gray-600 bg-transparent text-gray-300 hover:bg-gray-700 hover:text-white"
               >
                 {copy.cancel}
               </Button>
-              <Button
-                onClick={handleSave}
-                disabled={isLoading}
-                className="bg-blue-600 text-white hover:bg-blue-700"
-              >
+              <Button onClick={handleSave} disabled={isLoading}>
                 {isLoading ? copy.saving : copy.save}
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <label className="text-sm text-gray-500">{copy.name}</label>
-                <p className="font-medium">{profileData.name || "-"}</p>
+            <dl className="grid grid-cols-1 gap-4 border-y border-rule py-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <dt className="text-sm text-muted-foreground">{copy.name}</dt>
+                <dd className="font-medium">{profileData.name || "-"}</dd>
               </div>
-              <div>
-                <label className="text-sm text-gray-500">{copy.faculty}</label>
-                <p className="font-medium">
+              <div className="min-w-0">
+                <dt className="text-sm text-muted-foreground">{copy.faculty}</dt>
+                <dd className="font-medium">
                   {profileData.faculty
                     ? localizeAcademicValue(profileData.faculty, locale)
                     : "-"}
-                </p>
+                </dd>
               </div>
-              <div>
-                <label className="text-sm text-gray-500">{copy.department}</label>
-                <p className="font-medium">
+              <div className="min-w-0">
+                <dt className="text-sm text-muted-foreground">{copy.department}</dt>
+                <dd className="font-medium">
                   {profileData.department
                     ? localizeAcademicValue(profileData.department, locale)
                     : "-"}
-                </p>
+                </dd>
               </div>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditing(true)}
-              className="w-full border-gray-600 bg-transparent text-gray-300 hover:bg-gray-700 hover:text-white"
-            >
+            </dl>
+            <Button variant="outline" onClick={() => setIsEditing(true)}>
               {copy.editProfile}
             </Button>
           </div>

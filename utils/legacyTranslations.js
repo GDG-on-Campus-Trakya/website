@@ -1,6 +1,32 @@
 import { defaultLocale } from '@/i18n/locales';
 
 const EXACT_TRANSLATIONS = {
+  // Labels that lost their emoji or arrow in the redesign, plus new accessible labels
+  'Doğru': 'Correct',
+  'İlk 5': 'Top 5',
+  'Final Sıralaması': 'Final Ranking',
+  'Sıralama': 'Ranking',
+  // Field renders the required asterisk as its own text node
+  'Ürün Adı': 'Item Name',
+  'Olasılık (%)': 'Probability (%)',
+  'Renk': 'Color',
+  'Etkinlik Seçimi': 'Event Selection',
+  'Resim': 'Image',
+  'Email Adresi': 'Email Address',
+  'Rol': 'Role',
+  'Kapat': 'Close',
+  'Temizle': 'Clear',
+  'Çekilişi Sil': 'Delete Raffle',
+  'Sonuç ilan edildi': 'Result announced',
+  'Pasifleştir': 'Deactivate',
+  'Aktifleştir': 'Activate',
+  'İlk 3': 'Top 3',
+  'Veri Setleri': 'Datasets',
+  'Oyun Başlat': 'Start Game',
+  'Klasik': 'Classic',
+  'Kahoot': 'Kahoot',
+  'JSON Import': 'JSON Import',
+  'JSON Export': 'JSON Export',
   'Yükleniyor...': 'Loading...',
   'Loading...': 'Loading...',
   'Giriş yapmanız gerekiyor...': 'You need to sign in...',

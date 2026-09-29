@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { Instagram, MessageSquare, Minus, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 const COPY = {
   tr: {
@@ -391,201 +393,104 @@ export default function FAQ() {
     }));
   };
 
+  const quickLinks = [
+    { href: "/about", label: copy.quickLinks.about },
+    { href: "/events", label: copy.quickLinks.events },
+    { href: "/privacy", label: copy.quickLinks.privacy },
+    { href: "/terms", label: copy.quickLinks.terms },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#000000] text-white">
-      <div className="container mx-auto px-4 pb-12 pt-20 sm:pt-24 md:pt-28">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-16 text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 bg-gradient-to-r from-[#4285F4] via-[#DB4437] via-[#F4B400] to-[#0F9D58] bg-clip-text text-4xl font-bold text-transparent sm:text-5xl lg:text-6xl"
-            >
-              {copy.title}
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="mx-auto mb-8 max-w-3xl text-xl text-gray-300 sm:text-2xl"
-            >
-              {copy.description}
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="rounded-2xl border border-blue-500/30 bg-blue-900/20 p-6"
-            >
-              <p className="text-blue-200">
-                <strong>{copy.tipTitle}</strong> {copy.tipBody}
-              </p>
-            </motion.div>
-          </div>
+    <PageContainer>
+      <PageHeader title={copy.title} description={copy.description}>
+        <p className="mt-4 max-w-measure text-sm text-ink-2">
+          <strong className="font-semibold text-ink">{copy.tipTitle}</strong> {copy.tipBody}
+        </p>
+      </PageHeader>
 
-          <div className="space-y-8">
-            {copy.faqData.map((category, categoryIndex) => (
-              <motion.div
-                key={category.category}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: categoryIndex * 0.1 }}
-                className="rounded-2xl border border-gray-700/50 bg-gray-800/30 p-6 backdrop-blur-md"
-              >
-                <h2 className="mb-6 border-b border-gray-700/50 pb-3 text-2xl font-bold text-white">
-                  {category.category}
-                </h2>
+      <div>
+        {copy.faqData.map((category, categoryIndex) => (
+          <section
+            key={category.category}
+            className="grid gap-x-8 gap-y-2 border-t-2 border-ink pt-3 md:grid-cols-12 [&:not(:first-child)]:mt-12"
+          >
+            <h2 className="font-display text-xl font-bold md:col-span-4">{category.category}</h2>
 
-                <div className="space-y-4">
-                  {category.questions.map((item, questionIndex) => {
-                    const itemKey = `${categoryIndex}-${questionIndex}`;
-                    const isOpen = openItems[itemKey];
+            <div className="min-w-0 divide-y divide-rule border-b border-rule md:col-span-8">
+              {category.questions.map((item, questionIndex) => {
+                const itemKey = `${categoryIndex}-${questionIndex}`;
+                const isOpen = Boolean(openItems[itemKey]);
+                const panelId = `faq-panel-${itemKey}`;
 
-                    return (
-                      <div
-                        key={item.question}
-                        className="overflow-hidden rounded-xl border border-gray-700/30"
+                return (
+                  <div key={item.question}>
+                    <h3>
+                      <button
+                        type="button"
+                        onClick={() => toggleItem(itemKey)}
+                        aria-expanded={isOpen}
+                        aria-controls={panelId}
+                        className="flex min-h-11 w-full items-start justify-between gap-4 rounded-sm py-4 text-left transition-colors duration-micro ease-out hover:bg-paper-2"
                       >
-                        <button
-                          onClick={() => toggleItem(itemKey)}
-                          className="flex w-full items-center justify-between bg-gray-700/20 px-6 py-4 text-left transition-all duration-200 hover:bg-gray-700/30"
-                        >
-                          <span className="pr-4 font-semibold text-white">
-                            {item.question}
-                          </span>
-                          <motion.svg
-                            animate={{ rotate: isOpen ? 180 : 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="h-5 w-5 flex-shrink-0 text-blue-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </motion.svg>
-                        </button>
+                        <span className="min-w-0 font-display text-base font-bold leading-snug text-ink">
+                          {item.question}
+                        </span>
+                        {isOpen ? (
+                          <Minus className="mt-0.5 h-5 w-5 shrink-0 text-brand" aria-hidden="true" />
+                        ) : (
+                          <Plus className="mt-0.5 h-5 w-5 shrink-0 text-brand" aria-hidden="true" />
+                        )}
+                      </button>
+                    </h3>
 
-                        <AnimatePresence>
-                          {isOpen && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: "auto" }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="border-t border-gray-700/30 bg-gray-800/20 px-6 py-4">
-                                <p className="whitespace-pre-line leading-relaxed text-gray-300">
-                                  {item.answer}
-                                </p>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                    {isOpen && (
+                      <div id={panelId} className="pb-5 pr-9">
+                        <p className="max-w-measure whitespace-pre-line text-ink-2">
+                          {item.answer}
+                        </p>
                       </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            ))}
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <section className="mt-16 grid gap-x-8 gap-y-4 border-t-2 border-ink pt-3 md:grid-cols-12">
+        <h2 className="font-display text-xl font-bold md:col-span-4">{copy.contactTitle}</h2>
+        <div className="md:col-span-8">
+          <p className="max-w-measure text-ink-2">{copy.contactBody}</p>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <Button onClick={() => router.push("/tickets")}>
+              <MessageSquare aria-hidden="true" />
+              {copy.ticketCta}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => window.open("https://www.instagram.com/gdgoncampustu/", "_blank")}
+            >
+              <Instagram aria-hidden="true" />
+              {copy.instagramCta}
+            </Button>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mt-16 rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-blue-900/20 p-8 text-center"
-          >
-            <h3 className="mb-4 text-2xl font-bold text-white">{copy.contactTitle}</h3>
-            <p className="mb-6 text-gray-300">{copy.contactBody}</p>
-            <div className="flex flex-col justify-center gap-4 sm:flex-row">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => router.push("/tickets")}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl"
-              >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+          <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-1 border-t border-rule pt-3">
+            {quickLinks.map((link) => (
+              <li key={link.href}>
+                <button
+                  type="button"
+                  onClick={() => router.push(link.href)}
+                  className="inline-flex min-h-11 items-center whitespace-nowrap rounded-sm text-sm font-medium text-brand underline underline-offset-4 decoration-1 transition-colors duration-micro ease-out hover:decoration-2"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-                {copy.ticketCta}
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() =>
-                  window.open("https://www.instagram.com/gdgoncampustu/", "_blank")
-                }
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-600 to-purple-700 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:from-pink-700 hover:to-purple-800 hover:shadow-xl"
-              >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                </svg>
-                {copy.instagramCta}
-              </motion.button>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4"
-          >
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              onClick={() => router.push("/about")}
-              className="rounded-xl border border-gray-700/50 bg-gray-800/30 p-4 transition-all duration-200 hover:border-blue-500/50"
-            >
-              <div className="mb-2 text-2xl">👥</div>
-              <div className="text-sm text-gray-300">{copy.quickLinks.about}</div>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              onClick={() => router.push("/events")}
-              className="rounded-xl border border-gray-700/50 bg-gray-800/30 p-4 transition-all duration-200 hover:border-green-500/50"
-            >
-              <div className="mb-2 text-2xl">📅</div>
-              <div className="text-sm text-gray-300">{copy.quickLinks.events}</div>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              onClick={() => router.push("/privacy")}
-              className="rounded-xl border border-gray-700/50 bg-gray-800/30 p-4 transition-all duration-200 hover:border-purple-500/50"
-            >
-              <div className="mb-2 text-2xl">🔒</div>
-              <div className="text-sm text-gray-300">{copy.quickLinks.privacy}</div>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              onClick={() => router.push("/terms")}
-              className="rounded-xl border border-gray-700/50 bg-gray-800/30 p-4 transition-all duration-200 hover:border-yellow-500/50"
-            >
-              <div className="mb-2 text-2xl">📋</div>
-              <div className="text-sm text-gray-300">{copy.quickLinks.terms}</div>
-            </motion.button>
-          </motion.div>
+                  {link.label}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
-      </div>
-    </div>
+      </section>
+    </PageContainer>
   );
 }

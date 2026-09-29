@@ -7,6 +7,8 @@ import { useRouter } from "@/i18n/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Image from "next/image";
+import { Check, ClipboardList, Trophy, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { checkUserRole } from "@/utils/roleUtils";
 import { logger } from "@/utils/logger";
 import {
@@ -251,81 +253,89 @@ export default function HostGamePage() {
 
   if (loading || !game) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-white">Yükleniyor...</p>
-      </div>
+      <p className="py-10 text-lg">Yükleniyor...</p>
     );
   }
 
   if (!userRole) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Erişim Reddedildi</p>
-      </div>
+      <p className="py-10 text-lg font-semibold">Erişim Reddedildi</p>
     );
   }
 
+  // Answer tile hues keep their order: red, blue, yellow, green. Letters carry the shape cue.
+  const optionColors = ["bg-mark-red", "bg-mark-blue", "bg-mark-yellow", "bg-mark-green"];
+  const optionLetters = ["A", "B", "C", "D"];
+  const letterChipClass =
+    "flex h-9 w-9 shrink-0 items-center justify-center rounded border-2 border-ink font-display text-lg font-extrabold text-ink md:h-12 md:w-12 md:text-2xl";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-3 sm:p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-[calc(100dvh-7rem)] rounded-lg bg-stage p-3 text-stage-ink sm:p-6">
+      <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20 mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-            <div>
-              <h1 className="text-xl sm:text-3xl font-bold text-white mb-2">{game.quizTitle}</h1>
-              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-base text-gray-300">
-                <span className="text-lg sm:text-2xl font-mono">{game.gameCode}</span>
-                <span className="hidden sm:inline">•</span>
-                <span>👥 {connectedPlayerCount}/{playerCount}</span>
-                <span className="hidden sm:inline">•</span>
-                <span>
-                  📝 {game.currentQuestion + 1}/{game.totalQuestions}
+        <div className="mb-4 border-b border-stage-rule pb-4 sm:mb-6 sm:pb-6">
+          <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end sm:gap-4">
+            <div className="min-w-0">
+              <h1 className="mb-2 break-words font-display text-2xl font-extrabold sm:text-4xl">{game.quizTitle}</h1>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stage-muted sm:text-base">
+                <span className="font-outlier text-lg font-bold tabular-nums text-stage-ink sm:text-2xl">{game.gameCode}</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Users className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className="font-outlier tabular-nums">{connectedPlayerCount}/{playerCount}</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <ClipboardList className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className="font-outlier tabular-nums">
+                    {game.currentQuestion + 1}/{game.totalQuestions}
+                  </span>
                 </span>
               </div>
             </div>
-            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+            <div className="flex w-full gap-2 sm:w-auto sm:gap-3">
               {game.status === "finished" ? (
-                <button
+                <Button
+                  variant="destructive"
                   onClick={handleDeleteAndExit}
-                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm sm:text-base"
+                  className="flex-1 sm:flex-none"
                 >
                   Çıkış
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button
+                  variant="destructive"
                   onClick={handleEndGame}
-                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm sm:text-base"
+                  className="flex-1 sm:flex-none"
                 >
                   Bitir
-                </button>
+                </Button>
               )}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+          <div className="min-w-0 space-y-4 sm:space-y-6">
             {/* Waiting State */}
             {game.status === "waiting" && (
-              <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-6 sm:p-12 border border-white/20 text-center">
-                <div className="mb-4 sm:mb-6">
-                  <div className="text-4xl sm:text-6xl font-bold text-white mb-3 sm:mb-4">{game.gameCode}</div>
-                  <p className="text-base sm:text-xl text-gray-300">
+              <div className="border-b border-stage-rule pb-8 sm:pb-12">
+                <div className="mb-6 sm:mb-8">
+                  <div className="mb-3 break-all font-outlier text-6xl font-bold tabular-nums sm:mb-4 sm:text-8xl">{game.gameCode}</div>
+                  <p className="text-base text-stage-muted sm:text-xl">
                     Oyuncular bu kodu kullanarak katılabilir
                   </p>
-                  <p className="text-sm sm:text-base text-gray-400 mt-2">
+                  <p className="mt-2 text-sm text-stage-muted sm:text-base">
                     gdgoncampustrakya.com/game
                   </p>
                 </div>
 
-                <button
+                <Button
+                  size="lg"
                   onClick={handleStartGame}
                   disabled={playerCount === 0}
-                  className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-colors font-bold text-base sm:text-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Oyunu Başlat ({playerCount})
-                </button>
+                </Button>
               </div>
             )}
 
@@ -333,17 +343,17 @@ export default function HostGamePage() {
             {game.status === "playing" && currentQuestion && !showResults && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Timer */}
-                <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20">
-                  <div className="flex items-center justify-between mb-3 sm:mb-4">
-                    <span className="text-sm sm:text-base text-gray-300">Kalan Süre</span>
-                    <div className="text-3xl sm:text-5xl font-bold text-white">
+                <div>
+                  <div className="mb-3 flex items-baseline justify-between sm:mb-4">
+                    <span className="text-sm text-stage-muted sm:text-base">Kalan Süre</span>
+                    <div className="font-outlier text-6xl font-bold tabular-nums md:text-7xl">
                       {timeLeft}s
                     </div>
                   </div>
-                  <div className="w-full bg-gray-700 rounded-full h-3 sm:h-4 overflow-hidden">
+                  <div className="h-3 w-full overflow-hidden rounded-sm bg-stage-2 sm:h-4">
                     <div
-                      className={`h-full transition-all duration-1000 ${
-                        timeLeft > 10 ? "bg-green-500" : timeLeft > 5 ? "bg-yellow-500" : "bg-red-500"
+                      className={`h-full transition-[width] duration-1000 ease-linear ${
+                        timeLeft > 10 ? "bg-success" : timeLeft > 5 ? "bg-warning" : "bg-error"
                       }`}
                       style={{
                         width: `${(timeLeft / currentQuestion.timeLimit) * 100}%`
@@ -353,7 +363,7 @@ export default function HostGamePage() {
                 </div>
 
                 {/* Question */}
-                <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-white/20">
+                <div className="border-t-2 border-stage-ink pt-4 sm:pt-6">
                   {/* Question Image */}
                   {currentQuestion.imageUrl && (
                     <div className="mb-4 sm:mb-6">
@@ -363,50 +373,41 @@ export default function HostGamePage() {
                         width={900}
                         height={600}
                         priority
-                        className="w-full max-w-2xl mx-auto h-auto rounded-lg"
+                        className="mx-auto h-auto w-full max-w-2xl rounded"
                       />
                     </div>
                   )}
 
-                  <h2 className="text-xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">
+                  <h2 className="mb-4 text-balance break-words font-display text-3xl font-bold sm:mb-6 md:text-5xl">
                     {currentQuestion.question}
                   </h2>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    {currentQuestion.options.map((option, index) => {
-                      const colors = [
-                        "from-red-500 to-pink-500",
-                        "from-blue-500 to-cyan-500",
-                        "from-yellow-500 to-orange-500",
-                        "from-green-500 to-emerald-500"
-                      ];
-
-                      return (
-                        <div
-                          key={index}
-                          className={`bg-gradient-to-r ${colors[index]} p-4 sm:p-6 rounded-xl text-white font-semibold text-sm sm:text-lg`}
-                        >
-                          {option}
-                        </div>
-                      );
-                    })}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                    {currentQuestion.options.map((option, index) => (
+                      <div
+                        key={index}
+                        className={`${optionColors[index]} flex min-h-20 items-center gap-3 rounded-lg p-4 text-lg font-bold text-ink sm:gap-4 sm:p-6 md:text-3xl`}
+                      >
+                        <span className={letterChipClass} aria-hidden="true">
+                          {optionLetters[index]}
+                        </span>
+                        <span className="min-w-0 break-words">{option}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 {/* Answer Stats */}
-                <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20">
-                  <div className="flex items-center justify-between mb-3 sm:mb-4">
-                    <span className="text-sm sm:text-base text-white font-semibold">Cevaplayan</span>
-                    <span className="text-xl sm:text-2xl font-bold text-white">
+                <div className="flex flex-col gap-4 border-t border-stage-rule pt-4 sm:flex-row sm:items-center sm:justify-between sm:pt-6">
+                  <div className="flex items-baseline gap-4">
+                    <span className="text-sm font-semibold sm:text-base">Cevaplayan</span>
+                    <span className="font-outlier text-3xl font-bold tabular-nums">
                       {questionStats.totalAnswers}/{connectedPlayerCount}
                     </span>
                   </div>
-                  <button
-                    onClick={handleShowResults}
-                    className="w-full py-2 sm:py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-semibold text-sm sm:text-base"
-                  >
+                  <Button onClick={handleShowResults} size="lg">
                     Sonuçları Göster
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -416,20 +417,20 @@ export default function HostGamePage() {
               <div className="space-y-4 sm:space-y-6">
                 {/* Question Winner (Kahoot Mode) */}
                 {game.gameMode === "kahoot" && questionWinners[game.currentQuestion] && (
-                  <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl sm:rounded-2xl p-6 sm:p-8 border-4 border-yellow-300 text-center">
-                    <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">🏆</div>
-                    <h2 className="text-2xl sm:text-4xl font-bold text-white mb-2">Kazanan!</h2>
-                    <div className="text-xl sm:text-3xl font-bold text-white mb-2">
+                  <div className="rounded-lg bg-warning p-6 text-ink sm:p-8">
+                    <Trophy className="mb-3 h-10 w-10 sm:mb-4 sm:h-14 sm:w-14" aria-hidden="true" />
+                    <h2 className="mb-2 font-display text-3xl font-bold sm:text-5xl">Kazanan!</h2>
+                    <div className="mb-2 break-words font-display text-xl font-bold sm:text-3xl">
                       {questionWinners[game.currentQuestion].name}
                     </div>
-                    <div className="text-base sm:text-xl text-white/90">
-                      ⚡ En hızlı doğru cevap: {questionWinners[game.currentQuestion].timeSpent.toFixed(2)} saniye
+                    <div className="text-base sm:text-xl">
+                      En hızlı doğru cevap: <span className="font-outlier tabular-nums">{questionWinners[game.currentQuestion].timeSpent.toFixed(2)}</span> saniye
                     </div>
                   </div>
                 )}
 
                 {/* Correct Answer */}
-                <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-white/20">
+                <div>
                   {/* Question Image */}
                   {currentQuestion.imageUrl && (
                     <div className="mb-4 sm:mb-6">
@@ -438,16 +439,16 @@ export default function HostGamePage() {
                         alt="Question"
                         width={900}
                         height={600}
-                        className="w-full max-w-2xl mx-auto h-auto rounded-lg opacity-50"
+                        className="mx-auto h-auto w-full max-w-2xl rounded opacity-50"
                       />
                     </div>
                   )}
 
-                  <h2 className="text-lg sm:text-2xl font-bold text-white mb-4 sm:mb-6">
+                  <h2 className="mb-4 text-balance break-words font-display text-2xl font-bold sm:mb-6 md:text-4xl">
                     {currentQuestion.question}
                   </h2>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     {currentQuestion.options.map((option, index) => {
                       const isCorrect = index === currentQuestion.correctAnswer;
                       const answerCount = questionStats.optionCounts?.[index] || 0;
@@ -458,130 +459,131 @@ export default function HostGamePage() {
                       return (
                         <div
                           key={index}
-                          className={`p-4 sm:p-6 rounded-xl border-4 ${
-                            isCorrect
-                              ? "bg-green-500/30 border-green-500"
-                              : "bg-gray-700/30 border-gray-600"
+                          className={`flex items-start gap-3 rounded-lg border-2 bg-stage-2 p-4 sm:gap-4 sm:p-6 ${
+                            isCorrect ? "border-success" : "border-stage-rule"
                           }`}
                         >
-                          <div className="text-white font-semibold text-sm sm:text-lg mb-1 sm:mb-2">
-                            {option}
+                          <span className={`${letterChipClass} ${optionColors[index]}`} aria-hidden="true">
+                            {optionLetters[index]}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-1 break-words text-base font-semibold sm:mb-2 sm:text-xl">
+                              {option}
+                            </div>
+                            <div className="text-xs text-stage-muted sm:text-base">
+                              <span className="font-outlier tabular-nums">{answerCount}</span> cevap (<span className="font-outlier tabular-nums">{percentage}</span>%)
+                            </div>
                           </div>
-                          <div className="text-xs sm:text-base text-gray-300">
-                            {answerCount} cevap ({percentage}%)
-                          </div>
+                          {isCorrect && (
+                            <span className="inline-flex shrink-0 items-center gap-1 text-success">
+                              <Check className="h-6 w-6" aria-hidden="true" />
+                              <span className="sr-only">Doğru</span>
+                            </span>
+                          )}
                         </div>
                       );
                     })}
                   </div>
 
-                  <div className="mt-4 sm:mt-6 text-center text-white">
-                    <div className="text-sm sm:text-lg">
-                      ✅ Doğru: {questionStats.correctCount} / {questionStats.totalAnswers}
-                    </div>
+                  <div className="mt-4 text-sm sm:mt-6 sm:text-lg">
+                    <Check className="mr-1.5 inline h-4 w-4 align-[-2px] text-success sm:h-5 sm:w-5" aria-hidden="true" />
+                    Doğru: <span className="font-outlier tabular-nums">{questionStats.correctCount} / {questionStats.totalAnswers}</span>
                   </div>
                 </div>
 
                 {/* Next Button */}
-                <button
+                <Button
                   onClick={handleNextQuestion}
-                  className="w-full py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors font-bold text-base sm:text-xl"
+                  size="lg"
+                  className="w-full"
                 >
                   {game.currentQuestion + 1 >= game.totalQuestions
                     ? "Oyunu Bitir"
                     : "Sonraki Soru →"}
-                </button>
+                </Button>
               </div>
             )}
 
             {/* Finished State */}
             {game.status === "finished" && (
-              <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-6 sm:p-12 border border-white/20 text-center">
-                <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">🎉</div>
-                <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3 sm:mb-4">Oyun Bitti!</h2>
-                <p className="text-base sm:text-xl text-gray-300 mb-6 sm:mb-8">
+              <div className="border-y border-stage-rule py-8 sm:py-12">
+                <h2 className="mb-3 font-display text-3xl font-bold sm:mb-4 sm:text-5xl">Oyun Bitti!</h2>
+                <p className="mb-6 text-base text-stage-muted sm:mb-8 sm:text-xl">
                   {game.gameMode === "kahoot"
                     ? "Her soru için kazananlar gösterildi!"
                     : "Kazananları görmek için yan paneli kontrol edin"}
                 </p>
-                <button
+                <Button
+                  size="lg"
                   onClick={handleDeleteAndExit}
-                  className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors font-bold text-base sm:text-xl"
                 >
                   Quiz Yönetimine Dön
-                </button>
+                </Button>
               </div>
             )}
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-4 sm:space-y-6">
+          <div className="min-w-0 space-y-6 sm:space-y-8">
             {/* Leaderboard (Classic Mode Only) */}
             {game.gameMode !== "kahoot" && (
-              <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20">
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">🏆 Sıralama</h3>
+              <div className="border-t-2 border-stage-ink pt-3">
+                <h3 className="mb-3 font-display text-xl font-bold sm:mb-4 sm:text-2xl">Sıralama</h3>
                 {leaderboard.length > 0 ? (
-                  <div className="space-y-2 sm:space-y-3">
+                  <ol>
                     {leaderboard.slice(0, 10).map((player, index) => (
-                      <div
+                      <li
                         key={player.userId}
-                        className={`p-2 sm:p-3 rounded-lg ${
-                          index === 0
-                            ? "bg-yellow-500/20 border border-yellow-500"
-                            : index === 1
-                            ? "bg-gray-400/20 border border-gray-400"
-                            : index === 2
-                            ? "bg-orange-500/20 border border-orange-500"
-                            : "bg-white/5"
+                        className={`flex items-center justify-between gap-3 border-b border-stage-rule px-2 py-2 sm:py-3 ${
+                          index === 0 ? "bg-warning text-ink" : ""
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <span className="text-lg sm:text-2xl font-bold text-white">
-                              {index + 1}
-                            </span>
-                            <div>
-                              <div className="text-sm sm:text-base text-white font-semibold truncate max-w-[120px] sm:max-w-none">
-                                {player.name}
-                              </div>
-                              <div className="text-xs text-gray-400">
-                                ✅ {player.correctAnswers} doğru
-                              </div>
+                        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                          {index === 0 && <Trophy className="h-5 w-5 shrink-0" aria-hidden="true" />}
+                          <span className="w-6 shrink-0 font-outlier text-lg font-bold tabular-nums sm:text-2xl">
+                            {index + 1}
+                          </span>
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-semibold sm:text-base">
+                              {player.name}
+                            </div>
+                            <div className={`text-xs ${index === 0 ? "text-ink-2" : "text-stage-muted"}`}>
+                              <span className="font-outlier tabular-nums">{player.correctAnswers}</span> doğru
                             </div>
                           </div>
-                          <div className="text-lg sm:text-xl font-bold text-white">
-                            {player.score}
-                          </div>
                         </div>
-                      </div>
+                        <div className="shrink-0 font-outlier text-lg font-bold tabular-nums sm:text-xl">
+                          {player.score}
+                        </div>
+                      </li>
                     ))}
-                  </div>
+                  </ol>
                 ) : (
-                  <p className="text-sm sm:text-base text-gray-400 text-center">Henüz sıralama yok</p>
+                  <p className="text-sm text-stage-muted sm:text-base">Henüz sıralama yok</p>
                 )}
               </div>
             )}
 
             {/* Players */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20">
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">
-                👥 Oyuncular ({connectedPlayerCount})
+            <div className="border-t-2 border-stage-ink pt-3">
+              <h3 className="mb-3 font-display text-lg font-bold sm:mb-4 sm:text-xl">
+                Oyuncular (<span className="font-outlier tabular-nums">{connectedPlayerCount}</span>)
               </h3>
-              <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
+              <ul className="max-h-48 overflow-y-auto sm:max-h-64">
                 {Object.values(players).map((player) => (
-                  <div
+                  <li
                     key={player.userId}
-                    className="flex items-center justify-between p-2 bg-white/5 rounded-lg"
+                    className="flex items-center justify-between gap-3 border-b border-stage-rule px-2 py-2"
                   >
-                    <span className="text-xs sm:text-sm text-white truncate max-w-[150px] sm:max-w-none">{player.name}</span>
+                    <span className="min-w-0 truncate text-xs sm:text-sm">{player.name}</span>
                     <span
-                      className={`w-2 h-2 rounded-full ${
-                        player.isConnected ? "bg-green-500" : "bg-red-500"
+                      className={`h-2 w-2 shrink-0 rounded-full ${
+                        player.isConnected ? "bg-success" : "bg-error"
                       }`}
                     />
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           </div>
         </div>
@@ -593,7 +595,7 @@ export default function HostGamePage() {
         hideProgressBar={false}
         newestOnTop
         closeOnClick
-        theme="dark"
+        theme="light"
       />
     </div>
   );

@@ -3,7 +3,6 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from "@/i18n/navigation";
 import { Calendar, User, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 
 export default function FeaturedAnnouncementCard({ announcement }) {
@@ -25,63 +24,56 @@ export default function FeaturedAnnouncementCard({ announcement }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.01, boxShadow: '0px 10px 30px rgba(0, 0, 0, 0.3)' }}
+    <article
       onClick={handleCardClick}
-      className="group bg-gray-800/30 backdrop-blur-md rounded-3xl overflow-hidden border border-gray-700 hover:border-blue-500/50 transition-all duration-300 shadow-lg hover:shadow-blue-500/20 cursor-pointer grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-8 items-center mb-12"
+      className="group mb-12 grid cursor-pointer grid-cols-1 items-start gap-6 border-t-2 border-ink pt-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-8"
     >
       {/* Image Section */}
       {announcement.imageUrl && !imageError && (
-        <div className="relative w-full h-64 md:h-full min-h-[300px] overflow-hidden">
+        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg bg-paper-2">
           <Image
             src={announcement.imageUrl}
             alt={announcement.title}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-cover"
             onError={() => setImageError(true)}
           />
         </div>
       )}
 
       {/* Content Section */}
-      <div className="p-6 md:p-8 flex flex-col justify-center">
-        <div>
-          <span className="text-sm font-bold text-blue-400 mb-2 inline-block">Öne Çıkan Duyuru</span>
-          {/* Title */}
-          <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4 line-clamp-3 group-hover:text-blue-300 transition-colors duration-300">
-            {announcement.title}
-          </h2>
+      <div className="flex min-w-0 flex-col">
+        <span className="text-sm font-semibold text-ink-2">Öne Çıkan Duyuru</span>
+        {/* Title */}
+        <h2 className="mt-2 line-clamp-3 break-words font-display text-2xl font-bold lg:text-3xl group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
+          {announcement.title}
+        </h2>
 
-          {/* Meta Info */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              <span>{formatDate(announcement.createdAt)}</span>
-            </div>
-            {announcement.authorName && (
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                <span>{announcement.authorName}</span>
-              </div>
-            )}
+        {/* Meta Info */}
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" aria-hidden="true" />
+            <span className="font-outlier">{formatDate(announcement.createdAt)}</span>
           </div>
-
-          {/* Description */}
-          <p className="text-gray-300 text-base mb-6 line-clamp-4">
-            {announcement.description || announcement.content}
-          </p>
-
-          {/* Footer */}
-          <div className="mt-auto">
-            <div className="text-blue-400 group-hover:text-blue-300 text-md font-semibold flex items-center gap-2">
-              Devamını Oku
-              <ArrowRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300" />
+          {announcement.authorName && (
+            <div className="flex min-w-0 items-center gap-2">
+              <User className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="break-words">{announcement.authorName}</span>
             </div>
-          </div>
+          )}
+        </div>
+
+        {/* Description */}
+        <p className="mt-4 line-clamp-4 max-w-measure text-ink-2">
+          {announcement.description || announcement.content}
+        </p>
+
+        {/* Footer */}
+        <div className="mt-5 inline-flex min-h-11 items-center gap-1 whitespace-nowrap font-medium text-brand underline decoration-1 underline-offset-4 group-hover:decoration-2">
+          Devamını Oku
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </div>
       </div>
-    </motion.div>
+    </article>
   );
 }

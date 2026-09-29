@@ -7,6 +7,9 @@ import { generateSlug } from "@/lib/slug";
 import { Link } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { getLocalizedField } from "@/utils/localeUtils";
+import { ArrowRight, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { PageContainer, PageHeader, EmptyState } from "@/components/ui/page";
 
 export default function PersonalityTestClient({ initialTests = [] }) {
   const locale = useLocale();
@@ -17,8 +20,9 @@ export default function PersonalityTestClient({ initialTests = [] }) {
           title: "Personality Tests",
           subtitle: "Which test would you like to take?",
           search: "Search tests...",
+          clear: "Clear search",
           questionCount: (count) => `${count} questions`,
-          start: "Start ->",
+          start: "Start",
           noResults: "No results found",
           noTests: "No tests yet",
           noResultsBody: (query) => `No test matched "${query}".`,
@@ -29,8 +33,9 @@ export default function PersonalityTestClient({ initialTests = [] }) {
           title: "Kişilik Testleri",
           subtitle: "Hangi teste katılmak istersin?",
           search: "Test ara...",
+          clear: "Aramayı temizle",
           questionCount: (count) => `${count} soru`,
-          start: "Başla ->",
+          start: "Başla",
           noResults: "Sonuç bulunamadı",
           noTests: "Henüz test yok",
           noResultsBody: (query) => `"${query}" ile eşleşen test bulunamadı.`,
@@ -73,9 +78,9 @@ export default function PersonalityTestClient({ initialTests = [] }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 flex items-center justify-center">
-        <div className="text-white text-2xl">{copy.loading}</div>
-      </div>
+      <PageContainer>
+        <p className="text-md text-ink-2">{copy.loading}</p>
+      </PageContainer>
     );
   }
 
@@ -89,107 +94,86 @@ export default function PersonalityTestClient({ initialTests = [] }) {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            {copy.title}
-          </h1>
-          <p className="text-gray-400 text-lg">{copy.subtitle}</p>
-        </div>
+    <PageContainer>
+      <PageHeader title={copy.title} description={copy.subtitle} />
 
-        <div className="max-w-xl mx-auto mb-10">
-          <div className="relative">
-            <svg
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-              />
-            </svg>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={copy.search}
-              className="w-full bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl py-3 pl-12 pr-10 text-white placeholder-gray-400 focus:outline-none focus:border-white/40 focus:bg-white/15 transition-all"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-              >
-                ×
-              </button>
-            )}
-          </div>
-        </div>
+      <div className="relative mb-8 max-w-xl">
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden="true"
+        />
+        <Input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={copy.search}
+          aria-label={copy.search}
+          className="pl-10 pr-11"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            aria-label={copy.clear}
+            className="absolute right-0 top-1/2 flex h-control w-11 -translate-y-1/2 items-center justify-center rounded text-muted-foreground transition-colors duration-micro hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTests.map((test, index) => {
+      {filteredTests.length > 0 && (
+        <ul className="border-t-2 border-ink">
+          {filteredTests.map((test) => {
             const title = getLocalizedField(test, "title", locale);
             const description = getLocalizedField(test, "description", locale);
 
             return (
-              <div
-                key={test.id}
-                className="animate-fadeIn"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
+              <li key={test.id}>
                 <Link
                   href={`/personality-test/${test.slug || generateSlug(test.title)}`}
+                  className="group flex items-start gap-4 border-b border-rule py-5 transition-colors duration-micro ease-out hover:bg-paper-2 focus-visible:outline-offset-[-2px] sm:gap-6"
                 >
-                  <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 hover:bg-white/20 transition-all cursor-pointer hover:scale-105 h-full">
-                    {test.imageUrl && (
-                      <div className="mb-4 rounded-2xl overflow-hidden bg-white/5">
-                        <img
-                          src={test.imageUrl}
-                          alt={title}
-                          className="w-full h-48 object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
+                  {test.imageUrl && (
+                    <div className="aspect-[4/3] w-24 shrink-0 overflow-hidden rounded bg-paper-2 sm:w-36">
+                      <img
+                        src={test.imageUrl}
+                        alt={title}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
 
-                    <h2 className="text-2xl font-bold text-white mb-2">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-display text-lg font-bold group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
                       {title}
                     </h2>
-
-                    <p className="text-gray-300 mb-4">{description}</p>
-
-                    <div className="flex items-center justify-between text-sm text-gray-400">
-                      <span>{copy.questionCount(test.questionCount || 10)}</span>
-                      <span className="text-green-400">{copy.start}</span>
-                    </div>
+                    <p className="mt-1 max-w-measure text-ink-2">{description}</p>
+                    <p className="mt-3 font-outlier text-sm tabular-nums text-muted-foreground">
+                      {copy.questionCount(test.questionCount || 10)}
+                    </p>
                   </div>
+
+                  <span className="hidden items-center gap-1 self-center whitespace-nowrap font-medium text-brand sm:inline-flex">
+                    {copy.start}
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </span>
                 </Link>
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
+      )}
 
-        {filteredTests.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">
-              {searchQuery ? "\u{1F50D}" : "\u{1F3AD}"}
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-2">
-              {searchQuery ? copy.noResults : copy.noTests}
-            </h2>
-            <p className="text-gray-400">
-              {searchQuery
-                ? copy.noResultsBody(searchQuery)
-                : copy.noTestsBody}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
+      {filteredTests.length === 0 && !loading && (
+        <EmptyState
+          title={searchQuery ? copy.noResults : copy.noTests}
+          description={
+            searchQuery ? copy.noResultsBody(searchQuery) : copy.noTestsBody
+          }
+        />
+      )}
+    </PageContainer>
   );
 }

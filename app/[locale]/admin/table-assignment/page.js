@@ -15,22 +15,27 @@ import {
 } from "firebase/firestore";
 import { useRouter } from "@/i18n/navigation";
 import {
-  Users,
   Plus,
   Trash2,
   RefreshCw,
   UserPlus,
-  ArrowLeft,
-  Table,
   Shuffle,
   Edit2,
   Lock,
   Unlock,
-  Search
+  Search,
+  X,
 } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { checkUserRole, ROLES } from "@/utils/roleUtils";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { PageHeader, Section, EmptyState } from "@/components/ui/page";
+import { Stat } from "@/components/ui/stat";
 
 export default function TableAssignmentPage() {
   const [user, loading] = useAuthState(auth);
@@ -392,281 +397,219 @@ export default function TableAssignmentPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-gray-200">Yükleniyor...</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">Yükleniyor...</p>;
   }
 
   if (!userRole) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Erişim Reddedildi</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        Erişim Reddedildi
+      </p>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => router.push('/admin')}
-              className="flex items-center space-x-2 text-gray-400 hover:text-gray-100 transition-colors"
+    <div>
+      <PageHeader
+        title="Masa Yerleştirme Çarkı"
+        description="Katılımcıları masalara rastgele veya manuel yerleştirin"
+      />
+
+      {/* Stats */}
+      <dl className="mb-10 grid grid-cols-2 gap-x-6 gap-y-6 lg:grid-cols-4">
+        <Stat label="Toplam Masa" value={tables.length} />
+        <Stat label="Toplam Katılımcı" value={participants.length} />
+        <Stat label="Atanan" value={assignedCount} />
+        <Stat label="Bekleyen" value={unassignedParticipants.length} />
+      </dl>
+
+      {/* Search and Action Buttons */}
+      <div className="mb-8 flex flex-col gap-4 border-y border-rule py-4 lg:flex-row lg:items-center lg:justify-between">
+        {/* Search Bar */}
+        <div className="relative w-full min-w-0 lg:max-w-md">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Katılımcı ara (sadece atananlar)..."
+            className="pl-10 pr-12"
+          />
+          {searchQuery && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setSearchQuery("")}
+              aria-label="Temizle"
+              className="absolute right-0 top-0"
             >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Admin Panel</span>
-            </button>
-            <div className="border-l border-gray-500 h-8"></div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                Masa Yerleştirme Çarkı
-              </h1>
-              <p className="text-gray-300">
-                Katılımcıları masalara rastgele veya manuel yerleştirin
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <div className="flex items-center">
-              <Table className="w-8 h-8 text-blue-400" />
-              <div className="ml-3">
-                <p className="text-sm text-gray-400">Toplam Masa</p>
-                <p className="text-2xl font-bold text-gray-100">{tables.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <div className="flex items-center">
-              <Users className="w-8 h-8 text-green-400" />
-              <div className="ml-3">
-                <p className="text-sm text-gray-400">Toplam Katılımcı</p>
-                <p className="text-2xl font-bold text-gray-100">{participants.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <div className="flex items-center">
-              <Users className="w-8 h-8 text-purple-400" />
-              <div className="ml-3">
-                <p className="text-sm text-gray-400">Atanan</p>
-                <p className="text-2xl font-bold text-gray-100">{assignedCount}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-            <div className="flex items-center">
-              <UserPlus className="w-8 h-8 text-yellow-400" />
-              <div className="ml-3">
-                <p className="text-sm text-gray-400">Bekleyen</p>
-                <p className="text-2xl font-bold text-gray-100">{unassignedParticipants.length}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search and Action Buttons */}
-        <div className="mb-6 space-y-4">
-          {/* Search Bar */}
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Katılımcı ara (sadece atananlar)..."
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setShowAddTableModal(true)}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Masa Ekle</span>
-            </button>
-
-            <button
-              onClick={() => setShowAddParticipantModal(true)}
-              className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              <UserPlus className="w-5 h-5" />
-              <span>Katılımcı Ekle</span>
-            </button>
-
-            <button
-              onClick={handleRandomAssignment}
-              disabled={unassignedParticipants.length === 0 || tables.length === 0}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                unassignedParticipants.length === 0 || tables.length === 0
-                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                  : "bg-purple-600 text-white hover:bg-purple-700"
-              }`}
-            >
-              <Shuffle className="w-5 h-5" />
-              <span>Rastgele Ata</span>
-            </button>
-
-            <button
-              onClick={handleReset}
-              disabled={assignedCount === 0}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                assignedCount === 0
-                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                  : "bg-red-600 text-white hover:bg-red-700"
-              }`}
-            >
-              <RefreshCw className="w-5 h-5" />
-              <span>Sıfırla</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Unassigned Participants - Manual Assignment Section */}
-        {unassignedParticipants.length > 0 && (
-          <div className="bg-yellow-900/20 rounded-lg p-4 border border-yellow-600/40 mb-6">
-            <h3 className="text-lg font-semibold text-yellow-400 mb-3 flex items-center">
-              <UserPlus className="w-5 h-5 mr-2" />
-              Atanmamış Katılımcılar ({unassignedParticipants.length})
-            </h3>
-            <p className="text-sm text-gray-400 mb-3">
-              Katılımcıya tıklayın ve istediğiniz masayı seçin, ya da "Rastgele Ata" butonunu kullanın
-            </p>
-
-            {/* Manual Assignment Interface */}
-            <div className="space-y-4">
-              {unassignedParticipants.map(participant => (
-                <ManualAssignmentRow
-                  key={participant.id}
-                  participant={participant}
-                  tables={tables}
-                  participants={participants}
-                  onAssign={handleAssignToTable}
-                  onRemove={handleRemoveParticipant}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Search Results Info */}
-        {searchQuery && (
-          <div className="mb-4 bg-blue-900/20 border border-blue-600/40 rounded-lg p-3">
-            <p className="text-sm text-blue-300">
-              <Search className="w-4 h-4 inline mr-2" />
-              Arama: "{searchQuery}" - {filteredParticipants.filter(p => p.assignedTableId).length} sonuç bulundu
-            </p>
-          </div>
-        )}
-
-        {/* Tables Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {tables.map(table => {
-            const tableParticipants = filteredParticipants.filter(p => p.assignedTableId === table.id);
-            // Hide tables with no matching participants when searching
-            if (searchQuery && tableParticipants.length === 0) {
-              return null;
-            }
-            return (
-              <TableCard
-                key={table.id}
-                table={table}
-                participants={tableParticipants}
-                allParticipants={participants}
-                unassignedParticipants={unassignedParticipants}
-                onRemove={handleRemoveTable}
-                onEdit={(table) => {
-                  setEditingTable(table);
-                  setShowEditTableModal(true);
-                }}
-                onUnassignParticipant={handleUnassignParticipant}
-                onAssignParticipant={handleAssignToTable}
-                onToggleFull={handleToggleTableFull}
-                searchQuery={searchQuery}
-              />
-            );
-          })}
-
-          {tables.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
-                <Table className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-100 mb-2">
-                  Henüz masa yok
-                </h3>
-                <p className="text-gray-400 mb-4">
-                  İlk masayı ekleyin ve katılımcıları yerleştirmeye başlayın!
-                </p>
-                <button
-                  onClick={() => setShowAddTableModal(true)}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Masa Ekle
-                </button>
-              </div>
-            </div>
+              <X aria-hidden="true" />
+            </Button>
           )}
         </div>
 
-        {/* Modals */}
-        {showAddTableModal && (
-          <AddTableModal
-            onClose={() => setShowAddTableModal(false)}
-            onAdd={handleAddTable}
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button onClick={() => setShowAddTableModal(true)}>
+            <Plus aria-hidden="true" />
+            <span>Masa Ekle</span>
+          </Button>
+
+          <Button variant="outline" onClick={() => setShowAddParticipantModal(true)}>
+            <UserPlus aria-hidden="true" />
+            <span>Katılımcı Ekle</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={handleRandomAssignment}
+            disabled={unassignedParticipants.length === 0 || tables.length === 0}
+          >
+            <Shuffle aria-hidden="true" />
+            <span>Rastgele Ata</span>
+          </Button>
+
+          <Button
+            variant="destructive"
+            onClick={handleReset}
+            disabled={assignedCount === 0}
+          >
+            <RefreshCw aria-hidden="true" />
+            <span>Sıfırla</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Unassigned Participants - Manual Assignment Section */}
+      {unassignedParticipants.length > 0 && (
+        <Section title={`Atanmamış Katılımcılar (${unassignedParticipants.length})`} className="mb-10 mt-0 md:mt-0">
+          <p className="mb-3 max-w-measure text-sm text-muted-foreground">
+            Katılımcıya tıklayın ve istediğiniz masayı seçin, ya da "Rastgele Ata" butonunu kullanın
+          </p>
+
+          {/* Manual Assignment Interface */}
+          <ul className="border-t border-rule">
+            {unassignedParticipants.map(participant => (
+              <ManualAssignmentRow
+                key={participant.id}
+                participant={participant}
+                tables={tables}
+                participants={participants}
+                onAssign={handleAssignToTable}
+                onRemove={handleRemoveParticipant}
+              />
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      {/* Search Results Info */}
+      {searchQuery && (
+        <p className="mb-4 flex items-center gap-2 text-sm text-ink-2">
+          <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="min-w-0 break-words">
+            Arama: "{searchQuery}" - {filteredParticipants.filter(p => p.assignedTableId).length} sonuç bulundu
+          </span>
+        </p>
+      )}
+
+      {/* Tables Grid */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {tables.map(table => {
+          const tableParticipants = filteredParticipants.filter(p => p.assignedTableId === table.id);
+          // Hide tables with no matching participants when searching
+          if (searchQuery && tableParticipants.length === 0) {
+            return null;
+          }
+          return (
+            <TableCard
+              key={table.id}
+              table={table}
+              participants={tableParticipants}
+              allParticipants={participants}
+              unassignedParticipants={unassignedParticipants}
+              onRemove={handleRemoveTable}
+              onEdit={(table) => {
+                setEditingTable(table);
+                setShowEditTableModal(true);
+              }}
+              onUnassignParticipant={handleUnassignParticipant}
+              onAssignParticipant={handleAssignToTable}
+              onToggleFull={handleToggleTableFull}
+              searchQuery={searchQuery}
+            />
+          );
+        })}
+
+        {tables.length === 0 && (
+          <EmptyState
+            className="col-span-full"
+            title="Henüz masa yok"
+            description="İlk masayı ekleyin ve katılımcıları yerleştirmeye başlayın!"
+            action={<Button onClick={() => setShowAddTableModal(true)}>Masa Ekle</Button>}
           />
         )}
+      </div>
 
-        {showEditTableModal && editingTable && (
-          <EditTableModal
-            table={editingTable}
-            onClose={() => {
-              setShowEditTableModal(false);
-              setEditingTable(null);
-            }}
-            onEdit={handleEditTable}
-          />
-        )}
-
-        {showAddParticipantModal && (
-          <AddParticipantModal
-            onClose={() => setShowAddParticipantModal(false)}
-            onAdd={handleAddParticipant}
-          />
-        )}
-
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
+      {/* Modals */}
+      {showAddTableModal && (
+        <AddTableModal
+          onClose={() => setShowAddTableModal(false)}
+          onAdd={handleAddTable}
         />
+      )}
+
+      {showEditTableModal && editingTable && (
+        <EditTableModal
+          table={editingTable}
+          onClose={() => {
+            setShowEditTableModal(false);
+            setEditingTable(null);
+          }}
+          onEdit={handleEditTable}
+        />
+      )}
+
+      {showAddParticipantModal && (
+        <AddParticipantModal
+          onClose={() => setShowAddParticipantModal(false)}
+          onAdd={handleAddParticipant}
+        />
+      )}
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </div>
+  );
+}
+
+// Shared modal frame: overlay + panel, click on the overlay closes
+function ModalFrame({ onClose, title, children }) {
+  return (
+    <div
+      className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-[90dvh] w-full max-w-md flex-col overflow-hidden rounded-lg border border-rule bg-background p-6 text-foreground animate-in fade-in-0 duration-short"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="mb-4 font-display text-lg font-bold">{title}</h2>
+        <div className="min-h-0 overflow-y-auto">{children}</div>
       </div>
     </div>
   );
@@ -687,26 +630,26 @@ function ManualAssignmentRow({ participant, tables, participants, onAssign, onRe
   });
 
   return (
-    <div className="bg-gray-800 rounded-lg p-3 border border-gray-700 flex items-center justify-between">
-      <div className="flex items-center gap-3 flex-1">
-        <span className="text-gray-200 font-medium">{participant.name}</span>
+    <li className="flex items-center justify-between gap-3 border-b border-rule py-2">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="min-w-0 break-words font-medium">{participant.name}</span>
 
         <div className="relative">
-          <button
+          <Button
+            variant="outline"
             onClick={() => setShowTableDropdown(!showTableDropdown)}
-            className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" />
+            <Plus aria-hidden="true" />
             <span>Masaya Ata</span>
-          </button>
+          </Button>
 
           {showTableDropdown && (
             <>
               <div
-                className="fixed inset-0 z-10"
+                className="fixed inset-0 z-raised"
                 onClick={() => setShowTableDropdown(false)}
               />
-              <div className="absolute top-full left-0 mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-lg min-w-[200px] z-20">
+              <div className="absolute left-0 top-full z-dropdown mt-1 min-w-52 rounded border border-edge bg-popover text-popover-foreground shadow-whisper">
                 {availableTables.length > 0 ? (
                   availableTables.map(table => {
                     const isDisabled = table.isFullCapacity || table.isMarkedFull;
@@ -720,21 +663,21 @@ function ManualAssignmentRow({ participant, tables, participants, onAssign, onRe
                           }
                         }}
                         disabled={isDisabled}
-                        className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center justify-between ${
+                        className={`flex min-h-11 w-full items-center justify-between gap-3 px-4 py-2 text-left text-sm transition-colors duration-micro ${
                           isDisabled
-                            ? 'text-gray-500 cursor-not-allowed'
-                            : 'text-gray-200 hover:bg-gray-800'
+                            ? 'cursor-not-allowed text-muted-foreground'
+                            : 'text-ink hover:bg-secondary'
                         }`}
                       >
                         <span>{table.name} {table.isMarkedFull ? '(Dolu)' : ''}</span>
-                        <span className={`text-xs ${isDisabled ? 'text-red-400' : 'text-gray-400'}`}>
+                        <span className={`font-outlier text-xs tabular-nums ${isDisabled ? 'text-error' : 'text-muted-foreground'}`}>
                           {table.available}/{table.capacity}
                         </span>
                       </button>
                     );
                   })
                 ) : (
-                  <div className="px-4 py-2 text-sm text-gray-500">
+                  <div className="px-4 py-2 text-sm text-muted-foreground">
                     Masa yok
                   </div>
                 )}
@@ -744,14 +687,17 @@ function ManualAssignmentRow({ participant, tables, participants, onAssign, onRe
         </div>
       </div>
 
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => onRemove(participant.id)}
-        className="text-red-400 hover:text-red-300 transition-colors p-2"
+        className="shrink-0 text-error"
         title="Katılımcıyı sil"
+        aria-label="Katılımcıyı sil"
       >
-        <Trash2 className="w-4 h-4" />
-      </button>
-    </div>
+        <Trash2 aria-hidden="true" />
+      </Button>
+    </li>
   );
 }
 
@@ -765,49 +711,52 @@ function TableCard({ table, participants, allParticipants, unassignedParticipant
   const isMarkedFull = table.isFull || false;
 
   return (
-    <div className={`bg-gray-800 rounded-lg p-4 border ${isMarkedFull ? 'border-orange-500/50' : 'border-gray-700'}`}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-gray-100 flex items-center gap-2">
-          {table.name}
-          {isMarkedFull && <Lock className="w-4 h-4 text-orange-400" />}
+    <Card className={`min-w-0 p-4 ${isMarkedFull ? 'border-ink' : ''}`}>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="flex min-w-0 items-center gap-2 font-display text-lg font-semibold">
+          <span className="min-w-0 break-words">{table.name}</span>
+          {isMarkedFull && <Lock className="h-4 w-4 shrink-0" aria-hidden="true" />}
         </h3>
-        <div className="flex items-center gap-2">
-          <button
+        <div className="-mr-2 flex shrink-0 items-center">
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => onToggleFull(table.id, isMarkedFull)}
-            className={`p-2 rounded-lg transition-colors ${
-              isMarkedFull
-                ? 'text-orange-400 hover:bg-orange-600/20'
-                : 'text-gray-400 hover:bg-gray-600/20'
-            }`}
             title={isMarkedFull ? "Masayı müsait yap" : "Masayı dolu işaretle"}
+            aria-label={isMarkedFull ? "Masayı müsait yap" : "Masayı dolu işaretle"}
           >
-            {isMarkedFull ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-          </button>
-          <button
+            {isMarkedFull ? <Unlock aria-hidden="true" /> : <Lock aria-hidden="true" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => onEdit(table)}
-            className="p-2 text-blue-400 hover:bg-blue-600/20 rounded-lg transition-colors"
             title="Masayı düzenle"
+            aria-label="Masayı düzenle"
           >
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button
+            <Edit2 aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => onRemove(table.id)}
-            className="p-2 text-red-400 hover:bg-red-600/20 rounded-lg transition-colors"
+            className="text-error"
             title="Masayı kaldır"
+            aria-label="Masayı kaldır"
           >
-            <Trash2 className="w-4 h-4" />
-          </button>
+            <Trash2 aria-hidden="true" />
+          </Button>
         </div>
       </div>
 
       <div className="mb-3">
-        <div className="flex justify-between text-sm text-gray-400 mb-1">
-          <span>Doluluk {isMarkedFull && <span className="text-orange-400">(Dolu işaretli)</span>}</span>
-          <span>
+        <div className="mb-1 flex justify-between gap-2 text-sm text-muted-foreground">
+          <span>Doluluk {isMarkedFull && <span className="font-medium text-ink">(Dolu işaretli)</span>}</span>
+          <span className="font-outlier tabular-nums">
             {searchQuery && participants.length !== totalAssigned ? (
               <>
-                <span className="text-blue-400">{participants.length}</span>
-                <span className="text-gray-500">/{totalAssigned}</span>
+                <span className="text-brand">{participants.length}</span>
+                <span>/{totalAssigned}</span>
                 <span>/{table.capacity}</span>
               </>
             ) : (
@@ -815,72 +764,72 @@ function TableCard({ table, participants, allParticipants, unassignedParticipant
             )}
           </span>
         </div>
-        <div className="w-full bg-gray-700 rounded-full h-2">
+        <div className="h-2 w-full rounded-sm bg-paper-3">
           <div
-            className={`h-2 rounded-full transition-all ${
-              isMarkedFull ? 'bg-orange-500' : isFullCapacity ? 'bg-red-500' : fillPercentage > 80 ? 'bg-yellow-500' : 'bg-green-500'
+            className={`h-2 rounded-sm transition-[width] duration-short ${
+              isMarkedFull ? 'bg-ink-2' : isFullCapacity ? 'bg-error' : fillPercentage > 80 ? 'bg-warning' : 'bg-success'
             }`}
             style={{ width: `${fillPercentage}%` }}
           />
         </div>
         {searchQuery && participants.length !== totalAssigned && (
-          <p className="text-xs text-blue-300 mt-1">
+          <p className="mt-1 text-xs text-muted-foreground">
             Aramada {participants.length} kişi gösteriliyor (toplam {totalAssigned})
           </p>
         )}
       </div>
 
       {/* Participants List */}
-      <div className="space-y-2 mb-3 max-h-60 overflow-y-auto">
+      <div className="mb-3 max-h-60 overflow-y-auto">
         {participants.length > 0 ? (
-          participants.map(participant => (
-            <div
-              key={participant.id}
-              className="flex items-center justify-between bg-gray-900/50 px-3 py-2 rounded-lg"
-            >
-              <span className="text-gray-200 text-sm">{participant.name}</span>
-              <button
-                onClick={() => onUnassignParticipant(participant.id)}
-                className="text-red-400 hover:text-red-300 transition-colors"
-                title="Masadan çıkar"
+          <ul className="border-t border-rule">
+            {participants.map(participant => (
+              <li
+                key={participant.id}
+                className="flex items-center justify-between gap-2 border-b border-rule py-1 pl-1"
               >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))
+                <span className="min-w-0 break-words text-sm">{participant.name}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onUnassignParticipant(participant.id)}
+                  className="shrink-0 text-error"
+                  title="Masadan çıkar"
+                  aria-label="Masadan çıkar"
+                >
+                  <Trash2 aria-hidden="true" />
+                </Button>
+              </li>
+            ))}
+          </ul>
         ) : (
-          <p className="text-gray-500 text-center py-4 text-sm">Henüz kimse yok</p>
+          <p className="border-t border-rule py-4 text-sm text-muted-foreground">Henüz kimse yok</p>
         )}
       </div>
 
       {/* Assign Button or Full Indicator */}
       {isMarkedFull ? (
-        <button
-          disabled
-          className="w-full bg-orange-600/50 text-orange-200 px-3 py-2 rounded-lg cursor-not-allowed text-sm flex items-center justify-center space-x-2"
-        >
-          <Lock className="w-4 h-4" />
+        <Button variant="secondary" disabled className="w-full">
+          <Lock aria-hidden="true" />
           <span>Masa Dolu İşaretli</span>
-        </button>
+        </Button>
       ) : isFullCapacity ? (
-        <button
-          disabled
-          className="w-full bg-gray-600 text-gray-400 px-3 py-2 rounded-lg cursor-not-allowed text-sm flex items-center justify-center space-x-2"
-        >
+        <Button variant="secondary" disabled className="w-full">
           <span>Kontenjan Doldu</span>
-        </button>
+        </Button>
       ) : unassignedParticipants.length > 0 ? (
         <div className="relative">
-          <button
+          <Button
+            variant="outline"
             onClick={() => setShowAssignDropdown(!showAssignDropdown)}
-            className="w-full bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center justify-center space-x-2"
+            className="w-full"
           >
-            <Plus className="w-4 h-4" />
+            <Plus aria-hidden="true" />
             <span>Yerleştir</span>
-          </button>
+          </Button>
 
           {showAssignDropdown && (
-            <div className="absolute bottom-full left-0 right-0 mb-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
+            <div className="absolute bottom-full left-0 right-0 z-dropdown mb-2 max-h-48 overflow-y-auto rounded border border-edge bg-popover text-popover-foreground shadow-whisper">
               {unassignedParticipants.slice(0, 10).map(participant => (
                 <button
                   key={participant.id}
@@ -888,13 +837,13 @@ function TableCard({ table, participants, allParticipants, unassignedParticipant
                     onAssignParticipant(participant.id, table.id);
                     setShowAssignDropdown(false);
                   }}
-                  className="w-full text-left px-3 py-2 text-gray-200 text-sm hover:bg-gray-800 transition-colors"
+                  className="min-h-11 w-full px-3 py-2 text-left text-sm text-ink transition-colors duration-micro hover:bg-secondary"
                 >
                   {participant.name}
                 </button>
               ))}
               {unassignedParticipants.length > 10 && (
-                <div className="px-3 py-2 text-gray-500 text-xs text-center">
+                <div className="px-3 py-2 text-center text-xs text-muted-foreground">
                   +{unassignedParticipants.length - 10} kişi daha
                 </div>
               )}
@@ -902,7 +851,7 @@ function TableCard({ table, participants, allParticipants, unassignedParticipant
           )}
         </div>
       ) : null}
-    </div>
+    </Card>
   );
 }
 
@@ -927,61 +876,35 @@ function AddTableModal({ onClose, onAdd }) {
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-xl font-bold text-gray-100 mb-4">Yeni Masa Ekle</h2>
+    <ModalFrame onClose={onClose} title="Yeni Masa Ekle">
+      <form onSubmit={handleSubmit} className="grid gap-2">
+        <Field id="table-add-name" label="Masa Adı">
+          <Input
+            type="text"
+            value={tableName}
+            onChange={(e) => setTableName(e.target.value)}
+            placeholder="Örn: Masa 3"
+          />
+        </Field>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Masa Adı
-            </label>
-            <input
-              type="text"
-              value={tableName}
-              onChange={(e) => setTableName(e.target.value)}
-              placeholder="Örn: Masa 3"
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <Field id="table-add-capacity" label="Kapasite">
+          <Input
+            type="number"
+            value={capacity}
+            onChange={(e) => setCapacity(e.target.value)}
+            min="1"
+            className="tabular-nums"
+          />
+        </Field>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Kapasite
-            </label>
-            <input
-              type="number"
-              value={capacity}
-              onChange={(e) => setCapacity(e.target.value)}
-              min="1"
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="flex space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-700 text-gray-200 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              İptal
-            </button>
-            <button
-              type="submit"
-              className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Ekle
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <Button type="button" variant="outline" onClick={onClose}>
+            İptal
+          </Button>
+          <Button type="submit">Ekle</Button>
+        </div>
+      </form>
+    </ModalFrame>
   );
 }
 
@@ -1000,51 +923,30 @@ function AddParticipantModal({ onClose, onAdd }) {
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-xl font-bold text-gray-100 mb-4">Katılımcı Ekle</h2>
+    <ModalFrame onClose={onClose} title="Katılımcı Ekle">
+      <form onSubmit={handleSubmit} className="grid gap-2">
+        <Field
+          id="participant-add-names"
+          label="Katılımcı İsimleri"
+          help="Her satıra bir isim yazın. Birden fazla katılımcı ekleyebilirsiniz."
+        >
+          <Textarea
+            value={participantNames}
+            onChange={(e) => setParticipantNames(e.target.value)}
+            placeholder="Her satıra bir isim yazın:&#10;Ahmet Yılmaz&#10;Ayşe Demir&#10;Mehmet Kaya"
+            rows={6}
+            className="resize-none"
+          />
+        </Field>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Katılımcı İsimleri
-            </label>
-            <textarea
-              value={participantNames}
-              onChange={(e) => setParticipantNames(e.target.value)}
-              placeholder="Her satıra bir isim yazın:&#10;Ahmet Yılmaz&#10;Ayşe Demir&#10;Mehmet Kaya"
-              rows={6}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              Her satıra bir isim yazın. Birden fazla katılımcı ekleyebilirsiniz.
-            </p>
-          </div>
-
-          <div className="flex space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-700 text-gray-200 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              İptal
-            </button>
-            <button
-              type="submit"
-              className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Ekle
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <Button type="button" variant="outline" onClick={onClose}>
+            İptal
+          </Button>
+          <Button type="submit">Ekle</Button>
+        </div>
+      </form>
+    </ModalFrame>
   );
 }
 
@@ -1067,61 +969,34 @@ function EditTableModal({ table, onClose, onEdit }) {
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-xl font-bold text-gray-100 mb-4">Masayı Düzenle</h2>
+    <ModalFrame onClose={onClose} title="Masayı Düzenle">
+      <form onSubmit={handleSubmit} className="grid gap-2">
+        <Field id="table-edit-name" label="Masa Adı">
+          <Input
+            type="text"
+            value={tableName}
+            onChange={(e) => setTableName(e.target.value)}
+            placeholder="Örn: Masa 3"
+          />
+        </Field>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Masa Adı
-            </label>
-            <input
-              type="text"
-              value={tableName}
-              onChange={(e) => setTableName(e.target.value)}
-              placeholder="Örn: Masa 3"
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <Field id="table-edit-capacity" label="Kapasite">
+          <Input
+            type="number"
+            value={capacity}
+            onChange={(e) => setCapacity(e.target.value)}
+            min="1"
+            className="tabular-nums"
+          />
+        </Field>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Kapasite
-            </label>
-            <input
-              type="number"
-              value={capacity}
-              onChange={(e) => setCapacity(e.target.value)}
-              min="1"
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="flex space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-700 text-gray-200 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              İptal
-            </button>
-            <button
-              type="submit"
-              className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Güncelle
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <Button type="button" variant="outline" onClick={onClose}>
+            İptal
+          </Button>
+          <Button type="submit">Güncelle</Button>
+        </div>
+      </form>
+    </ModalFrame>
   );
 }
-

@@ -6,8 +6,10 @@ import { auth, storage } from "@/firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { checkUserRole, ROLES } from "@/utils/roleUtils";
 import { toast, ToastContainer } from "react-toastify";
-import { Upload, FileIcon, X, Copy, Check, ArrowLeft, Trash2 } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { Upload, FileIcon, X, Copy, Check, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { PageHeader, Section } from "@/components/ui/page";
 import "react-toastify/dist/ReactToastify.css";
 import { useEffect } from "react";
 
@@ -176,56 +178,37 @@ export default function FileUploadPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <p className="text-lg text-gray-300">Yükleniyor...</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">Yükleniyor...</p>;
   }
 
   if (!userRole) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <p className="text-lg text-red-500">Erişim Reddedildi</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        Erişim Reddedildi
+      </p>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 sm:p-6">
-      {/* Header */}
-      <div className="mb-8">
-        <Link
-          href="/admin"
-          className="inline-flex items-center text-gray-400 hover:text-white transition-colors mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Admin Paneline Dön
-        </Link>
+    <div>
+      <PageHeader
+        title="Dosya Yükleme"
+        description="PDF, görsel ve diğer dosyaları yükleyin ve herkese açık URL alın"
+      />
 
-        <div className="text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-            Dosya Yükleme
-          </h1>
-          <p className="text-gray-300">PDF, görsel ve diğer dosyaları yükleyin ve herkese açık URL alın</p>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl">
         {/* Upload Section */}
-        <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
-          <h2 className="text-xl font-semibold text-white mb-4">Dosya Yükle</h2>
-
+        <Section title="Dosya Yükle">
           {!selectedFile ? (
             <div
-              className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors"
+              className="cursor-pointer rounded border border-dashed border-input p-8 text-center transition-colors duration-micro hover:bg-secondary"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onClick={() => fileInputRef.current?.click()}
             >
-              <FileIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-300 text-lg mb-2">Dosya seç veya sürükle</p>
-              <p className="text-gray-400 text-sm">PDF, görsel, video vb. (Max 50MB)</p>
+              <FileIcon className="mx-auto mb-4 h-10 w-10 text-muted-foreground" aria-hidden="true" />
+              <p className="mb-1 text-md text-ink">Dosya seç veya sürükle</p>
+              <p className="text-sm text-muted-foreground">PDF, görsel, video vb. (Max 50MB)</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -235,131 +218,123 @@ export default function FileUploadPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-center justify-between bg-gray-700/50 rounded-lg p-4">
-                <div className="flex items-center space-x-3">
-                  <FileIcon className="w-8 h-8 text-blue-400" />
-                  <div>
-                    <p className="text-white font-medium">{selectedFile.name}</p>
-                    <p className="text-gray-400 text-sm">{formatFileSize(selectedFile.size)}</p>
+              <div className="flex items-center justify-between gap-3 border-y border-rule py-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <FileIcon className="h-6 w-6 shrink-0 text-brand" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <p className="break-words font-medium">{selectedFile.name}</p>
+                    <p className="text-sm text-muted-foreground tabular-nums">{formatFileSize(selectedFile.size)}</p>
                   </div>
                 </div>
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={clearFile}
-                  className="text-gray-400 hover:text-red-400 transition-colors"
                   disabled={isUploading}
                 >
-                  <X className="w-5 h-5" />
-                </button>
+                  <X aria-hidden="true" />
+                </Button>
               </div>
 
               {isUploading && (
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-gray-400">
+                  <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Yükleniyor...</span>
-                    <span>{uploadProgress}%</span>
+                    <span className="font-outlier tabular-nums">{uploadProgress}%</span>
                   </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div className="h-2 w-full rounded-sm bg-paper-3">
                     <div
-                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                      className="h-2 rounded-sm bg-brand transition-[width] duration-short ease-out"
                       style={{ width: `${uploadProgress}%` }}
                     ></div>
                   </div>
                 </div>
               )}
 
-              <button
+              <Button
                 onClick={handleUpload}
-                disabled={isUploading}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 rounded-lg font-medium hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center space-x-2"
+                loading={isUploading}
+                className="w-full sm:w-auto"
               >
                 {isUploading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                    <span>Yükleniyor...</span>
-                  </>
+                  <span>Yükleniyor...</span>
                 ) : (
                   <>
-                    <Upload className="w-4 h-4" />
+                    <Upload aria-hidden="true" />
                     <span>Yükle</span>
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           )}
-        </div>
+        </Section>
 
         {/* Uploaded Files List */}
         {uploadedFiles.length > 0 && (
-          <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Yüklenen Dosyalar ({uploadedFiles.length})
-            </h2>
-
-            <div className="space-y-3">
+          <Section title={`Yüklenen Dosyalar (${uploadedFiles.length})`}>
+            <ul>
               {uploadedFiles.map((file) => (
-                <div
-                  key={file.id}
-                  className="bg-gray-700/50 rounded-lg p-4 space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <FileIcon className="w-6 h-6 text-green-400" />
-                      <div>
-                        <p className="text-white font-medium">{file.name}</p>
-                        <p className="text-gray-400 text-sm">{formatFileSize(file.size)}</p>
+                <li key={file.id} className="space-y-3 border-b border-rule py-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <FileIcon className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      <div className="min-w-0">
+                        <p className="break-words font-medium">{file.name}</p>
+                        <p className="text-sm text-muted-foreground tabular-nums">{formatFileSize(file.size)}</p>
                       </div>
                     </div>
-                    <button
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => removeFromList(file.id)}
-                      className="text-gray-400 hover:text-red-400 transition-colors"
                       title="Listeden kaldır"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                      <Trash2 aria-hidden="true" />
+                    </Button>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <input
+                  <div className="flex items-center gap-2">
+                    <Input
                       type="text"
                       value={file.url}
                       readOnly
-                      className="flex-1 bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 font-mono"
+                      className="min-w-0 flex-1 font-outlier text-sm"
                     />
-                    <button
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
                       onClick={() => copyToClipboard(file.url, file.id)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded transition-colors flex items-center space-x-1"
                     >
                       {copiedUrl === file.id ? (
-                        <Check className="w-4 h-4" />
+                        <Check aria-hidden="true" />
                       ) : (
-                        <Copy className="w-4 h-4" />
+                        <Copy aria-hidden="true" />
                       )}
-                    </button>
-                    <a
-                      href={file.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded transition-colors text-sm"
-                    >
-                      Aç
-                    </a>
+                    </Button>
+                    <Button asChild variant="outline">
+                      <a href={file.url} target="_blank" rel="noopener noreferrer">
+                        Aç
+                      </a>
+                    </Button>
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
-          </div>
+            </ul>
+          </Section>
         )}
 
-        {/* Info Box */}
-        <div className="bg-blue-900/30 border border-blue-700/50 rounded-xl p-4">
-          <h3 className="text-blue-400 font-medium mb-2">Bilgi</h3>
-          <ul className="text-gray-300 text-sm space-y-1">
+        {/* Info */}
+        <Section title="Bilgi">
+          <ul className="max-w-measure space-y-1 text-sm text-ink-2">
             <li>• Yüklenen dosyalar herkese açık URL ile erişilebilir olacaktır</li>
             <li>• PDF dosyaları tarayıcıda doğrudan görüntülenebilir</li>
             <li>• URL'yi kopyalayıp web sitesinde kullanabilirsiniz</li>
             <li>• Dosyalar Firebase Storage'da saklanır</li>
           </ul>
-        </div>
+        </Section>
       </div>
 
       <ToastContainer
@@ -372,7 +347,7 @@ export default function FileUploadPage() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
+        theme="light"
       />
     </div>
   );

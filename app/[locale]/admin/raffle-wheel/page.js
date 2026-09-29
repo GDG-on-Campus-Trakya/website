@@ -13,9 +13,13 @@ import {
   serverTimestamp
 } from "firebase/firestore";
 import { useRouter } from "@/i18n/navigation";
-import { ArrowLeft, Plus, Edit3, Trash2, Play, Settings } from "lucide-react";
+import { ArrowLeft, Plus, Edit3, Trash2, Play, Settings, Trophy } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ui/field";
 
 export default function RaffleWheelPage() {
   const [user, loading] = useAuthState(auth);
@@ -156,181 +160,181 @@ export default function RaffleWheelPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-gray-200">Loading...</p>
-      </div>
+      <p className="py-12 text-lg text-muted-foreground">Loading...</p>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Access Denied</p>
-      </div>
+      <p className="py-12 text-lg text-error">Access Denied</p>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-900 p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => router.push('/admin')}
-              className="flex items-center space-x-2 text-gray-400 hover:text-gray-100 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Admin Panel</span>
-            </button>
-            <div className="border-l border-gray-600 h-8"></div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-100 mb-2">
-                Çekiliş Çarkı
-              </h1>
-              <p className="text-gray-400">
-                Çark için ürün ekleyin ve çevirerek kazanan belirleyin
-              </p>
-            </div>
-          </div>
+  const stageSecondary =
+    "inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded border border-stage-rule bg-transparent px-4 text-sm font-medium text-stage-ink transition-colors duration-micro ease-out hover:bg-stage-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
+  return (
+    <div className="min-h-[calc(100dvh-4rem)] rounded-lg bg-stage p-4 text-stage-ink sm:p-6 lg:p-8">
+      {/* Header */}
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4 border-b border-stage-rule pb-6">
+        <div className="min-w-0">
           <button
-            onClick={() => setShowAddModal(true)}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            onClick={() => router.push('/admin')}
+            className="mb-3 inline-flex min-h-11 items-center gap-2 whitespace-nowrap text-sm text-stage-muted transition-colors duration-micro ease-out hover:text-stage-ink"
           >
-            <Plus className="w-5 h-5" />
-            <span>Ürün Ekle</span>
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <span>Admin Panel</span>
           </button>
+          <h1 className="font-display text-3xl font-bold text-stage-ink md:text-5xl">
+            Çekiliş Çarkı
+          </h1>
+          <p className="mt-2 max-w-prose text-stage-muted">
+            Çark için ürün ekleyin ve çevirerek kazanan belirleyin
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Wheel Section */}
-          <div className="bg-gray-800 rounded-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-100 mb-6 text-center">Çark</h2>
+        <Button onClick={() => setShowAddModal(true)}>
+          <Plus aria-hidden="true" />
+          <span>Ürün Ekle</span>
+        </Button>
+      </div>
 
-            <div className="relative">
-              <WheelComponent
-                items={items}
-                spinning={spinning}
-                selectedWinner={selectedWinner}
-              />
-            </div>
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-12">
+        {/* Wheel Section */}
+        <div className="min-w-0">
+          <h2 className="mb-6 font-display text-xl font-bold text-stage-ink">Çark</h2>
 
-            <button
-              onClick={spinWheel}
-              disabled={spinning || items.length === 0}
-              className={`w-full mt-8 py-4 rounded-lg font-bold text-lg transition-all flex items-center justify-center space-x-2 ${
-                spinning || items.length === 0
-                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transform hover:scale-105"
-              }`}
-            >
-              <Play className="w-6 h-6" />
-              <span>{spinning ? "Dönüyor..." : "Çarkı Çevir!"}</span>
-            </button>
-
-            {selectedWinner && (
-              <div className="mt-6 p-6 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg text-center">
-                <p className="text-2xl font-bold text-white mb-2">🎉 Kazanan! 🎉</p>
-                <p className="text-xl font-semibold text-white">{selectedWinner.name}</p>
-              </div>
-            )}
+          <div className="relative mx-auto w-full max-w-xl">
+            <WheelComponent
+              items={items}
+              spinning={spinning}
+              selectedWinner={selectedWinner}
+            />
           </div>
 
-          {/* Items List */}
-          <div className="bg-gray-800 rounded-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-100 mb-6">Ürünler ({items.length})</h2>
+          <Button
+            onClick={spinWheel}
+            disabled={spinning || items.length === 0}
+            size="lg"
+            className="mt-8 h-14 w-full text-lg font-bold"
+          >
+            <Play aria-hidden="true" />
+            <span>{spinning ? "Dönüyor..." : "Çarkı Çevir!"}</span>
+          </Button>
 
-            <div className="space-y-3 max-h-[600px] overflow-y-auto">
-              {items.length > 0 ? (
-                items.map((item) => (
-                  <div
+          {selectedWinner && (
+            <div
+              role="status"
+              className="mt-6 flex items-center gap-4 rounded-lg bg-warning p-6 text-ink"
+            >
+              <Trophy className="h-10 w-10 shrink-0" aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="text-lg font-semibold">Kazanan!</p>
+                <p className="break-words font-display text-3xl font-bold md:text-4xl">
+                  {selectedWinner.name}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Items List */}
+        <div className="min-w-0 lg:border-l lg:border-stage-rule lg:pl-12">
+          <h2 className="mb-6 font-display text-xl font-bold text-stage-ink">
+            Ürünler (<span className="font-outlier tabular-nums">{items.length}</span>)
+          </h2>
+
+          <div className="max-h-[600px] overflow-y-auto">
+            {items.length > 0 ? (
+              <ul className="border-t border-stage-rule">
+                {items.map((item) => (
+                  <li
                     key={item.id}
-                    className="p-4 bg-gray-700 rounded-lg flex items-center justify-between"
-                    style={{ borderLeft: `4px solid ${item.color}` }}
+                    className="flex items-center justify-between gap-3 border-b border-stage-rule py-4"
                   >
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-100">{item.name}</h3>
-                      <div className="flex items-center space-x-4 mt-1">
-                        <span className="text-sm text-gray-400">
-                          Olasılık: {item.probability}%
-                        </span>
-                        <div
-                          className="w-4 h-4 rounded"
-                          style={{ backgroundColor: item.color }}
-                        ></div>
-                      </div>
+                    <div
+                      className="h-6 w-6 shrink-0 rounded-sm border border-stage-rule"
+                      style={{ backgroundColor: item.color }}
+                    ></div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="break-words font-sans text-base font-semibold text-stage-ink">{item.name}</h3>
+                      <span className="text-sm text-stage-muted">
+                        Olasılık: <span className="font-outlier tabular-nums">{item.probability}%</span>
+                      </span>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex shrink-0 items-center gap-2">
                       <button
                         onClick={() => {
                           setEditingItem(item);
                           setShowEditModal(true);
                         }}
-                        className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                        aria-label="Düzenle"
+                        className={`${stageSecondary} w-11 px-0`}
                       >
-                        <Edit3 className="w-4 h-4" />
+                        <Edit3 className="h-4 w-4" aria-hidden="true" />
                       </button>
-                      <button
+                      <Button
+                        variant="destructive"
+                        size="icon"
                         onClick={() => handleDeleteItem(item.id)}
-                        className="p-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                        aria-label="Sil"
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        <Trash2 aria-hidden="true" />
+                      </Button>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-12">
-                  <Settings className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-400">Henüz ürün eklenmemiş</p>
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                  >
-                    İlk Ürünü Ekle
-                  </button>
-                </div>
-              )}
-            </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="border-t border-stage-rule py-12">
+                <Settings className="mb-4 h-10 w-10 text-stage-muted" aria-hidden="true" />
+                <p className="text-stage-muted">Henüz ürün eklenmemiş</p>
+                <Button
+                  onClick={() => setShowAddModal(true)}
+                  className="mt-4"
+                >
+                  İlk Ürünü Ekle
+                </Button>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Add Item Modal */}
-        {showAddModal && (
-          <ItemModal
-            onClose={() => setShowAddModal(false)}
-            onSubmit={handleAddItem}
-            title="Yeni Ürün Ekle"
-          />
-        )}
-
-        {/* Edit Item Modal */}
-        {showEditModal && editingItem && (
-          <ItemModal
-            onClose={() => {
-              setShowEditModal(false);
-              setEditingItem(null);
-            }}
-            onSubmit={handleEditItem}
-            title="Ürün Düzenle"
-            initialData={editingItem}
-          />
-        )}
-
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
       </div>
+
+      {/* Add Item Modal */}
+      {showAddModal && (
+        <ItemModal
+          onClose={() => setShowAddModal(false)}
+          onSubmit={handleAddItem}
+          title="Yeni Ürün Ekle"
+        />
+      )}
+
+      {/* Edit Item Modal */}
+      {showEditModal && editingItem && (
+        <ItemModal
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingItem(null);
+          }}
+          onSubmit={handleEditItem}
+          title="Ürün Düzenle"
+          initialData={editingItem}
+        />
+      )}
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }
@@ -351,8 +355,8 @@ function WheelComponent({ items, spinning, selectedWinner }) {
 
   if (items.length === 0) {
     return (
-      <div className="w-full aspect-square bg-gray-700 rounded-full flex items-center justify-center">
-        <p className="text-gray-400 text-center px-8">
+      <div className="flex aspect-square w-full items-center justify-center rounded-full border border-stage-rule bg-stage-2">
+        <p className="px-8 text-center text-stage-muted">
           Ürün eklemek için yukarıdaki butona tıklayın
         </p>
       </div>
@@ -364,8 +368,8 @@ function WheelComponent({ items, spinning, selectedWinner }) {
   return (
     <div className="relative w-full aspect-square">
       {/* Pointer */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10">
-        <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[30px] border-t-red-500"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-raised">
+        <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[30px] border-t-error"></div>
       </div>
 
       {/* Wheel */}
@@ -417,7 +421,7 @@ function WheelComponent({ items, spinning, selectedWinner }) {
         })}
 
         {/* Center circle */}
-        <circle cx="50" cy="50" r="8" fill="#1f2937" stroke="#fff" strokeWidth="1" />
+        <circle cx="50" cy="50" r="8" className="fill-stage stroke-stage-ink" strokeWidth="1" />
       </svg>
     </div>
   );
@@ -453,74 +457,72 @@ function ItemModal({ onClose, onSubmit, title, initialData = null }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-modal flex items-center justify-center overflow-y-auto bg-ink/60 p-4"
       onClick={onClose}
     >
       <div
-        className="bg-gray-800 rounded-lg p-6 w-full max-w-md"
+        className="w-full max-w-md rounded-lg border border-rule bg-background p-6 text-foreground"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold text-gray-100 mb-4">{title}</h2>
+        <h2 className="mb-4 text-xl font-bold">{title}</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Ürün Adı *
-            </label>
-            <input
+        <form onSubmit={handleSubmit} className="space-y-2">
+          <Field id="raffle-item-name" label="Ürün Adı" required>
+            <Input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               required
-              className="w-full bg-gray-700 text-gray-100 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Örn: iPhone 15"
             />
-          </div>
+          </Field>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Olasılık (%) *
-            </label>
-            <input
+          <Field
+            id="raffle-item-probability"
+            label="Olasılık (%)"
+            help="Yüksek olasılık = daha fazla kazanma şansı"
+            required
+          >
+            <Input
               type="number"
               min="1"
               max="100"
               value={formData.probability}
               onChange={(e) => setFormData({...formData, probability: parseInt(e.target.value) || 0})}
               required
-              className="w-full bg-gray-700 text-gray-100 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="font-outlier tabular-nums"
             />
-            <p className="text-xs text-gray-400 mt-1">
-              Yüksek olasılık = daha fazla kazanma şansı
-            </p>
-          </div>
+          </Field>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Renk *
-            </label>
-            <div className="flex items-center space-x-2 mb-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="raffle-item-color">
+              Renk<span aria-hidden="true"> *</span>
+            </Label>
+            <div className="flex items-center gap-2">
               <input
                 type="color"
                 value={formData.color}
                 onChange={(e) => setFormData({...formData, color: e.target.value})}
-                className="w-12 h-12 rounded cursor-pointer"
+                aria-label="Renk"
+                className="h-control w-12 shrink-0 cursor-pointer rounded border border-input bg-background p-1"
               />
-              <input
+              <Input
+                id="raffle-item-color"
                 type="text"
                 value={formData.color}
                 onChange={(e) => setFormData({...formData, color: e.target.value})}
-                className="flex-1 bg-gray-700 text-gray-100 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="min-w-0 flex-1 font-outlier"
                 placeholder="#3b82f6"
               />
             </div>
-            <div className="grid grid-cols-9 gap-2">
+            <div className="mt-1 grid grid-cols-9 gap-2">
               {presetColors.map(color => (
                 <button
                   key={color}
                   type="button"
                   onClick={() => setFormData({...formData, color})}
-                  className="w-8 h-8 rounded hover:scale-110 transition-transform"
+                  aria-pressed={formData.color === color}
+                  className="h-8 w-full min-w-0 rounded-sm outline-offset-2 aria-pressed:outline aria-pressed:outline-2 aria-pressed:outline-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
                   style={{ backgroundColor: color }}
                   title={color}
                 />
@@ -528,20 +530,21 @@ function ItemModal({ onClose, onSubmit, title, initialData = null }) {
             </div>
           </div>
 
-          <div className="flex space-x-3 pt-4">
-            <button
+          <div className="flex gap-3 pt-6">
+            <Button
               type="button"
+              variant="outline"
               onClick={onClose}
-              className="flex-1 bg-gray-600 text-gray-100 py-2 rounded hover:bg-gray-700 transition-colors"
+              className="flex-1"
             >
               İptal
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors"
+              className="flex-1"
             >
               {initialData ? "Güncelle" : "Ekle"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

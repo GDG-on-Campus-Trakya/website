@@ -6,24 +6,15 @@ export default function NotFound() {
   const t = useTranslations('notFound');
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-black via-gray-900 to-slate-900 text-white">
-      <div className="text-center p-4">
-        <h1 className="text-8xl md:text-9xl font-bold text-purple-500 animate-pulse">
-          404
-        </h1>
-        <p className="mt-4 text-xl md:text-2xl font-semibold">{t('title')}</p>
-        <p className="mt-2 text-gray-400">{t('description')}</p>
-        <div className="mt-8">
-          <Link href="/">
-            <Button
-              variant="secondary"
-              className="rounded-full px-8 py-3 text-lg font-bold transition-transform hover:scale-105"
-            >
-              {t('backHome')}
-            </Button>
-          </Link>
-        </div>
-      </div>
+    <div className="mx-auto flex w-full max-w-page flex-col items-start px-gutter py-16 md:py-28">
+      <p className="font-outlier text-sm text-muted-foreground">404</p>
+      <h1 className="mt-3 max-w-2xl font-display text-[length:var(--text-display-s)] font-extrabold">
+        {t('title')}
+      </h1>
+      <p className="mt-4 max-w-measure text-ink-2">{t('description')}</p>
+      <Button asChild className="mt-8">
+        <Link href="/">{t('backHome')}</Link>
+      </Button>
     </div>
   );
 }

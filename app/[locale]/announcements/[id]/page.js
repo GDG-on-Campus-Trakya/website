@@ -6,11 +6,12 @@ import { Link } from "@/i18n/navigation";
 import { announcementsUtils } from '@/utils/announcementsUtils';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { motion } from 'framer-motion';
 import { Calendar, User, Clock, Share2, Linkedin, ChevronRight, Instagram } from 'lucide-react';
 import Image from 'next/image';
 import { useLocale } from 'next-intl';
 import { formatLocalizedDate, getLocalizedField } from '@/utils/localeUtils';
+import { Button } from '@/components/ui/button';
+import { PageContainer, Section } from '@/components/ui/page';
 
 export default function AnnouncementDetailPage() {
   const params = useParams();
@@ -89,10 +90,9 @@ export default function AnnouncementDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-screen font-sans bg-gradient-to-b from-[#1a1a2e] to-[#000000] text-white items-center justify-center px-4">
-        <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 border-2 border-blue-500 border-t-transparent mb-4"></div>
-        <p className="text-gray-400 text-xs sm:text-sm text-center">Duyuru yükleniyor...</p>
-      </div>
+      <PageContainer>
+        <p role="status" className="text-sm text-muted-foreground">Duyuru yükleniyor...</p>
+      </PageContainer>
     );
   }
 
@@ -101,137 +101,130 @@ export default function AnnouncementDetailPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen font-sans bg-gradient-to-b from-[#1a1a2e] to-[#000000] text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 pt-20 sm:pt-24">
-        {/* Breadcrumbs */}
-<nav aria-label="Breadcrumb" className="mb-4 sm:mb-6">
-  <ol className="flex items-center gap-1 text-xs sm:text-sm text-gray-400 min-w-0">
-    <li className="shrink-0">
-      <Link href="/" className="hover:text-white transition-colors whitespace-nowrap">
-        Ana Sayfa
-      </Link>
-    </li>
-    <li className="shrink-0"><ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" /></li>
-    <li className="shrink-0">
-      <Link href="/announcements" className="hover:text-white transition-colors whitespace-nowrap">
-        Duyurular
-      </Link>
-    </li>
-    <li className="shrink-0"><ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" /></li>
-    {/* Uzun başlık: shrink kaldırıldı, ellipsis aktif */}
-    <li className="min-w-0">
-      <span className="text-white block truncate max-w-[40vw] sm:max-w-[60vw] lg:max-w-[40ch]">
-        {announcementTitle}
-      </span>
-    </li>
-  </ol>
-</nav>
+    <PageContainer>
+      {/* Breadcrumbs */}
+      <nav aria-label="Breadcrumb" className="mb-6">
+        <ol className="flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
+          <li className="shrink-0">
+            <Link href="/" className="whitespace-nowrap rounded-sm hover:text-ink hover:underline hover:underline-offset-4">
+              Ana Sayfa
+            </Link>
+          </li>
+          <li className="shrink-0"><ChevronRight className="h-4 w-4" aria-hidden="true" /></li>
+          <li className="shrink-0">
+            <Link href="/announcements" className="whitespace-nowrap rounded-sm hover:text-ink hover:underline hover:underline-offset-4">
+              Duyurular
+            </Link>
+          </li>
+          <li className="shrink-0"><ChevronRight className="h-4 w-4" aria-hidden="true" /></li>
+          {/* Uzun başlık: shrink kaldırıldı, ellipsis aktif */}
+          <li className="min-w-0">
+            <span className="block max-w-[40vw] truncate text-ink sm:max-w-[60vw] lg:max-w-[40ch]">
+              {announcementTitle}
+            </span>
+          </li>
+        </ol>
+      </nav>
 
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
-          {/* Main Content */}
-          <motion.article
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-2 bg-gray-800/30 backdrop-blur-md rounded-xl sm:rounded-2xl overflow-hidden border border-gray-700 shadow-2xl"
-          >
-            {announcement.imageUrl && !imageError && (
-              <div className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 bg-gray-900">
-                <Image
-                  src={announcement.imageUrl}
-                  alt={announcementTitle}
-                  fill
-                  className="object-cover"
-                  onError={() => setImageError(true)}
-                  priority
-                />
-              </div>
-            )}
-            <div className="p-4 sm:p-6 lg:p-8">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4 leading-tight break-words">
-                {announcementTitle}
-              </h1>
-              <div className="prose prose-sm sm:prose-base lg:prose-lg prose-invert max-w-none text-gray-300 leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                {announcementContent}
-              </div>
-              {!announcementContent && (
-                <p className="text-gray-400 italic text-sm sm:text-base">Bu duyuru için içerik bulunmuyor.</p>
-              )}
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:gap-12">
+        {/* Main Content */}
+        <article className="min-w-0">
+          <h1 className="break-words text-4xl font-extrabold leading-tight">
+            {announcementTitle}
+          </h1>
+          {announcement.imageUrl && !imageError && (
+            <div className="relative mt-6 aspect-[16/9] w-full overflow-hidden rounded-lg bg-paper-2">
+              <Image
+                src={announcement.imageUrl}
+                alt={announcementTitle}
+                fill
+                className="object-cover"
+                onError={() => setImageError(true)}
+                priority
+              />
             </div>
-          </motion.article>
+          )}
+          <div className="mt-6 max-w-measure whitespace-pre-wrap break-words leading-relaxed text-ink-2 [overflow-wrap:anywhere]">
+            {announcementContent}
+          </div>
+          {!announcementContent && (
+            <p className="text-sm italic text-muted-foreground">Bu duyuru için içerik bulunmuyor.</p>
+          )}
+        </article>
 
-          {/* Sidebar */}
-          <motion.aside initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4 sm:space-y-6 lg:space-y-8">
-            {/* Author & Date */}
-            <div className="bg-gray-800/30 backdrop-blur-md rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-700">
-              <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Duyuru Bilgileri</h3>
-              <div className="space-y-3 sm:space-y-4 text-sm">
-                {announcement.authorName && (
-                  <div className="flex items-start gap-3">
-                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 shrink-0 mt-0.5" />
-                    <div className="min-w-0 flex-1">
-                      <span className="text-gray-400 text-xs sm:text-sm">Yazar</span>
-                      <p className="text-white font-medium text-sm sm:text-base break-words">{announcement.authorName}</p>
-                    </div>
-                  </div>
-                )}
+        {/* Sidebar */}
+        <aside className="min-w-0">
+          {/* Author & Date */}
+          <Section title="Duyuru Bilgileri" className="mt-0 md:mt-0">
+            <dl className="space-y-4 text-sm">
+              {announcement.authorName && (
                 <div className="flex items-start gap-3">
-                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 shrink-0 mt-0.5" />
+                  <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                   <div className="min-w-0 flex-1">
-                    <span className="text-gray-400 text-xs sm:text-sm">Yayınlanma</span>
-                    <p className="text-white font-medium text-sm sm:text-base break-words">{formatDate(announcement.createdAt)}</p>
+                    <dt className="text-xs text-muted-foreground">Yazar</dt>
+                    <dd className="break-words font-medium">{announcement.authorName}</dd>
                   </div>
                 </div>
-                {announcement.updatedAt && announcement.updatedAt !== announcement.createdAt && (
-                  <div className="flex items-start gap-3">
-                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 shrink-0 mt-0.5" />
-                    <div className="min-w-0 flex-1">
-                      <span className="text-gray-400 text-xs sm:text-sm">Güncellenme</span>
-                      <p className="text-white font-medium text-sm sm:text-base break-words">{formatDate(announcement.updatedAt)}</p>
-                    </div>
-                  </div>
-                )}
+              )}
+              <div className="flex items-start gap-3">
+                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <dt className="text-xs text-muted-foreground">Yayınlanma</dt>
+                  <dd className="break-words font-outlier">{formatDate(announcement.createdAt)}</dd>
+                </div>
               </div>
-            </div>
+              {announcement.updatedAt && announcement.updatedAt !== announcement.createdAt && (
+                <div className="flex items-start gap-3">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  <div className="min-w-0 flex-1">
+                    <dt className="text-xs text-muted-foreground">Güncellenme</dt>
+                    <dd className="break-words font-outlier">{formatDate(announcement.updatedAt)}</dd>
+                  </div>
+                </div>
+              )}
+            </dl>
+          </Section>
 
-            {/* Share */}
-            <div className="bg-gray-800/30 backdrop-blur-md rounded-2xl p-6 border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-4">Paylaş</h3>
-              <div className="flex gap-4">
-                <button onClick={shareOnX} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition-colors">
-                  <svg width="20" height="20" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" fill="white"/>
-                  </svg>
-                </button>
-                <button onClick={shareOnLinkedIn} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition-colors">
-                  <Linkedin className="w-5 h-5 text-[#0A66C2]" />
-                </button>
-                <a href="https://www.instagram.com/gdgoncampustu/" target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition-colors">
-                  <Instagram className="w-5 h-5 text-[#E1306C]" />
+          {/* Share */}
+          <Section title="Paylaş" className="mt-8 md:mt-8">
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={shareOnX} aria-label="X">
+                <svg width="20" height="20" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" fill="currentColor"/>
+                </svg>
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={shareOnLinkedIn} aria-label="LinkedIn">
+                <Linkedin className="!size-5 text-[#0A66C2]" aria-hidden="true" />
+              </Button>
+              <Button asChild variant="outline" className="flex-1">
+                <a href="https://www.instagram.com/gdgoncampustu/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                  <Instagram className="!size-5 text-[#E1306C]" aria-hidden="true" />
                 </a>
-              </div>
+              </Button>
             </div>
+          </Section>
 
-            {/* Recent Announcements */}
-            {recentAnnouncements.length > 0 && (
-              <div className="bg-gray-800/30 backdrop-blur-md rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-700">
-                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Son Duyurular</h3>
-                <div className="space-y-3 sm:space-y-4">
-                  {recentAnnouncements.map(item => (
-                    <Link key={item.id} href={`/announcements/${item.id}`}>
-                      <div className="block p-3 sm:p-4 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition-colors">
-                        <p className="font-medium text-white text-sm sm:text-base line-clamp-2 mb-1">
-                          {getLocalizedField(item, 'title', locale)}
-                        </p>
-                        <p className="text-xs text-gray-400">{formatDate(item.createdAt)}</p>
-                      </div>
+          {/* Recent Announcements */}
+          {recentAnnouncements.length > 0 && (
+            <Section title="Son Duyurular" className="mt-8 md:mt-8">
+              <ul>
+                {recentAnnouncements.map(item => (
+                  <li key={item.id}>
+                    <Link
+                      href={`/announcements/${item.id}`}
+                      className="group block border-b border-rule py-3 transition-colors duration-micro ease-out hover:bg-paper-2"
+                    >
+                      <p className="line-clamp-2 font-medium group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
+                        {getLocalizedField(item, 'title', locale)}
+                      </p>
+                      <p className="mt-1 font-outlier text-xs text-muted-foreground">{formatDate(item.createdAt)}</p>
                     </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </motion.aside>
-        </div>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+        </aside>
       </div>
 
       <ToastContainer
@@ -244,8 +237,8 @@ export default function AnnouncementDetailPage() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
+        theme="light"
       />
-    </div>
+    </PageContainer>
   );
 }

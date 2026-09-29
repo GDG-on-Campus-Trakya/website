@@ -1,13 +1,38 @@
 import ConditionalAnalytics from '@/components/ConditionalAnalytics';
 import { getLocale } from 'next-intl/server';
 import './globals.css';
-import { Inter } from 'next/font/google';
+import {
+  Bricolage_Grotesque,
+  IBM_Plex_Sans,
+  IBM_Plex_Mono
+} from 'next/font/google';
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
+// Turkish needs latin-ext (ğ ş ı İ). Display + body + one outlier for dates and counts.
+const bricolage = Bricolage_Grotesque({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-bricolage',
   display: 'swap'
 });
+
+const plex = IBM_Plex_Sans({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500', '600'],
+  variable: '--font-plex',
+  display: 'swap'
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500'],
+  variable: '--font-plex-mono',
+  display: 'swap'
+});
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover'
+};
 
 const baseUrl =
   process.env.NEXT_PUBLIC_BASE_URL || 'https://gdgoncampustu.com';
@@ -153,19 +178,18 @@ export default async function RootLayout({ children }) {
   };
 
   return (
-    <html lang={locale} className="h-full">
+    <html
+      lang={locale}
+      className={`h-full ${bricolage.variable} ${plex.variable} ${plexMono.variable}`}
+    >
       <head>
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
-        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body
-        className={`${inter.variable} font-sans flex flex-col min-h-screen custom-scrollbar overflow-x-hidden`}
+        className="font-sans flex flex-col min-h-screen"
       >
         {children}
         <ConditionalAnalytics />

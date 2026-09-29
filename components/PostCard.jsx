@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Heart, MessageCircle, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { socialUtils } from "../utils/socialUtils";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../firebase";
@@ -136,10 +138,10 @@ export default function PostCard({
     post.eventName;
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg overflow-hidden max-w-full">
-      <div className="flex items-center justify-between p-4 gap-2">
-        <div className="flex items-center space-x-3 min-w-0 flex-1">
-          <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-pink-500">
+    <article className="max-w-full border-b border-rule py-6">
+      <div className="flex items-center justify-between gap-3 pb-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full border border-rule bg-paper-3">
             {(() => {
               const profilePhoto =
                 postUserProfile?.photoURL ||
@@ -155,59 +157,47 @@ export default function PostCard({
                     }
                     width={32}
                     height={32}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                   />
                 );
               }
 
               return (
-                <div className="w-full h-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                  <User className="w-4 h-4 text-white" />
+                <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                  <User className="h-4 w-4" aria-hidden="true" />
                 </div>
               );
             })()}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="max-w-full">
-              <h3 className="text-white font-semibold text-sm break-words">
-                {postUserProfile?.name ||
-                  post.userName ||
-                  post.userEmail?.split("@")[0]}
-              </h3>
-              {eventName && (
-                <p className="text-blue-400 text-xs break-words">
-                  • {eventName}
-                </p>
-              )}
-            </div>
-            <p className="text-gray-400 text-xs">{formatDate(post.timestamp)}</p>
+          <div className="min-w-0 flex-1">
+            <h3 className="break-words font-sans text-sm font-semibold">
+              {postUserProfile?.name ||
+                post.userName ||
+                post.userEmail?.split("@")[0]}
+            </h3>
+            {eventName && (
+              <p className="break-words text-xs text-ink-2">{eventName}</p>
+            )}
+            <p className="font-outlier text-xs text-muted-foreground">
+              {formatDate(post.timestamp)}
+            </p>
           </div>
         </div>
 
         {showAdminActions && (
-          <div className="flex space-x-1">
-            <button
-              onClick={handleHide}
-              className={`px-3 py-1 rounded-full text-xs ${
-                post.isHidden
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-yellow-600 text-white hover:bg-yellow-700"
-              }`}
-            >
+          <div className="flex shrink-0 gap-2">
+            <Button variant="outline" size="sm" onClick={handleHide}>
               {post.isHidden ? copy.show : copy.hide}
-            </button>
-            <button
-              onClick={handleDelete}
-              className="bg-red-600 text-white px-3 py-1 rounded-full text-xs hover:bg-red-700"
-            >
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleDelete}>
               {copy.delete}
-            </button>
+            </Button>
           </div>
         )}
       </div>
 
       <div
-        className="relative cursor-pointer max-w-full overflow-hidden"
+        className="relative aspect-[4/3] max-w-full cursor-pointer overflow-hidden rounded-lg bg-paper-2"
         onClick={() => onPostClick && onPostClick(post)}
       >
         <Image
@@ -215,7 +205,7 @@ export default function PostCard({
           alt={post.description || "Post image"}
           width={600}
           height={400}
-          className="w-full h-64 sm:h-80 lg:h-96 object-cover hover:opacity-95 transition-opacity max-w-full"
+          className="h-full w-full max-w-full object-cover"
           priority={false}
           loading="lazy"
           placeholder="blur"
@@ -223,51 +213,50 @@ export default function PostCard({
         />
 
         {post.isHidden && (
-          <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center">
-            <span className="text-white font-semibold">{copy.hiddenPost}</span>
+          <div className="absolute inset-0 flex items-center justify-center bg-ink/60">
+            <span className="font-semibold text-brand-ink">{copy.hiddenPost}</span>
           </div>
         )}
       </div>
 
-      <div className="p-4 sm:p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-4">
+      <div className="pt-2">
+        <div className="flex items-center justify-between gap-3">
+          <div className="-ml-2 flex items-center">
             <button
               onClick={handleLike}
               disabled={!user || isLiking}
-              className={`flex items-center space-x-2 transition-colors ${
-                isLiked ? "text-red-500" : "text-gray-400 hover:text-red-500"
+              className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded px-2 transition-colors duration-micro ease-out ${
+                isLiked ? "text-error" : "text-ink-2 hover:text-error"
               } ${!user ? "cursor-not-allowed opacity-50" : ""}`}
             >
-              <Heart className={`w-6 h-6 ${isLiked ? "fill-current" : ""}`} />
-              <span className="text-sm font-medium">{likeCount}</span>
+              <Heart
+                className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`}
+                aria-hidden="true"
+              />
+              <span className="text-sm tabular-nums">{likeCount}</span>
             </button>
 
             <button
               onClick={() => onPostClick && onPostClick(post)}
-              className="flex items-center space-x-2 text-gray-400 hover:text-blue-500 transition-colors"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded px-2 text-ink-2 transition-colors duration-micro ease-out hover:text-brand"
             >
-              <MessageCircle className="w-6 h-6" />
-              <span className="text-sm">{post.commentCount || 0}</span>
+              <MessageCircle className="h-5 w-5" aria-hidden="true" />
+              <span className="text-sm tabular-nums">{post.commentCount || 0}</span>
             </button>
           </div>
 
-          {post.isAdminPost && (
-            <div className="bg-green-600 px-2 py-1 rounded-full">
-              <span className="text-white text-xs font-medium">Admin</span>
-            </div>
-          )}
+          {post.isAdminPost && <Badge variant="accent">Admin</Badge>}
         </div>
 
         {post.description && (
-          <div className="text-[#d1d1e0] text-sm leading-relaxed">
-            <span className="font-semibold text-white">
+          <p className="max-w-measure text-sm leading-relaxed text-ink-2">
+            <span className="font-semibold text-ink">
               {post.userName || post.userEmail}
             </span>{" "}
             {post.description}
-          </div>
+          </p>
         )}
       </div>
-    </div>
+    </article>
   );
 }

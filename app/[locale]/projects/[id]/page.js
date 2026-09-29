@@ -19,11 +19,14 @@ import {
   increment,
 } from "firebase/firestore";
 import { db, auth } from "@/firebase";
-import { motion } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLocale } from "next-intl";
 import { formatLocalizedDate, getLocalizedField } from "@/utils/localeUtils";
+import { ArrowLeft, Eye, Github, Heart, MessageSquare, Share2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { EmptyState, PageContainer, Skeleton } from "@/components/ui/page";
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -234,61 +237,79 @@ export default function ProjectDetailPage() {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-      },
-    },
-  };
-
   const projectTitle = getLocalizedField(project, "title", locale);
   const projectDescription = getLocalizedField(project, "description", locale);
   const sortedComments = [...(project?.comments || [])].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
 
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: projectTitle,
+        text: projectDescription,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success(copy.copied);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#000000] text-white">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-lg">{copy.loading}</p>
+      <PageContainer>
+        <p className="text-ink-2">{copy.loading}</p>
+        <div className="mt-6 space-y-4" aria-hidden="true">
+          <Skeleton className="h-10 w-2/3" />
+          <Skeleton className="aspect-[16/9] w-full max-w-3xl" />
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   if (notFound) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#000000] text-white">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">404</h1>
-          <p className="text-xl mb-8">{copy.notFound}</p>
-          <Link
-            href="/projects"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
-          >
-            {copy.backToProjects}
-          </Link>
-        </div>
-      </div>
+      <PageContainer>
+        <h1 className="font-display text-display-s font-extrabold">404</h1>
+        <p className="mt-3 text-md text-ink-2">{copy.notFound}</p>
+        <Button asChild className="mt-6">
+          <Link href="/projects">{copy.backToProjects}</Link>
+        </Button>
+      </PageContainer>
     );
   }
+
+  const isLiked = Boolean(project.likes?.includes(user?.uid));
+
+  const actions = (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleLike}
+        aria-pressed={isLiked}
+        className={isLiked ? "border-error text-error" : undefined}
+      >
+        <Heart className={isLiked ? "fill-current" : undefined} aria-hidden="true" />
+        <span className="font-outlier tabular-nums">{project.likes?.length || 0}</span>
+      </Button>
+
+      {project.githubLink && (
+        <Button asChild variant="outline">
+          <a href={project.githubLink} target="_blank" rel="noopener noreferrer">
+            <Github aria-hidden="true" />
+            GitHub
+          </a>
+        </Button>
+      )}
+
+      <Button type="button" variant="outline" onClick={handleShare}>
+        <Share2 aria-hidden="true" />
+        {copy.share}
+      </Button>
+    </>
+  );
 
   return (
     <>
@@ -333,416 +354,174 @@ export default function ProjectDetailPage() {
         )}
       </Head>
 
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-        className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#000000] text-white"
-      >
-        <motion.div variants={itemVariants} className="relative h-96 overflow-hidden">
-          {project.imageUrl ? (
-            <>
-              <img
-                src={project.imageUrl}
-                alt={projectTitle}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-            </>
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-800" />
+      <PageContainer>
+        <Link
+          href="/projects"
+          className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-sm text-sm font-medium text-brand underline underline-offset-4 decoration-1 transition-colors duration-micro ease-out hover:decoration-2"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          {copy.backToProjects}
+        </Link>
+
+        <header className="mb-8 mt-4 border-b border-rule pb-6 md:mb-10 md:pb-8">
+          <h1 className="max-w-3xl font-display text-4xl font-extrabold md:text-5xl">
+            {projectTitle}
+          </h1>
+          {project.createdAt && (
+            <p className="mt-3 font-outlier text-sm text-muted-foreground">
+              {formatLocalizedDate(project.createdAt.toDate(), locale, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
           )}
+        </header>
 
-          <div className="absolute inset-0 flex items-end">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-              <Link
-                href="/projects"
-                className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                {copy.backToProjects}
-              </Link>
-
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4">
-                {projectTitle}
-              </h1>
-
-              {project.createdAt && (
-                <div className="flex items-center gap-4 text-white/90">
-                  <span>
-                    {formatLocalizedDate(project.createdAt.toDate(), locale, {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        <div className="lg:hidden sticky top-0 bg-black/80 backdrop-blur-md border-b border-gray-700 p-4 z-40">
-          <div className="flex items-center justify-center gap-4">
-            <motion.button
-              onClick={handleLike}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
-                project.likes?.includes(user?.uid)
-                  ? "bg-red-600/20 text-red-400 border border-red-500/30"
-                  : "bg-gray-700/50 text-gray-300"
-              }`}
-            >
-              <svg
-                className="w-5 h-5"
-                fill={project.likes?.includes(user?.uid) ? "currentColor" : "none"}
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+        <div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_16rem]">
+          <div className="min-w-0 space-y-12">
+            {project.imageUrl && (
+              <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-paper-2">
+                <img
+                  src={project.imageUrl}
+                  alt={projectTitle}
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
-              </svg>
-              <span className="text-sm font-medium">
-                {project.likes?.length || 0}
-              </span>
-            </motion.button>
-
-            {project.githubLink && (
-              <motion.a
-                href={project.githubLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-700/50 text-gray-300 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                </svg>
-                <span className="text-sm font-medium">GitHub</span>
-              </motion.a>
+              </div>
             )}
 
-            <motion.button
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: projectTitle,
-                    text: projectDescription,
-                    url: window.location.href,
-                  });
-                } else {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast.success(copy.copied);
-                }
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/20 text-blue-400 transition-colors"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-                />
-              </svg>
-              <span className="text-sm font-medium">{copy.share}</span>
-            </motion.button>
-          </div>
-        </div>
+            <div className="flex flex-wrap items-center gap-3 lg:hidden">{actions}</div>
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <motion.div variants={itemVariants} className="lg:col-span-3 space-y-6">
-              <div>
-                <h2 className="text-2xl font-semibold mb-4 text-white">
-                  {copy.about}
+            <section>
+              <h2 className="border-t-2 border-ink pt-3 font-display text-xl font-bold">
+                {copy.about}
+              </h2>
+              <p className="mt-4 max-w-measure whitespace-pre-wrap text-md text-ink-2">
+                {projectDescription}
+              </p>
+            </section>
+
+            {project.collaborators && project.collaborators.length > 0 && (
+              <section>
+                <h2 className="border-t-2 border-ink pt-3 font-display text-xl font-bold">
+                  {copy.collaborators}
                 </h2>
-                <div className="prose prose-invert max-w-none">
-                  <p className="text-gray-300 text-lg leading-relaxed whitespace-pre-wrap">
-                    {projectDescription}
-                  </p>
-                </div>
-              </div>
+                <ul className="mt-2 divide-y divide-rule border-b border-rule">
+                  {project.collaborators.map((collab, index) => (
+                    <li key={index} className="flex items-center gap-4 py-3">
+                      <img
+                        src={collab.photoURL || "/logo.svg"}
+                        alt={collab.name}
+                        className="h-10 w-10 shrink-0 rounded-full object-cover"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-ink">
+                          {collab.name || copy.unnamed}
+                        </p>
+                        <p className="truncate text-sm text-muted-foreground">{collab.email}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
-              {project.collaborators && project.collaborators.length > 0 && (
-                <div>
-                  <h2 className="text-2xl font-semibold mb-6 text-white">
-                    {copy.collaborators}
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {project.collaborators.map((collab, index) => (
-                      <motion.div
-                        key={index}
-                        whileHover={{ scale: 1.02 }}
-                        className="flex items-center gap-4 bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50"
-                      >
-                        <img
-                          src={collab.photoURL || "/logo.svg"}
-                          alt={collab.name}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                        <div>
-                          <p className="font-medium text-white">
-                            {collab.name || copy.unnamed}
-                          </p>
-                          <p className="text-sm text-gray-400">{collab.email}</p>
-                        </div>
-                      </motion.div>
-                    ))}
+            <section>
+              <h2 className="border-t-2 border-ink pt-3 font-display text-xl font-bold">
+                {copy.comments} (<span className="tabular-nums">{project.comments?.length || 0}</span>)
+              </h2>
+
+              {user ? (
+                <form onSubmit={handleComment} className="mt-4 flex gap-4">
+                  <img
+                    src={userProfilePhoto || "/logo.svg"}
+                    alt="Your profile"
+                    className="h-10 w-10 shrink-0 rounded-full object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <Textarea
+                      value={newComment}
+                      onChange={(event) => setNewComment(event.target.value)}
+                      placeholder={copy.commentPlaceholder}
+                      aria-label={copy.commentPlaceholder}
+                      rows={3}
+                    />
+                    <div className="mt-3 flex justify-end">
+                      <Button type="submit" disabled={!newComment.trim()}>
+                        {copy.commentButton}
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                </form>
+              ) : (
+                <p className="mt-4 border-y border-rule py-4 text-ink-2">{copy.signInNotice}</p>
               )}
 
-              <div>
-                <h2 className="text-2xl font-semibold mb-6 text-white">
-                  {copy.comments} ({project.comments?.length || 0})
-                </h2>
-
-                {user ? (
-                  <motion.form
-                    onSubmit={handleComment}
-                    className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 mb-6"
-                  >
-                    <div className="flex gap-4">
-                      <img
-                        src={userProfilePhoto || "/logo.svg"}
-                        alt="Your profile"
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div className="flex-1">
-                        <textarea
-                          value={newComment}
-                          onChange={(event) => setNewComment(event.target.value)}
-                          placeholder={copy.commentPlaceholder}
-                          rows={3}
-                          className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              <div className="mt-6">
+                {sortedComments.length > 0 ? (
+                  <ul className="divide-y divide-rule border-y border-rule">
+                    {sortedComments.map((comment) => (
+                      <li key={comment.id} className="flex gap-3 py-4">
+                        <img
+                          src={comment.userPhoto || "/logo.svg"}
+                          alt={comment.userName}
+                          className="h-8 w-8 shrink-0 rounded-full object-cover"
                         />
-                        <div className="flex justify-end mt-3">
-                          <button
-                            type="submit"
-                            disabled={!newComment.trim()}
-                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg transition-colors"
-                          >
-                            {copy.commentButton}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.form>
-                ) : (
-                  <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 mb-6 text-center">
-                    <p className="text-gray-400">{copy.signInNotice}</p>
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  {sortedComments.length > 0 ? (
-                    sortedComments.map((comment) => (
-                      <motion.div
-                        key={comment.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-4 border border-gray-700/30"
-                      >
-                        <div className="flex gap-3">
-                          <img
-                            src={comment.userPhoto || "/logo.svg"}
-                            alt={comment.userName}
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="font-medium text-white text-sm">
-                                {comment.userName}
-                              </span>
-                              <span className="text-xs text-gray-400">
-                                {formatLocalizedDate(comment.createdAt, locale, {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </span>
-                            </div>
-                            <p className="text-gray-300 text-sm leading-relaxed">
-                              {comment.text}
-                            </p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                            <span className="text-sm font-semibold text-ink">
+                              {comment.userName}
+                            </span>
+                            <span className="font-outlier text-xs text-muted-foreground">
+                              {formatLocalizedDate(comment.createdAt, locale, {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
                           </div>
+                          <p className="mt-1 max-w-measure text-ink-2">{comment.text}</p>
                         </div>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-400">{copy.noComments}</p>
-                      <p className="text-gray-500 text-sm mt-1">
-                        {copy.firstComment}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div variants={itemVariants} className="lg:block hidden">
-              <div className="sticky top-8 space-y-4">
-                <motion.button
-                  onClick={handleLike}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors w-full justify-center ${
-                    project.likes?.includes(user?.uid)
-                      ? "bg-red-600/20 text-red-400 border border-red-500/30"
-                      : "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
-                  }`}
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill={project.likes?.includes(user?.uid) ? "currentColor" : "none"}
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium">
-                    {project.likes?.length || 0}
-                  </span>
-                </motion.button>
-
-                {project.githubLink && (
-                  <motion.a
-                    href={project.githubLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-700/50 text-gray-300 hover:bg-gray-700 transition-colors w-full justify-center"
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                    </svg>
-                    <span className="text-sm font-medium">GitHub</span>
-                  </motion.a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <EmptyState title={copy.noComments} description={copy.firstComment} />
                 )}
-
-                <motion.button
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({
-                        title: projectTitle,
-                        text: projectDescription,
-                        url: window.location.href,
-                      });
-                    } else {
-                      navigator.clipboard.writeText(window.location.href);
-                      toast.success(copy.copied);
-                    }
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors w-full justify-center"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium">{copy.share}</span>
-                </motion.button>
-
-                <div className="mt-8 space-y-3 text-sm text-gray-400">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                      <span>{copy.views}</span>
-                    </div>
-                    <span className="text-white font-medium">
-                      {project.views || 0}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                        />
-                      </svg>
-                      <span>{copy.commentStat}</span>
-                    </div>
-                    <span className="text-white font-medium">
-                      {project.comments?.length || 0}
-                    </span>
-                  </div>
-                </div>
               </div>
-            </motion.div>
+            </section>
           </div>
+
+          <aside className="hidden lg:block">
+            <div className="sticky top-8 space-y-6">
+              <div className="flex flex-col items-stretch gap-3 [&>*]:w-full">{actions}</div>
+
+              <dl className="divide-y divide-rule border-y border-rule text-sm">
+                <div className="flex items-center justify-between gap-4 py-3">
+                  <dt className="flex items-center gap-2 text-muted-foreground">
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                    {copy.views}
+                  </dt>
+                  <dd className="font-outlier font-medium tabular-nums text-ink">
+                    {project.views || 0}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-4 py-3">
+                  <dt className="flex items-center gap-2 text-muted-foreground">
+                    <MessageSquare className="h-4 w-4" aria-hidden="true" />
+                    {copy.commentStat}
+                  </dt>
+                  <dd className="font-outlier font-medium tabular-nums text-ink">
+                    {project.comments?.length || 0}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </aside>
         </div>
-      </motion.div>
+      </PageContainer>
 
       <ToastContainer
         position="top-right"
@@ -754,7 +533,7 @@ export default function ProjectDetailPage() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
+        theme="light"
       />
     </>
   );

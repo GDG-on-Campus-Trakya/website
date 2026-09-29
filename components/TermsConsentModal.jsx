@@ -17,7 +17,7 @@ import { Link } from "@/i18n/navigation";
 
 const COPY = {
   tr: {
-    title: "Hoş Geldiniz! 👋",
+    title: "Hoş Geldiniz!",
     description:
       "GDG on Campus Trakya platformuna hoş geldiniz. Devam etmeden önce lütfen aşağıdaki şartları okuyup kabul edin.",
     privacyPrefix: "Gizlilik Politikasını",
@@ -35,7 +35,7 @@ const COPY = {
     accept: "Kabul Et ve Devam Et",
   },
   en: {
-    title: "Welcome! 👋",
+    title: "Welcome!",
     description:
       "Welcome to the GDG on Campus Trakya platform. Before continuing, please read and accept the terms below.",
     privacyPrefix: "I have read and accept the",
@@ -77,101 +77,78 @@ export default function TermsConsentModal({ isOpen, onAccept, onDecline }) {
 
   const bothAccepted = privacyAccepted && termsAccepted;
 
+  const linkClass =
+    "text-brand underline underline-offset-4 decoration-1 hover:decoration-2";
+
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent
-        className="max-h-[90vh] max-w-2xl overflow-y-auto border-gray-700 bg-gray-800 text-white"
+        className="max-w-2xl [&>button]:hidden"
         onInteractOutside={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => event.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-blue-400">
-            {copy.title}
-          </DialogTitle>
-          <DialogDescription className="mt-4 text-base text-gray-300">
+          <DialogTitle className="text-xl">{copy.title}</DialogTitle>
+          <DialogDescription className="mt-2 text-base text-ink-2">
             {copy.description}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="my-6 space-y-6">
-          <div className="flex items-start space-x-3 rounded-lg border border-gray-600/50 bg-gray-700/30 p-4">
+        <div className="my-2">
+          <div className="flex items-start gap-3 border-t border-rule py-4">
             <Checkbox
               id="privacy"
               checked={privacyAccepted}
               onCheckedChange={setPrivacyAccepted}
-              className="mt-1 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
+              className="mt-0.5"
             />
-            <div className="flex-1">
-              <Label
-                htmlFor="privacy"
-                className="cursor-pointer text-sm font-medium text-white"
-              >
+            <div className="min-w-0 flex-1">
+              <Label htmlFor="privacy" className="cursor-pointer text-sm leading-normal">
                 {locale === "en" ? `${copy.privacyPrefix} ` : ""}
-                <Link
-                  href="/privacy"
-                  target="_blank"
-                  className="text-blue-400 underline hover:text-blue-300"
-                >
+                <Link href="/privacy" target="_blank" className={linkClass}>
                   {locale === "en" ? "Privacy Policy" : copy.privacyPrefix}
                 </Link>{" "}
                 {locale === "en" ? "" : copy.privacySuffix}
                 {locale === "en" ? copy.privacySuffix : ""}
               </Label>
-              <p className="mt-1 text-xs text-gray-400">{copy.privacyHelp}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{copy.privacyHelp}</p>
             </div>
           </div>
 
-          <div className="flex items-start space-x-3 rounded-lg border border-gray-600/50 bg-gray-700/30 p-4">
+          <div className="flex items-start gap-3 border-t border-rule py-4">
             <Checkbox
               id="terms"
               checked={termsAccepted}
               onCheckedChange={setTermsAccepted}
-              className="mt-1 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
+              className="mt-0.5"
             />
-            <div className="flex-1">
-              <Label
-                htmlFor="terms"
-                className="cursor-pointer text-sm font-medium text-white"
-              >
+            <div className="min-w-0 flex-1">
+              <Label htmlFor="terms" className="cursor-pointer text-sm leading-normal">
                 {locale === "en" ? `${copy.termsPrefix} ` : ""}
-                <Link
-                  href="/terms"
-                  target="_blank"
-                  className="text-blue-400 underline hover:text-blue-300"
-                >
+                <Link href="/terms" target="_blank" className={linkClass}>
                   {locale === "en" ? "Terms of Use" : copy.termsPrefix}
                 </Link>{" "}
                 {locale === "en" ? "" : copy.termsSuffix}
                 {locale === "en" ? copy.termsSuffix : ""}
               </Label>
-              <p className="mt-1 text-xs text-gray-400">{copy.termsHelp}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{copy.termsHelp}</p>
             </div>
           </div>
 
-          <div className="rounded-lg border border-blue-500/30 bg-blue-900/20 p-4">
-            <p className="text-sm leading-relaxed text-gray-300">
-              <strong className="text-blue-400">{copy.kvkkTitle}</strong>{" "}
-              {copy.kvkkBody}
-            </p>
-          </div>
+          <p className="border-t border-rule pt-4 text-sm text-ink-2">
+            <strong className="font-semibold text-ink">{copy.kvkkTitle}</strong>{" "}
+            {copy.kvkkBody}
+          </p>
         </div>
 
-        <DialogFooter className="flex-col gap-3 sm:flex-row">
-          <Button
-            variant="outline"
-            onClick={onDecline}
-            className="w-full border-gray-600 bg-gray-700 text-white hover:bg-gray-600 sm:w-auto"
-          >
+        <DialogFooter className="flex-col gap-3 sm:flex-row sm:space-x-0">
+          <Button variant="outline" onClick={onDecline} className="w-full sm:w-auto">
             {copy.decline}
           </Button>
           <Button
             onClick={() => bothAccepted && onAccept()}
             disabled={!bothAccepted}
-            className={`w-full sm:w-auto ${
-              bothAccepted
-                ? "bg-blue-600 hover:bg-blue-700"
-                : "cursor-not-allowed bg-gray-600"
-            }`}
+            className="w-full sm:w-auto"
           >
             {copy.accept}
           </Button>

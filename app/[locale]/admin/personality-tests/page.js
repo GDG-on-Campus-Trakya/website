@@ -7,18 +7,14 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useRouter } from "@/i18n/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  Search,
-  Plus,
-  Edit2,
-  Trash2,
-  ArrowLeft,
-  Upload,
-  X,
-  Save,
-  PlusCircle,
-  MinusCircle,
-} from "lucide-react";
+import { Search, Plus, Trash2, Upload, X, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ui/field";
+import { PageHeader, EmptyState, Skeleton } from "@/components/ui/page";
 import { logger } from "@/utils/logger";
 import { checkUserRole, ROLES } from "@/utils/roleUtils";
 
@@ -406,73 +402,30 @@ export default function AdminPersonalityTestsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-gray-200">Loading...</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">Loading...</p>;
   }
 
   if (userRole !== ROLES.ADMIN) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Access Denied</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        Access Denied
+      </p>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-4 mb-4">
-            <button
-              onClick={() => router.push("/admin")}
-              className="flex items-center space-x-2 text-gray-400 hover:text-gray-100 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Admin Panel</span>
-            </button>
-            <div className="border-l border-gray-500 h-8"></div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-100 mb-2">
-                Kişilik Testleri Yönetimi
-              </h1>
-              <p className="text-gray-300">
-                Kişilik testlerini oluşturun, düzenleyin ve yönetin
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="bg-gray-800 rounded-lg shadow p-6 mb-8">
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Test ara..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-700/60 text-gray-100 placeholder-gray-400 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Buttons */}
-            <button
-              onClick={() => setShowJsonImport(true)}
-              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 font-medium"
-            >
-              <Upload className="w-5 h-5" />
-              <span>JSON Import</span>
-            </button>
-
-            <button
+    <div>
+      <PageHeader
+        title="Kişilik Testleri Yönetimi"
+        description="Kişilik testlerini oluşturun, düzenleyin ve yönetin"
+        actions={
+          <>
+            <Button type="button" variant="outline" onClick={() => setShowJsonImport(true)}>
+              <Upload aria-hidden="true" />
+              JSON Import
+            </Button>
+            <Button
+              type="button"
               onClick={() => {
                 setEditingTest(null);
                 setFormData({
@@ -485,104 +438,125 @@ export default function AdminPersonalityTestsPage() {
                 });
                 setShowForm(true);
               }}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 font-medium"
             >
-              <Plus className="w-5 h-5" />
-              <span>Yeni Test</span>
-            </button>
-          </div>
+              <Plus aria-hidden="true" />
+              Yeni Test
+            </Button>
+          </>
+        }
+      />
+
+      {/* Search */}
+      <div className="relative mb-6 max-w-md">
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+          aria-hidden="true"
+        />
+        <Input
+          type="text"
+          aria-label="Test ara..."
+          placeholder="Test ara..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Tests List */}
+      {isLoading ? (
+        <div className="space-y-3" role="status" aria-busy="true">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
         </div>
-
-        {/* Tests List */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTests.length > 0 ? (
-              filteredTests.map((test) => (
-                <div
-                  key={test.id}
-                  className="bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
-                >
-                  {test.imageUrl && (
-                    <img
-                      src={test.imageUrl}
-                      alt={test.title}
-                      className="w-full h-48 object-cover"
-                    />
-                  )}
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-100 mb-2">
-                      {test.title}
-                    </h3>
-                    <p className="text-gray-300 text-sm mb-4">
-                      {test.description}
-                    </p>
-                    <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
-                      <span>{test.questionCount || 0} soru</span>
-                      <span>Sıra: {test.order}</span>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEdit(test)}
-                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                        <span>Düzenle</span>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(test.id)}
-                        className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span>Sil</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <div className="bg-gray-800 rounded-lg p-8">
-                  <h3 className="text-xl font-semibold text-gray-100 mb-2">
-                    Test bulunamadı
-                  </h3>
-                  <p className="text-gray-300">
-                    Yeni bir test oluşturmak için "Yeni Test" butonuna tıklayın.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* JSON Import Modal */}
-        {showJsonImport && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-              <div className="p-6 border-b border-gray-700 flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-100">
-                  JSON Import
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowJsonImport(false);
-                    setJsonInput("");
-                  }}
-                  className="text-gray-400 hover:text-gray-100 transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="p-6 flex-1 overflow-y-auto">
-                <p className="text-gray-300 mb-4">
-                  JSON dosyanızı yapıştırın. Format örneği:
+      ) : filteredTests.length > 0 ? (
+        <ul className="border-t-2 border-ink">
+          {filteredTests.map((test) => (
+            <li
+              key={test.id}
+              className="flex flex-col gap-4 border-b border-rule py-5 sm:flex-row sm:items-start"
+            >
+              {test.imageUrl && (
+                <img
+                  src={test.imageUrl}
+                  alt={test.title}
+                  className="aspect-[16/9] w-full shrink-0 rounded object-cover sm:w-48"
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <h3 className="font-display text-xl font-bold">
+                  {test.title}
+                </h3>
+                <p className="mt-1 max-w-measure text-sm text-ink-2">
+                  {test.description}
                 </p>
+                <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 font-outlier text-sm tabular-nums text-muted-foreground">
+                  <span>{test.questionCount || 0} soru</span>
+                  <span>Sıra: {test.order}</span>
+                </div>
+              </div>
+              <div className="flex gap-2 sm:shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(test)}
+                >
+                  Düzenle
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDelete(test.id)}
+                >
+                  Sil
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <EmptyState
+          title="Test bulunamadı"
+          description={'Yeni bir test oluşturmak için "Yeni Test" butonuna tıklayın.'}
+        />
+      )}
 
-                <pre className="bg-gray-900 text-gray-300 p-4 rounded-lg mb-4 text-sm overflow-x-auto">
+      {/* JSON Import Modal */}
+      {showJsonImport && (
+        <div className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4 animate-in fade-in-0 duration-short">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="json-import-title"
+            className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-rule bg-background text-foreground"
+          >
+            <div className="flex items-center justify-between gap-4 border-b border-rule p-4 sm:p-6">
+              <h2 id="json-import-title" className="font-display text-2xl font-bold">
+                JSON Import
+              </h2>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="İptal"
+                onClick={() => {
+                  setShowJsonImport(false);
+                  setJsonInput("");
+                }}
+                className="-mr-2 shrink-0"
+              >
+                <X aria-hidden="true" />
+              </Button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              <p className="mb-4 text-ink-2">
+                JSON dosyanızı yapıştırın. Format örneği:
+              </p>
+
+              <pre className="mb-4 overflow-x-auto rounded border border-rule bg-paper-2 p-4 font-mono text-sm text-ink-2">
 {`{
   "title": "Test Başlığı",
   "description": "Test açıklaması",
@@ -607,415 +581,405 @@ export default function AdminPersonalityTestsPage() {
     }
   }
 }`}
-                </pre>
+              </pre>
 
-                <textarea
-                  value={jsonInput}
-                  onChange={(e) => setJsonInput(e.target.value)}
-                  placeholder="JSON verilerinizi buraya yapıştırın..."
-                  rows={15}
-                  className="w-full px-4 py-3 bg-gray-700 text-gray-100 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm"
-                />
-              </div>
+              <Textarea
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+                aria-label="JSON Import"
+                placeholder="JSON verilerinizi buraya yapıştırın..."
+                rows={15}
+                className="font-mono text-sm"
+              />
+            </div>
 
-              <div className="p-6 border-t border-gray-700 flex space-x-4">
-                <button
-                  onClick={handleJsonImport}
-                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 font-medium"
-                >
-                  <Upload className="w-5 h-5" />
-                  <span>İçe Aktar</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setShowJsonImport(false);
-                    setJsonInput("");
-                  }}
-                  className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-                >
-                  İptal
-                </button>
-              </div>
+            <div className="flex flex-col gap-3 border-t border-rule p-4 sm:flex-row sm:p-6">
+              <Button type="button" onClick={handleJsonImport}>
+                <Upload aria-hidden="true" />
+                İçe Aktar
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowJsonImport(false);
+                  setJsonInput("");
+                }}
+              >
+                İptal
+              </Button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Form Modal */}
-        {showForm && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 overflow-y-auto p-4">
-            <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl my-8">
-              <div className="p-6 border-b border-gray-700 flex items-center justify-between sticky top-0 bg-gray-800 z-10">
-                <h2 className="text-2xl font-bold text-gray-100">
-                  {editingTest ? "Test Düzenle" : "Yeni Test Oluştur"}
-                </h2>
-                <button
-                  onClick={handleFormClose}
-                  className="text-gray-400 hover:text-gray-100 transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
+      {/* Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-modal overflow-y-auto bg-ink/60 p-4 animate-in fade-in-0 duration-short">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="test-form-title"
+            className="mx-auto my-8 w-full max-w-4xl rounded-lg border border-rule bg-background text-foreground"
+          >
+            <div className="sticky top-0 z-raised flex items-center justify-between gap-4 rounded-t-lg border-b border-rule bg-background p-4 sm:p-6">
+              <h2 id="test-form-title" className="font-display text-2xl font-bold">
+                {editingTest ? "Test Düzenle" : "Yeni Test Oluştur"}
+              </h2>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="İptal"
+                onClick={handleFormClose}
+                className="-mr-2 shrink-0"
+              >
+                <X aria-hidden="true" />
+              </Button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-10 p-4 sm:p-6">
+              {/* Basic Info */}
+              <div className="space-y-2">
+                <h3 className="mb-2 font-display text-lg font-semibold">
+                  Temel Bilgiler
+                </h3>
+
+                <Field id="test-title" label="Test Başlığı *">
+                  <Input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
+                    required
+                  />
+                </Field>
+
+                <Field id="test-description" label="Açıklama *">
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    rows={3}
+                    required
+                  />
+                </Field>
+
+                <Field id="test-order" label="Sıra" className="max-w-40">
+                  <Input
+                    type="number"
+                    value={formData.order}
+                    onChange={(e) =>
+                      setFormData({ ...formData, order: parseInt(e.target.value) })
+                    }
+                    className="font-outlier tabular-nums"
+                    min={1}
+                  />
+                </Field>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="test-cover">Kapak Resmi</Label>
+
+                  {/* Drag and Drop Area */}
+                  <div
+                    onDrop={handleCoverDrop}
+                    onDragOver={handleCoverDragOver}
+                    onDragLeave={handleCoverDragLeave}
+                    className={cn(
+                      "relative rounded border-2 border-dashed p-6 text-center transition-colors duration-micro",
+                      isDraggingCover
+                        ? "border-brand bg-paper-2"
+                        : "border-input bg-background",
+                      uploadingCover
+                        ? "cursor-not-allowed opacity-55"
+                        : "cursor-pointer hover:bg-secondary"
+                    )}
+                  >
+                    {formData.imageUrl ? (
+                      <div className="space-y-3">
+                        <img
+                          src={formData.imageUrl}
+                          alt="Cover"
+                          className="aspect-[16/9] w-full rounded object-cover"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Yeni resim yüklemek için sürükle-bırak veya tıkla
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload className="mx-auto h-10 w-10 text-muted-foreground" aria-hidden="true" />
+                        <p className="font-medium">
+                          {isDraggingCover ? 'Bırakın...' : 'Resmi sürükle-bırak veya tıkla'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          PNG, JPG, GIF (Max 5MB)
+                        </p>
+                      </div>
+                    )}
+
+                    <input
+                      id="test-cover"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverImageUpload}
+                      disabled={uploadingCover}
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                    />
+
+                    {uploadingCover && (
+                      <div className="absolute inset-0 flex items-center justify-center rounded bg-background/70">
+                        <Loader2 className="h-8 w-8 animate-spin text-brand" aria-hidden="true" />
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                {/* Basic Info */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-100">
-                    Temel Bilgiler
+              {/* Questions */}
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-4 border-t-2 border-ink pt-3">
+                  <h3 className="font-display text-lg font-semibold">
+                    Sorular ({formData.questions.length})
                   </h3>
+                  <Button type="button" variant="outline" size="sm" onClick={addQuestion}>
+                    <Plus aria-hidden="true" />
+                    Soru Ekle
+                  </Button>
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Test Başlığı *
-                    </label>
-                    <input
+                {formData.questions.map((question, qIndex) => (
+                  <div
+                    key={qIndex}
+                    className="space-y-3 border-b border-rule py-5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-display text-base font-semibold">
+                        Soru {qIndex + 1}
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Sil"
+                        onClick={() => removeQuestion(qIndex)}
+                        className="-mr-2 text-error"
+                      >
+                        <Trash2 aria-hidden="true" />
+                      </Button>
+                    </div>
+
+                    <Input
                       type="text"
-                      value={formData.title}
+                      aria-label="Soru metni"
+                      placeholder="Soru metni"
+                      value={question.question}
                       onChange={(e) =>
-                        setFormData({ ...formData, title: e.target.value })
+                        updateQuestion(qIndex, "question", e.target.value)
                       }
-                      className="w-full px-4 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
                     />
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Açıklama *
-                    </label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
-                      }
-                      rows={3}
-                      className="w-full px-4 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Sıra
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.order}
-                      onChange={(e) =>
-                        setFormData({ ...formData, order: parseInt(e.target.value) })
-                      }
-                      className="w-full px-4 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      min={1}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Kapak Resmi
-                    </label>
-
-                    {/* Drag and Drop Area */}
-                    <div
-                      onDrop={handleCoverDrop}
-                      onDragOver={handleCoverDragOver}
-                      onDragLeave={handleCoverDragLeave}
-                      className={`
-                        relative border-2 border-dashed rounded-lg p-6 text-center transition-all
-                        ${isDraggingCover
-                          ? 'border-blue-500 bg-blue-500/10'
-                          : 'border-gray-600 bg-gray-700/30'
-                        }
-                        ${uploadingCover ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-blue-400'}
-                      `}
-                    >
-                      {formData.imageUrl ? (
-                        <div className="space-y-3">
-                          <img
-                            src={formData.imageUrl}
-                            alt="Cover"
-                            className="w-full h-48 object-cover rounded-lg"
-                          />
-                          <p className="text-sm text-gray-400">
-                            Yeni resim yüklemek için sürükle-bırak veya tıkla
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <Upload className="w-12 h-12 mx-auto text-gray-400" />
-                          <p className="text-gray-300 font-medium">
-                            {isDraggingCover ? 'Bırakın...' : 'Resmi sürükle-bırak veya tıkla'}
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            PNG, JPG, GIF (Max 5MB)
-                          </p>
-                        </div>
-                      )}
-
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleCoverImageUpload}
-                        disabled={uploadingCover}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-
-                      {uploadingCover && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/50 rounded-lg">
-                          <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Questions */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-100">
-                      Sorular ({formData.questions.length})
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={addQuestion}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-                    >
-                      <PlusCircle className="w-4 h-4" />
-                      <span>Soru Ekle</span>
-                    </button>
-                  </div>
-
-                  {formData.questions.map((question, qIndex) => (
-                    <div
-                      key={qIndex}
-                      className="bg-gray-700 p-4 rounded-lg space-y-3"
-                    >
-                      <div className="flex items-start justify-between">
-                        <h4 className="text-md font-semibold text-gray-100">
-                          Soru {qIndex + 1}
-                        </h4>
-                        <button
+                    <div>
+                      <div className="mb-1 flex items-center justify-between gap-4">
+                        <span className="text-sm text-ink-2">
+                          Seçenekler ({question.options.length})
+                        </span>
+                        <Button
                           type="button"
-                          onClick={() => removeQuestion(qIndex)}
-                          className="text-red-400 hover:text-red-300"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addOption(qIndex)}
                         >
-                          <MinusCircle className="w-5 h-5" />
-                        </button>
+                          Seçenek Ekle
+                        </Button>
                       </div>
 
-                      <input
-                        type="text"
-                        placeholder="Soru metni"
-                        value={question.question}
-                        onChange={(e) =>
-                          updateQuestion(qIndex, "question", e.target.value)
-                        }
-                        className="w-full px-4 py-2 bg-gray-600 text-gray-100 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-300">
-                            Seçenekler ({question.options.length})
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => addOption(qIndex)}
-                            className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                          >
-                            Seçenek Ekle
-                          </button>
-                        </div>
-
-                        {question.options.map((option, oIndex) => (
-                          <div
-                            key={oIndex}
-                            className="bg-gray-600 p-3 rounded space-y-2"
-                          >
-                            <div className="flex items-start space-x-2">
-                              <input
-                                type="text"
-                                placeholder="Seçenek metni"
-                                value={option.text}
-                                onChange={(e) =>
-                                  updateOption(qIndex, oIndex, "text", e.target.value)
-                                }
-                                className="flex-1 px-3 py-1 bg-gray-500 text-gray-100 border border-gray-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeOption(qIndex, oIndex)}
-                                className="text-red-400 hover:text-red-300"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                            <div className="text-xs text-gray-400">
-                              Puanlar: {JSON.stringify(option.points)}
-                            </div>
+                      {question.options.map((option, oIndex) => (
+                        <div
+                          key={oIndex}
+                          className="border-t border-rule py-3"
+                        >
+                          <div className="flex items-start gap-2">
+                            <Input
+                              type="text"
+                              aria-label="Seçenek metni"
+                              placeholder="Seçenek metni"
+                              value={option.text}
+                              onChange={(e) =>
+                                updateOption(qIndex, oIndex, "text", e.target.value)
+                              }
+                              className="min-w-0 flex-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label="Sil"
+                              onClick={() => removeOption(qIndex, oIndex)}
+                              className="shrink-0 text-error"
+                            >
+                              <X aria-hidden="true" />
+                            </Button>
                           </div>
-                        ))}
-                      </div>
+                          <div className="mt-1 break-all font-outlier text-xs text-muted-foreground">
+                            Puanlar: {JSON.stringify(option.points)}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                ))}
+              </div>
+
+              {/* Results */}
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-4 border-t-2 border-ink pt-3">
+                  <h3 className="font-display text-lg font-semibold">
+                    Sonuçlar ({Object.keys(formData.results).length})
+                  </h3>
+                  <Button type="button" variant="outline" size="sm" onClick={addResult}>
+                    <Plus aria-hidden="true" />
+                    Sonuç Ekle
+                  </Button>
                 </div>
 
-                {/* Results */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-100">
-                      Sonuçlar ({Object.keys(formData.results).length})
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={addResult}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-                    >
-                      <PlusCircle className="w-4 h-4" />
-                      <span>Sonuç Ekle</span>
-                    </button>
-                  </div>
+                {Object.entries(formData.results).map(([key, result]) => (
+                  <div
+                    key={key}
+                    className="space-y-3 border-b border-rule py-5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="min-w-0 break-words font-display text-base font-semibold">
+                        {key}
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Sil"
+                        onClick={() => removeResult(key)}
+                        className="-mr-2 shrink-0 text-error"
+                      >
+                        <Trash2 aria-hidden="true" />
+                      </Button>
+                    </div>
 
-                  {Object.entries(formData.results).map(([key, result]) => (
-                    <div
-                      key={key}
-                      className="bg-gray-700 p-4 rounded-lg space-y-3"
-                    >
-                      <div className="flex items-start justify-between">
-                        <h4 className="text-md font-semibold text-gray-100">
-                          {key}
-                        </h4>
-                        <button
-                          type="button"
-                          onClick={() => removeResult(key)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          <MinusCircle className="w-5 h-5" />
-                        </button>
-                      </div>
+                    <Input
+                      type="text"
+                      aria-label="Başlık"
+                      placeholder="Başlık"
+                      value={result.title}
+                      onChange={(e) =>
+                        updateResult(key, "title", e.target.value)
+                      }
+                    />
 
-                      <input
-                        type="text"
-                        placeholder="Başlık"
-                        value={result.title}
-                        onChange={(e) =>
-                          updateResult(key, "title", e.target.value)
-                        }
-                        className="w-full px-4 py-2 bg-gray-600 text-gray-100 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                    <Textarea
+                      aria-label="Açıklama"
+                      placeholder="Açıklama"
+                      value={result.description}
+                      onChange={(e) =>
+                        updateResult(key, "description", e.target.value)
+                      }
+                      rows={2}
+                    />
 
-                      <textarea
-                        placeholder="Açıklama"
-                        value={result.description}
-                        onChange={(e) =>
-                          updateResult(key, "description", e.target.value)
-                        }
-                        rows={2}
-                        className="w-full px-4 py-2 bg-gray-600 text-gray-100 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm text-gray-300 mb-1">
-                            Renk
-                          </label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-1.5 block text-sm font-medium">
+                          Renk
                           <input
                             type="color"
                             value={result.color}
                             onChange={(e) =>
                               updateResult(key, "color", e.target.value)
                             }
-                            className="w-full h-10 bg-gray-600 border border-gray-500 rounded-lg"
+                            className="mt-1.5 block h-control w-full cursor-pointer rounded border border-input bg-background p-1"
                           />
-                        </div>
-                      </div>
-
-                      {/* Result Image Drag and Drop */}
-                      <div>
-                        <label className="block text-sm text-gray-300 mb-2">
-                          Sonuç Resmi
                         </label>
-                        <div
-                          onDrop={(e) => handleResultDrop(e, key)}
-                          onDragOver={(e) => handleResultDragOver(e, key)}
-                          onDragLeave={handleResultDragLeave}
-                          className={`
-                            relative border-2 border-dashed rounded-lg p-4 text-center transition-all
-                            ${draggingResultKey === key
-                              ? 'border-green-500 bg-green-500/10'
-                              : 'border-gray-600 bg-gray-700/30'
-                            }
-                            cursor-pointer hover:border-green-400
-                          `}
-                        >
-                          {result.imageUrl ? (
-                            <div className="space-y-2">
-                              <img
-                                src={result.imageUrl}
-                                alt={result.title}
-                                className="w-full h-32 object-cover rounded"
-                              />
-                              <p className="text-xs text-gray-400">
-                                Yeni resim için sürükle-bırak veya tıkla
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="space-y-2 py-4">
-                              <Upload className="w-8 h-8 mx-auto text-gray-400" />
-                              <p className="text-sm text-gray-300">
-                                {draggingResultKey === key ? 'Bırakın...' : 'Resmi sürükle-bırak veya tıkla'}
-                              </p>
-                              <p className="text-xs text-gray-400">
-                                PNG, JPG, GIF
-                              </p>
-                            </div>
-                          )}
-
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleResultImageUpload(e, key)}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          />
-                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                {/* Submit Buttons */}
-                <div className="flex space-x-4 pt-6 border-t border-gray-700">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 font-medium"
-                  >
-                    <Save className="w-5 h-5" />
-                    <span>{editingTest ? "Güncelle" : "Oluştur"}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleFormClose}
-                    className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-                  >
-                    İptal
-                  </button>
-                </div>
-              </form>
-            </div>
+                    {/* Result Image Drag and Drop */}
+                    <div>
+                      <p className="mb-1.5 text-sm font-medium leading-none">
+                        Sonuç Resmi
+                      </p>
+                      <div
+                        onDrop={(e) => handleResultDrop(e, key)}
+                        onDragOver={(e) => handleResultDragOver(e, key)}
+                        onDragLeave={handleResultDragLeave}
+                        className={cn(
+                          "relative cursor-pointer rounded border-2 border-dashed p-4 text-center transition-colors duration-micro hover:bg-secondary",
+                          draggingResultKey === key
+                            ? "border-brand bg-paper-2"
+                            : "border-input bg-background"
+                        )}
+                      >
+                        {result.imageUrl ? (
+                          <div className="space-y-2">
+                            <img
+                              src={result.imageUrl}
+                              alt={result.title}
+                              className="aspect-[16/9] w-full rounded object-cover"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Yeni resim için sürükle-bırak veya tıkla
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2 py-4">
+                            <Upload className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
+                            <p className="text-sm">
+                              {draggingResultKey === key ? 'Bırakın...' : 'Resmi sürükle-bırak veya tıkla'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              PNG, JPG, GIF
+                            </p>
+                          </div>
+                        )}
+
+                        <input
+                          type="file"
+                          accept="image/*"
+                          aria-label="Sonuç Resmi"
+                          onChange={(e) => handleResultImageUpload(e, key)}
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex flex-col gap-3 border-t border-rule pt-6 sm:flex-row">
+                <Button type="submit">
+                  {editingTest ? "Güncelle" : "Oluştur"}
+                </Button>
+                <Button type="button" variant="outline" onClick={handleFormClose}>
+                  İptal
+                </Button>
+              </div>
+            </form>
           </div>
-        )}
+        </div>
+      )}
 
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
-      </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }

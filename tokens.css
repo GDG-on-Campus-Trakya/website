@@ -1,0 +1,132 @@
+/* Hallmark · genre: editorial · macrostructure: Ecosystem Index · nav: N6 Newspaper masthead · footer: Ft1 Mast-headed
+ * theme: custom · vibe: "campus notice board, paper and blue ink" · paper: oklch(97% 0.010 95) · accent: oklch(50% 0.20 262)
+ * display: Bricolage Grotesque · body: IBM Plex Sans · outlier: IBM Plex Mono · axes: light / geometric-sans / cool
+ * studied: no · context: inferred
+ *
+ * Colour tokens are stored twice: `--c-*` holds the bare "L C H" triplet (so Tailwind can add
+ * alpha with `oklch(var(--c-x) / <alpha-value>)`), `--color-*` is the ready-to-use colour.
+ * Nothing outside this file may contain a raw colour value, except the brand marks of third
+ * parties (WhatsApp, X, LinkedIn, Instagram) and user-chosen data colours (raffle wheel).
+ */
+
+:root {
+  /* Paper, ink, neutrals: warm paper, blue-black ink (tinted toward the accent hue) */
+  --c-paper:   97% 0.010 95;
+  --c-paper-2: 94% 0.012 95;
+  --c-paper-3: 91% 0.014 95;
+  --c-rule:    85% 0.012 95;   /* decorative hairlines */
+  --c-edge:    58% 0.018 265;  /* boundaries of inputs and controls, >= 3:1 on paper */
+  --c-muted:   46% 0.018 265;  /* secondary text, >= 4.5:1 on paper */
+  --c-ink-2:   34% 0.020 265;
+  --c-ink:     20% 0.022 265;
+
+  /* Accent: one blue. Used for links, primary action, active state, focus. */
+  --c-accent:       50% 0.200 262;
+  --c-accent-hover: 43% 0.200 262;
+  --c-accent-ink:   97% 0.010 95;   /* text on accent fill */
+  --c-focus:        50% 0.220 262;
+
+  /* Status */
+  --c-error:   50% 0.200 27;
+  --c-success: 48% 0.140 150;
+  --c-warning: 84% 0.150 90;        /* fill only; text on it is ink */
+
+  /* Google marks. Tiny brand details only (a dot, a rule, a tag). Never a fill or a text colour. */
+  --c-mark-blue:   62% 0.190 260;
+  --c-mark-red:    60% 0.210 27;
+  --c-mark-yellow: 84% 0.170 90;
+  --c-mark-green:  62% 0.170 150;
+
+  /* Stage: scoped dark surface for projected live screens (quiz, poll, raffle) */
+  --c-stage:       18% 0.020 265;
+  --c-stage-2:     24% 0.022 265;
+  --c-stage-rule:  34% 0.020 265;
+  --c-stage-ink:   96% 0.008 95;
+  --c-stage-muted: 74% 0.014 265;
+
+  --color-paper:        oklch(var(--c-paper));
+  --color-paper-2:      oklch(var(--c-paper-2));
+  --color-paper-3:      oklch(var(--c-paper-3));
+  --color-rule:         oklch(var(--c-rule));
+  --color-edge:         oklch(var(--c-edge));
+  --color-muted:        oklch(var(--c-muted));
+  --color-ink-2:        oklch(var(--c-ink-2));
+  --color-ink:          oklch(var(--c-ink));
+  --color-accent:       oklch(var(--c-accent));
+  --color-accent-hover: oklch(var(--c-accent-hover));
+  --color-accent-ink:   oklch(var(--c-accent-ink));
+  --color-focus:        oklch(var(--c-focus));
+  --color-error:        oklch(var(--c-error));
+  --color-success:      oklch(var(--c-success));
+  --color-warning:      oklch(var(--c-warning));
+  --color-mark-blue:    oklch(var(--c-mark-blue));
+  --color-mark-red:     oklch(var(--c-mark-red));
+  --color-mark-yellow:  oklch(var(--c-mark-yellow));
+  --color-mark-green:   oklch(var(--c-mark-green));
+  --color-stage:        oklch(var(--c-stage));
+  --color-stage-2:      oklch(var(--c-stage-2));
+  --color-stage-rule:   oklch(var(--c-stage-rule));
+  --color-stage-ink:    oklch(var(--c-stage-ink));
+  --color-stage-muted:  oklch(var(--c-stage-muted));
+
+  /* Type: display + body + one outlier (dates, times, counts) */
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-body:    var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-outlier: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* Scale, major third (1.25) */
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-md:   1.25rem;
+  --text-lg:   1.5625rem;
+  --text-xl:   1.9531rem;
+  --text-2xl:  2.4414rem;
+  --text-3xl:  3.0518rem;
+  --text-display-s: clamp(2rem, 3.5vw + 1rem, 3.5rem);
+  --text-display:   clamp(2.5rem, 5vw + 1rem, 5rem);
+
+  /* Space, 4-pt scale */
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs:  0.5rem;
+  --space-sm:  0.75rem;
+  --space-md:  1rem;
+  --space-lg:  1.5rem;
+  --space-xl:  2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+  --space-4xl: 9rem;
+  --page-gutter: clamp(1rem, 4vw, 2.5rem);
+  --page-max: 72rem;
+  --page-max-wide: 80rem;   /* admin screens with tables */
+  --measure: 65ch;
+
+  /* Shape: one small radius, hairlines, no shadow stacks */
+  --radius-sm: 2px;
+  --radius:    4px;
+  --radius-lg: 6px;
+  --rule-hair: 1px;
+  --shadow-whisper: 0 1px 2px oklch(var(--c-ink) / 0.06);
+
+  /* Control height: inputs and buttons share it */
+  --control-h: 2.75rem;
+
+  /* Motion */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:     cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 200ms;
+  --dur-long:  320ms;
+
+  /* Z-index scale */
+  --z-base:     1;
+  --z-raised:   10;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-modal:    400;
+  --z-popover:  450;   /* select/menus that open from inside a modal */
+  --z-toast:    500;
+  --z-tooltip:  600;
+}

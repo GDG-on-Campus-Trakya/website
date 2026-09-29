@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Filter, Calendar, Trophy } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { socialUtils } from "@/utils/socialUtils";
@@ -10,6 +10,9 @@ import PostModal from "@/components/PostModal";
 import PostUpload from "@/components/PostUpload";
 import AnnouncementCard from "@/components/AnnouncementCard";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { Button } from "@/components/ui/button";
+import { fieldClasses } from "@/components/ui/input";
+import { PageContainer, PageHeader, EmptyState } from "@/components/ui/page";
 import { useRouter } from "@/i18n/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -220,105 +223,105 @@ export default function SocialPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-lg">{copy.loading}</div>
-      </div>
+      <PageContainer>
+        <p role="status" className="text-ink-2">
+          {copy.loading}
+        </p>
+      </PageContainer>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-lg">{copy.signInRequired}</div>
-      </div>
+      <PageContainer>
+        <p role="status" className="text-ink-2">
+          {copy.signInRequired}
+        </p>
+      </PageContainer>
     );
   }
 
   const stats = getFilterStats();
 
+  const tabClass = (active) =>
+    `-mb-px whitespace-nowrap border-b-2 py-3 text-sm font-medium transition-colors duration-micro ease-out ${
+      active
+        ? "border-ink text-ink"
+        : "border-transparent text-muted-foreground hover:text-ink"
+    }`;
+
   return (
-    <div className="flex flex-col min-h-screen font-sans bg-gradient-to-b from-[#1a1a2e] to-[#000000] text-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pt-20 sm:pt-24">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-2">
-            {copy.title}
-          </h1>
-          <p className="text-gray-400 text-sm sm:text-base">{copy.subtitle}</p>
-        </div>
-
-        <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-4 sm:p-6 mb-6 border border-gray-700">
-          <div className="flex space-x-2 mb-4">
-            <button
-              onClick={() => setCurrentTab("posts")}
-              className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-                currentTab === "posts"
-                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30"
-                  : "text-gray-400 hover:bg-gray-700/50 hover:text-white"
-              }`}
-            >
-              <Calendar className="w-4 h-4" />
-              <span>{copy.photosTab}</span>
-            </button>
-
-            <button
-              onClick={() => setCurrentTab("results")}
-              className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-                currentTab === "results"
-                  ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg shadow-yellow-500/30"
-                  : "text-gray-400 hover:bg-gray-700/50 hover:text-white"
-              }`}
-            >
-              <Trophy className="w-4 h-4" />
-              <span>{copy.resultsTab}</span>
-            </button>
-          </div>
-
-          {currentTab === "posts" && Object.keys(stats.eventGroups).length > 0 && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Filter className="w-4 h-4" />
-                <span>{copy.filter}</span>
-              </div>
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="w-full sm:flex-1 max-w-full bg-gray-700/50 border border-gray-600 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer hover:bg-gray-700"
-              >
-                <option value="all">{copy.allEvents(stats.total)}</option>
-                {Object.entries(stats.eventGroups).map(([eventId, eventData]) => (
-                  <option key={eventId} value={eventId}>
-                    {copy.eventStats(eventData.name, eventData.count)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-
-        {currentTab === "posts" &&
+    <PageContainer>
+      <PageHeader
+        title={copy.title}
+        description={copy.subtitle}
+        actions={
+          currentTab === "posts" &&
           (loadingEvents ? (
-            <div className="fixed bottom-6 right-6 bg-gray-600 p-4 rounded-full shadow-2xl z-50">
-              <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent" />
-            </div>
+            <Button disabled loading>
+              <Plus aria-hidden="true" />
+              {copy.sharePhoto}
+            </Button>
           ) : activeEvents.length > 0 ? (
-            <button
+            <Button
               onClick={() => setShowUpload(true)}
-              className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full hover:bg-blue-700 transition-all shadow-2xl hover:scale-110 z-50"
               title={copy.activeEventsTitle(activeEvents.length)}
             >
-              <Plus className="w-6 h-6" />
-            </button>
-          ) : null)}
+              <Plus aria-hidden="true" />
+              {copy.sharePhoto}
+            </Button>
+          ) : null)
+        }
+      />
+
+      <div className="max-w-2xl">
+        <div className="flex gap-6 overflow-x-auto border-b border-rule">
+          <button
+            onClick={() => setCurrentTab("posts")}
+            aria-current={currentTab === "posts" ? "page" : undefined}
+            className={tabClass(currentTab === "posts")}
+          >
+            {copy.photosTab}
+          </button>
+
+          <button
+            onClick={() => setCurrentTab("results")}
+            aria-current={currentTab === "results" ? "page" : undefined}
+            className={tabClass(currentTab === "results")}
+          >
+            {copy.resultsTab}
+          </button>
+        </div>
+
+        {currentTab === "posts" && Object.keys(stats.eventGroups).length > 0 && (
+          <div className="flex min-w-0 flex-col gap-1.5 border-b border-rule py-4">
+            <label htmlFor="social-filter" className="text-sm font-medium">
+              {copy.filter}
+            </label>
+            <select
+              id="social-filter"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className={`${fieldClasses} h-control min-w-0 cursor-pointer py-2 text-sm`}
+            >
+              <option value="all">{copy.allEvents(stats.total)}</option>
+              {Object.entries(stats.eventGroups).map(([eventId, eventData]) => (
+                <option key={eventId} value={eventId}>
+                  {copy.eventStats(eventData.name, eventData.count)}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent mb-4" />
-            <p className="text-[#d1d1e0] text-sm">{copy.postsLoading}</p>
-          </div>
+          <p role="status" className="py-12 text-sm text-muted-foreground">
+            {copy.postsLoading}
+          </p>
         ) : (
           <>
             {currentTab === "posts" && filteredPosts.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div>
                 {filteredPosts.map((post) => (
                   <ErrorBoundary key={post.id}>
                     <PostCard
@@ -332,7 +335,7 @@ export default function SocialPage() {
             )}
 
             {currentTab === "results" && announcements.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div>
                 {announcements.map((announcement) => (
                   <ErrorBoundary key={announcement.id}>
                     <AnnouncementCard announcement={announcement} />
@@ -341,112 +344,97 @@ export default function SocialPage() {
               </div>
             )}
 
-            {((currentTab === "posts" && filteredPosts.length === 0) ||
-              (currentTab === "results" && announcements.length === 0)) && (
-              <div className="text-center py-12">
-                <div className="relative mx-auto rounded-xl bg-gray-800/50 backdrop-blur-sm p-8 shadow-xl max-w-md">
-                  {currentTab === "posts" ? (
-                    activeEvents.length > 0 ? (
-                      <>
-                        <h3 className="text-xl font-semibold text-white mb-2">
-                          {filter === "all"
-                            ? copy.noPhotos
-                            : copy.noPhotosForEvent}
-                        </h3>
-                        <p className="text-[#d1d1e0] mb-4">{copy.firstPhoto}</p>
-                        <button
-                          onClick={() => setShowUpload(true)}
-                          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all"
-                        >
-                          {copy.sharePhoto}
-                        </button>
-                        <div className="mt-4 text-sm text-gray-400">
-                          {"\u{1F3AF}"}{" "}
-                          {copy.activeEventsAvailable(activeEvents.length)}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-6xl mb-4">{"\u{1F4F8}"}</div>
-                        <h3 className="text-xl font-semibold text-white mb-2">
-                          {copy.noActiveEvents}
-                        </h3>
-                        <p className="text-[#d1d1e0] mb-4">
-                          {copy.noActiveEventsBody}
-                        </p>
-                        <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-4 mt-4">
-                          <p className="text-blue-300 text-sm">
-                            {"\u{1F4A1}"} {copy.activeEventsHint}
-                          </p>
-                        </div>
-                      </>
-                    )
-                  ) : (
+            {currentTab === "posts" && filteredPosts.length === 0 && (
+              <EmptyState
+                className="mt-8"
+                title={
+                  activeEvents.length > 0
+                    ? filter === "all"
+                      ? copy.noPhotos
+                      : copy.noPhotosForEvent
+                    : copy.noActiveEvents
+                }
+                description={
+                  activeEvents.length > 0 ? copy.firstPhoto : copy.noActiveEventsBody
+                }
+                action={
+                  activeEvents.length > 0 ? (
                     <>
-                      <div className="text-6xl mb-4">{"\u{1F3C6}"}</div>
-                      <h3 className="text-xl font-semibold text-white mb-2">
-                        {copy.noResults}
-                      </h3>
-                      <p className="text-[#d1d1e0] mb-4">{copy.noResultsBody}</p>
-                      <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-4 mt-4">
-                        <p className="text-yellow-300 text-sm">
-                          {"\u{1F389}"} {copy.resultsHint}
-                        </p>
-                      </div>
+                      <Button onClick={() => setShowUpload(true)}>
+                        {copy.sharePhoto}
+                      </Button>
+                      <p className="mt-4 text-sm text-muted-foreground">
+                        {copy.activeEventsAvailable(activeEvents.length)}
+                      </p>
                     </>
-                  )}
-                </div>
-              </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {copy.activeEventsHint}
+                    </p>
+                  )
+                }
+              />
+            )}
+
+            {currentTab === "results" && announcements.length === 0 && (
+              <EmptyState
+                className="mt-8"
+                title={copy.noResults}
+                description={copy.noResultsBody}
+                action={
+                  <p className="text-sm text-muted-foreground">{copy.resultsHint}</p>
+                }
+              />
             )}
 
             {((currentTab === "posts" && filteredPosts.length > 0) ||
               (currentTab === "results" && announcements.length > 0)) &&
               hasMore && (
-                <div className="flex justify-center py-6 mt-6">
-                  <button
+                <div className="py-8">
+                  <Button
+                    variant="outline"
                     onClick={() =>
                       currentTab === "posts"
                         ? loadPosts(true)
                         : loadAnnouncements(true)
                     }
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all shadow-lg"
                   >
                     {copy.loadMore}
-                  </button>
+                  </Button>
                 </div>
               )}
           </>
         )}
-
-        {showUpload && activeEvents.length > 0 && (
-          <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
-            <PostUpload
-              onUploadComplete={handleUploadComplete}
-              onCancel={() => setShowUpload(false)}
-            />
-          </div>
-        )}
-
-        <PostModal
-          post={selectedPost}
-          isOpen={!!selectedPost}
-          onClose={() => setSelectedPost(null)}
-          onDelete={handlePostDelete}
-        />
-
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
       </div>
-    </div>
+
+      {showUpload && activeEvents.length > 0 && (
+        <div className="fixed inset-0 z-modal flex items-center justify-center overflow-y-auto bg-ink/60 p-4">
+          <PostUpload
+            onUploadComplete={handleUploadComplete}
+            onCancel={() => setShowUpload(false)}
+          />
+        </div>
+      )}
+
+      <PostModal
+        post={selectedPost}
+        isOpen={!!selectedPost}
+        onClose={() => setSelectedPost(null)}
+        onDelete={handlePostDelete}
+      />
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </PageContainer>
   );
 }

@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "next-intl";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { PageContainer, PageHeader, Section } from "@/components/ui/page";
 
 const WORD_BANKS = {
   tr: [
@@ -325,24 +328,23 @@ export default function TypingTest() {
   const renderedText = useMemo(
     () =>
       text.split("").map((char, index) => {
-        let className = "transition-all duration-100 ";
+        let className = "";
 
         if (index < input.length) {
           if (input[index] === char) {
-            className += "opacity-100 text-green-400";
+            className = "text-success";
           } else {
-            className += "rounded bg-red-500/20 px-0.5 text-red-400 opacity-100";
+            className = "text-error underline";
           }
         } else if (index === input.length) {
-          className +=
-            "animate-pulse border-b-2 border-blue-400 bg-blue-500/30 text-gray-400 opacity-50";
+          className = "bg-warning text-ink";
         } else {
-          className += "text-gray-500 opacity-30";
+          className = "text-muted-foreground";
         }
 
         return (
           <span key={index} className={className}>
-            {char === " " ? "\u00A0" : char}
+            {char === " " ? " " : char}
             {char === "\n" ? <br /> : ""}
           </span>
         );
@@ -351,180 +353,149 @@ export default function TypingTest() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 px-4 py-12">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-8 animate-fadeIn text-center">
-          <h1 className="mb-2 text-4xl font-bold text-white md:text-5xl">
-            {copy.title}
-          </h1>
-          <p className="text-gray-400">{copy.subtitle}</p>
-        </div>
+    <PageContainer>
+      <PageHeader title={copy.title} description={copy.subtitle} />
 
-        {!stats ? (
-          <div className="animate-fadeIn space-y-6">
-            <div className="rounded-2xl border border-gray-700 bg-gray-800/50 p-6 shadow-xl backdrop-blur-sm">
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-                  <div className="flex w-full gap-2 sm:w-auto">
-                    <button
-                      onClick={() => setMode("normal")}
-                      disabled={isActive}
-                      className={`flex-1 rounded-lg px-4 py-2 font-medium transition-all sm:flex-none ${
-                        mode === "normal"
-                          ? "bg-blue-600 text-white shadow-lg"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      } disabled:cursor-not-allowed disabled:opacity-50`}
-                    >
-                      {copy.normalMode}
-                    </button>
-                    <button
-                      onClick={() => setMode("code")}
-                      disabled={isActive}
-                      className={`flex-1 rounded-lg px-4 py-2 font-medium transition-all sm:flex-none ${
-                        mode === "code"
-                          ? "bg-blue-600 text-white shadow-lg"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      } disabled:cursor-not-allowed disabled:opacity-50`}
-                    >
-                      {copy.codeMode}
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={resetTest}
-                    className="w-full rounded-lg bg-red-600 px-4 py-2 font-medium text-white shadow-lg transition-all hover:bg-red-700 sm:w-auto"
-                  >
-                    {copy.reset}
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-center gap-3">
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={isEndless}
-                      onChange={(event) => setIsEndless(event.target.checked)}
-                      disabled={isActive}
-                      className="h-5 w-5 cursor-pointer rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-                    />
-                    <span className="font-medium text-gray-300">
-                      {copy.endlessMode}
-                    </span>
-                  </label>
-                  <span className="text-sm text-gray-500">{copy.endlessHelp}</span>
-                </div>
-              </div>
-
-              {isActive && (
-                <div className="mt-6 flex flex-wrap justify-center gap-6 text-center">
-                  <div>
-                    <div className="text-3xl font-bold text-blue-400">
-                      {Math.round(
-                        input.trim().split(/\s+/).length /
-                          ((Date.now() - startTime) / 1000 / 60) || 0
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-400">{copy.wpm}</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-green-400">
-                      {Math.round(
-                        (input
-                          .split("")
-                          .filter((char, i) => char === text[i]).length /
-                          currentCharIndex) *
-                          100 || 0
-                      )}
-                      %
-                    </div>
-                    <div className="text-sm text-gray-400">{copy.accuracy}</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-purple-400">
-                      {Math.round((Date.now() - startTime) / 1000)}s
-                    </div>
-                    <div className="text-sm text-gray-400">{copy.time}</div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div
-              ref={containerRef}
-              tabIndex={0}
-              onKeyDown={handleKeyDown}
-              className="cursor-text overflow-hidden rounded-2xl border-2 border-gray-700 bg-gray-800/50 p-6 shadow-xl backdrop-blur-sm focus:border-blue-500 focus:outline-none md:p-8"
-            >
-              <div
-                className={`leading-relaxed ${
-                  mode === "code"
-                    ? "overflow-x-auto whitespace-pre-wrap font-mono text-base md:text-lg"
-                    : "break-words font-sans text-xl md:text-2xl"
-                }`}
-                style={{ userSelect: "none", wordBreak: "break-word" }}
+      {!stats ? (
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex gap-2">
+              <Button
+                variant={mode === "normal" ? "default" : "outline"}
+                onClick={() => setMode("normal")}
+                disabled={isActive}
               >
-                {renderedText}
-              </div>
+                {copy.normalMode}
+              </Button>
+              <Button
+                variant={mode === "code" ? "default" : "outline"}
+                onClick={() => setMode("code")}
+                disabled={isActive}
+              >
+                {copy.codeMode}
+              </Button>
             </div>
 
-            <div className="text-center text-sm text-gray-500">
-              {copy.clickToStart}
-            </div>
+            <Button variant="secondary" onClick={resetTest}>
+              {copy.reset}
+            </Button>
           </div>
-        ) : (
-          <div className="animate-slideUp rounded-2xl border border-gray-700 bg-gray-800/50 p-8 shadow-xl backdrop-blur-sm">
-            <h2 className="mb-8 text-center text-3xl font-bold text-white">
-              {copy.results}
-            </h2>
 
-            <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
-              <div className="rounded-xl border border-blue-700/50 bg-blue-900/30 p-4 text-center md:p-6">
-                <div className="mb-2 text-4xl font-bold text-blue-400 md:text-5xl">
-                  {stats.wpm}
-                </div>
-                <div className="text-sm text-gray-400">{copy.wordsPerMinute}</div>
-              </div>
-              <div className="rounded-xl border border-green-700/50 bg-green-900/30 p-4 text-center md:p-6">
-                <div className="mb-2 text-4xl font-bold text-green-400 md:text-5xl">
-                  {stats.accuracy}%
-                </div>
-                <div className="text-sm text-gray-400">{copy.accuracy}</div>
-              </div>
-              <div className="rounded-xl border border-purple-700/50 bg-purple-900/30 p-4 text-center md:p-6">
-                <div className="mb-2 text-4xl font-bold text-purple-400 md:text-5xl">
-                  {stats.rawWpm}
-                </div>
-                <div className="text-sm text-gray-400">{copy.rawWpm}</div>
-              </div>
-              <div className="rounded-xl border border-indigo-700/50 bg-indigo-900/30 p-4 text-center md:p-6">
-                <div className="mb-2 text-4xl font-bold text-indigo-400 md:text-5xl">
-                  {stats.timeElapsed}s
-                </div>
-                <div className="text-sm text-gray-400">{copy.time}</div>
-              </div>
-              <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/30 p-4 text-center md:p-6">
-                <div className="mb-2 text-4xl font-bold text-yellow-400 md:text-5xl">
-                  {stats.correctChars}
-                </div>
-                <div className="text-sm text-gray-400">{copy.correctChars}</div>
-              </div>
-              <div className="rounded-xl border border-red-700/50 bg-red-900/30 p-4 text-center md:p-6">
-                <div className="mb-2 text-4xl font-bold text-red-400 md:text-5xl">
-                  {stats.totalChars - stats.correctChars}
-                </div>
-                <div className="text-sm text-gray-400">{copy.errors}</div>
-              </div>
-            </div>
-
-            <button
-              onClick={resetTest}
-              className="w-full rounded-lg bg-blue-600 py-4 text-lg font-bold text-white shadow-lg transition-all hover:bg-blue-700"
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <label
+              htmlFor="typing-endless"
+              className="flex cursor-pointer items-center gap-2"
             >
-              {copy.tryAgain}
-            </button>
+              <Checkbox
+                id="typing-endless"
+                checked={isEndless}
+                onCheckedChange={(checked) => setIsEndless(checked === true)}
+                disabled={isActive}
+              />
+              <span className="font-medium">{copy.endlessMode}</span>
+            </label>
+            <span className="text-sm text-muted-foreground">{copy.endlessHelp}</span>
           </div>
-        )}
-      </div>
-    </div>
+
+          {isActive && (
+            <dl className="mt-6 grid grid-cols-3 gap-4 border-y border-rule py-4">
+              <div className="flex flex-col-reverse">
+                <dt className="mt-1 text-sm text-muted-foreground">{copy.wpm}</dt>
+                <dd className="font-display text-3xl font-extrabold tabular-nums leading-none">
+                  {Math.round(
+                    input.trim().split(/\s+/).length /
+                      ((Date.now() - startTime) / 1000 / 60) || 0
+                  )}
+                </dd>
+              </div>
+              <div className="flex flex-col-reverse">
+                <dt className="mt-1 text-sm text-muted-foreground">{copy.accuracy}</dt>
+                <dd className="font-display text-3xl font-extrabold tabular-nums leading-none">
+                  {Math.round(
+                    (input
+                      .split("")
+                      .filter((char, i) => char === text[i]).length /
+                      currentCharIndex) *
+                      100 || 0
+                  )}
+                  %
+                </dd>
+              </div>
+              <div className="flex flex-col-reverse">
+                <dt className="mt-1 text-sm text-muted-foreground">{copy.time}</dt>
+                <dd className="font-display text-3xl font-extrabold tabular-nums leading-none">
+                  {Math.round((Date.now() - startTime) / 1000)}s
+                </dd>
+              </div>
+            </dl>
+          )}
+
+          <div
+            ref={containerRef}
+            tabIndex={0}
+            onKeyDown={handleKeyDown}
+            className="mt-6 cursor-text overflow-hidden rounded-lg border border-input bg-background p-5 focus-visible:border-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:p-8"
+          >
+            <div
+              className={`leading-relaxed ${
+                mode === "code"
+                  ? "overflow-x-auto whitespace-pre-wrap font-mono text-base md:text-lg"
+                  : "break-words font-sans text-xl md:text-2xl"
+              }`}
+              style={{ userSelect: "none", wordBreak: "break-word" }}
+            >
+              {renderedText}
+            </div>
+          </div>
+
+          <p className="mt-3 text-sm text-muted-foreground">{copy.clickToStart}</p>
+        </div>
+      ) : (
+        <Section title={copy.results}>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-8 border-b border-rule pb-8 md:grid-cols-3">
+            <div className="flex flex-col-reverse">
+              <dt className="mt-2 text-sm text-muted-foreground">{copy.wordsPerMinute}</dt>
+              <dd className="font-display text-4xl font-extrabold tabular-nums leading-none md:text-5xl">
+                {stats.wpm}
+              </dd>
+            </div>
+            <div className="flex flex-col-reverse">
+              <dt className="mt-2 text-sm text-muted-foreground">{copy.accuracy}</dt>
+              <dd className="font-display text-4xl font-extrabold tabular-nums leading-none md:text-5xl">
+                {stats.accuracy}%
+              </dd>
+            </div>
+            <div className="flex flex-col-reverse">
+              <dt className="mt-2 text-sm text-muted-foreground">{copy.rawWpm}</dt>
+              <dd className="font-display text-4xl font-extrabold tabular-nums leading-none md:text-5xl">
+                {stats.rawWpm}
+              </dd>
+            </div>
+            <div className="flex flex-col-reverse">
+              <dt className="mt-2 text-sm text-muted-foreground">{copy.time}</dt>
+              <dd className="font-display text-4xl font-extrabold tabular-nums leading-none md:text-5xl">
+                {stats.timeElapsed}s
+              </dd>
+            </div>
+            <div className="flex flex-col-reverse">
+              <dt className="mt-2 text-sm text-muted-foreground">{copy.correctChars}</dt>
+              <dd className="font-display text-4xl font-extrabold tabular-nums leading-none text-success md:text-5xl">
+                {stats.correctChars}
+              </dd>
+            </div>
+            <div className="flex flex-col-reverse">
+              <dt className="mt-2 text-sm text-muted-foreground">{copy.errors}</dt>
+              <dd className="font-display text-4xl font-extrabold tabular-nums leading-none text-error md:text-5xl">
+                {stats.totalChars - stats.correctChars}
+              </dd>
+            </div>
+          </dl>
+
+          <Button size="lg" onClick={resetTest} className="mt-8">
+            {copy.tryAgain}
+          </Button>
+        </Section>
+      )}
+    </PageContainer>
   );
 }

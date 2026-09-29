@@ -7,6 +7,8 @@ import { useLocale } from "next-intl";
 import { auth } from "../firebase";
 import { checkUserRole, canAccessPage } from "../utils/roleUtils";
 import { logger } from "@/utils/logger";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/page";
 
 export default function AdminProtection({ children, requiredRole = null }) {
   const locale = useLocale();
@@ -96,46 +98,23 @@ export default function AdminProtection({ children, requiredRole = null }) {
 
   if (loading || isChecking) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">{copy.checking}</p>
-        </div>
-      </div>
+      <p role="status" className="py-12 text-ink-2">
+        {copy.checking}
+      </p>
     );
   }
 
   if (!isAuthorized) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-rose-50">
-        <div className="text-center bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-xl border border-white/20">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"
-              />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            {copy.unauthorizedTitle}
-          </h2>
-          <p className="text-gray-600 mb-6">{copy.unauthorizedBody}</p>
-          <button
-            onClick={() => router.push("/admin")}
-            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-600 transform hover:scale-105 transition-all duration-300"
-          >
+      <EmptyState
+        title={copy.unauthorizedTitle}
+        description={copy.unauthorizedBody}
+        action={
+          <Button variant="outline" onClick={() => router.push("/admin")}>
             {copy.backToAdmin}
-          </button>
-        </div>
-      </div>
+          </Button>
+        }
+      />
     );
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale } from "next-intl";
+import { PageContainer } from "@/components/ui/page";
 
 const COPY = {
   tr: {
@@ -235,199 +236,148 @@ const COPY = {
   },
 };
 
+const h2Class =
+  "mt-12 border-t border-rule pt-6 font-display text-xl font-bold first:mt-0 first:border-t-0 first:pt-0";
+const h3Class = "mt-6 font-display text-lg font-semibold";
+const pClass = "mt-3 text-ink-2";
+const listClass = "mt-3 list-disc space-y-1.5 pl-5 text-ink-2";
+
 export default function PrivacyPolicy() {
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
+  const { sections } = copy;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#000000] text-white">
-      <div className="container mx-auto px-4 pb-12 pt-20 sm:pt-24 md:pt-28">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-12 text-center">
-            <h1 className="mb-4 bg-clip-text text-4xl font-bold sm:text-5xl">
-              {copy.title}
-            </h1>
-            <p className="text-xl text-gray-300">{copy.organization}</p>
-            <p className="mt-2 text-sm text-gray-400">{copy.updated}</p>
-          </div>
+    <PageContainer>
+      <header className="mb-10 border-b border-rule pb-6">
+        <h1 className="font-display text-4xl font-extrabold md:text-5xl">{copy.title}</h1>
+        <p className="mt-3 text-md text-ink-2">{copy.organization}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{copy.updated}</p>
+      </header>
 
-          <div className="space-y-8 rounded-2xl border border-gray-700/50 bg-gray-800/30 p-8 backdrop-blur-md">
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.intro.title}
-              </h2>
-              <div className="space-y-4 text-gray-300">
-                {copy.sections.intro.paragraphs.map((paragraph) => (
-                  <p key={paragraph} className="leading-relaxed">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-            </section>
+      <div className="max-w-measure">
+        <section>
+          <h2 className={h2Class}>{sections.intro.title}</h2>
+          {sections.intro.paragraphs.map((paragraph) => (
+            <p key={paragraph} className={pClass}>
+              {paragraph}
+            </p>
+          ))}
+        </section>
 
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.collectedData.title}
-              </h2>
-              <div className="space-y-4">
-                {copy.sections.collectedData.groups.map((group) => (
-                  <div key={group.title}>
-                    <h3 className="mb-2 text-lg font-semibold text-white">{group.title}</h3>
-                    <ul className="ml-4 list-inside list-disc space-y-1 text-gray-300">
-                      {group.items.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.purposes.title}
-              </h2>
-              <p className="mb-4 text-gray-300">{copy.sections.purposes.intro}</p>
-              <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                {copy.sections.purposes.items.map(([label, description]) => (
-                  <li key={label}>
-                    <strong className="text-white">{label}:</strong> {description}
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.legalBasis.title}
-              </h2>
-              <p className="leading-relaxed text-gray-300">{copy.sections.legalBasis.body}</p>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.retention.title}
-              </h2>
-              <div className="rounded-xl border border-blue-500/30 bg-blue-900/20 p-6">
-                <p className="mb-4 leading-relaxed text-gray-300">
-                  {copy.sections.retention.intro}
-                </p>
-                <ul className="space-y-2 text-gray-300">
-                  {copy.sections.retention.items.map(([label, description]) => (
-                    <li key={label}>
-                      <strong className="text-white">{label}:</strong> {description}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-4 rounded-lg border border-yellow-500/30 bg-yellow-900/20 p-4">
-                  <p className="text-sm text-yellow-200">{copy.sections.retention.note}</p>
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.security.title}
-              </h2>
-              <p className="mb-4 leading-relaxed text-gray-300">
-                {copy.sections.security.intro}
-              </p>
-              <ul className="ml-4 list-inside list-disc space-y-2 text-gray-300">
-                {copy.sections.security.items.map((item) => (
+        <section>
+          <h2 className={h2Class}>{sections.collectedData.title}</h2>
+          {sections.collectedData.groups.map((group) => (
+            <div key={group.title}>
+              <h3 className={h3Class}>{group.title}</h3>
+              <ul className={listClass}>
+                {group.items.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.rights.title}
-              </h2>
-              <p className="mb-4 text-gray-300">{copy.sections.rights.intro}</p>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {copy.sections.rights.cards.map(([title, body]) => (
-                  <div
-                    key={title}
-                    className="rounded-xl border border-gray-600/50 bg-gray-700/30 p-4"
-                  >
-                    <h4 className="mb-2 font-semibold text-white">{title}</h4>
-                    <p className="text-sm text-gray-300">{body}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.cookies.title}
-              </h2>
-              <div className="rounded-xl border border-green-500/30 bg-green-900/20 p-6">
-                <p className="leading-relaxed text-gray-300">{copy.sections.cookies.body}</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.thirdParty.title}
-              </h2>
-              <div className="space-y-4">
-                {copy.sections.thirdParty.cards.map(([title, body]) => (
-                  <div
-                    key={title}
-                    className="rounded-xl border border-gray-600/50 bg-gray-700/30 p-4"
-                  >
-                    <h4 className="mb-2 font-semibold text-white">{title}</h4>
-                    <p className="text-sm text-gray-300">{body}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.openSource.title}
-              </h2>
-              <div className="rounded-xl border border-purple-500/30 bg-purple-900/20 p-6">
-                <p className="mb-4 leading-relaxed text-gray-300">
-                  {copy.sections.openSource.body}
-                </p>
-                <p className="font-semibold text-purple-300">
-                  {copy.sections.openSource.emphasis}
-                </p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.contact.title}
-              </h2>
-              <div className="rounded-xl border border-gray-600/50 bg-gray-700/30 p-6">
-                <p className="mb-4 leading-relaxed text-gray-300">
-                  {copy.sections.contact.intro}
-                </p>
-                <div className="space-y-2">
-                  {copy.sections.contact.items.map(([label, value]) => (
-                    <p key={label} className="text-white">
-                      <strong>{label}:</strong> {value}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-blue-400">
-                {copy.sections.updates.title}
-              </h2>
-              <p className="leading-relaxed text-gray-300">{copy.sections.updates.body}</p>
-            </section>
-
-            <div className="mt-12 border-t border-gray-700/50 pt-8 text-center">
-              <p className="text-sm text-gray-400">{copy.footer}</p>
             </div>
-          </div>
-        </div>
+          ))}
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{sections.purposes.title}</h2>
+          <p className={pClass}>{sections.purposes.intro}</p>
+          <ul className={listClass}>
+            {sections.purposes.items.map(([label, description]) => (
+              <li key={label}>
+                <strong className="font-semibold text-ink">{label}:</strong> {description}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{sections.legalBasis.title}</h2>
+          <p className={pClass}>{sections.legalBasis.body}</p>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{sections.retention.title}</h2>
+          <p className={pClass}>{sections.retention.intro}</p>
+          <ul className={listClass}>
+            {sections.retention.items.map(([label, description]) => (
+              <li key={label}>
+                <strong className="font-semibold text-ink">{label}:</strong> {description}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 rounded bg-warning px-4 py-3 text-sm text-ink">
+            {sections.retention.note}
+          </p>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{sections.security.title}</h2>
+          <p className={pClass}>{sections.security.intro}</p>
+          <ul className={listClass}>
+            {sections.security.items.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{sections.rights.title}</h2>
+          <p className={pClass}>{sections.rights.intro}</p>
+          <dl className="mt-3 divide-y divide-rule border-y border-rule">
+            {sections.rights.cards.map(([title, body]) => (
+              <div key={title} className="py-3">
+                <dt className="font-semibold text-ink">{title}</dt>
+                <dd className="mt-1 text-ink-2">{body}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{sections.cookies.title}</h2>
+          <p className={pClass}>{sections.cookies.body}</p>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{sections.thirdParty.title}</h2>
+          <dl className="mt-3 divide-y divide-rule border-y border-rule">
+            {sections.thirdParty.cards.map(([title, body]) => (
+              <div key={title} className="py-3">
+                <dt className="font-semibold text-ink">{title}</dt>
+                <dd className="mt-1 text-ink-2">{body}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{sections.openSource.title}</h2>
+          <p className={pClass}>{sections.openSource.body}</p>
+          <p className="mt-3 font-semibold text-ink">{sections.openSource.emphasis}</p>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{sections.contact.title}</h2>
+          <p className={pClass}>{sections.contact.intro}</p>
+          <ul className={listClass}>
+            {sections.contact.items.map(([label, value]) => (
+              <li key={label}>
+                <strong className="font-semibold text-ink">{label}:</strong> {value}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section>
+          <h2 className={h2Class}>{sections.updates.title}</h2>
+          <p className={pClass}>{sections.updates.body}</p>
+        </section>
+
+        <p className="mt-12 border-t border-rule pt-4 text-sm text-muted-foreground">
+          {copy.footer}
+        </p>
       </div>
-    </div>
+    </PageContainer>
   );
 }

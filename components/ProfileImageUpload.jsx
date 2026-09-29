@@ -5,6 +5,8 @@ import { useLocale } from "next-intl";
 import { uploadImage } from "../utils/storageUtils";
 import { toast } from "react-toastify";
 import { logger } from "@/utils/logger";
+import { Camera } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const COPY = {
   tr: {
@@ -82,15 +84,18 @@ const ProfileImageUpload = ({
 
   return (
     <>
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="icon"
         onClick={() => !uploading && fileInputRef.current?.click()}
-        disabled={uploading}
-        className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm text-white shadow-lg transition-colors hover:bg-blue-600 disabled:bg-blue-300"
+        loading={uploading}
+        className="absolute -bottom-2 -right-2 bg-background"
         title={copy.title}
+        aria-label={copy.title}
       >
-        {uploading ? "⏳" : "📷"}
-      </button>
+        <Camera />
+      </Button>
 
       <input
         ref={fileInputRef}

@@ -21,10 +21,19 @@ import {
 import { useRouter } from "@/i18n/navigation";
 import QRCode from "qrcode";
 import { v4 as uuidv4 } from "uuid";
-import { Link } from "@/i18n/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
+import { Calendar, ChevronDown, ChevronRight, MapPin, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { Input, fieldClasses } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { PageHeader, Section, EmptyState } from "@/components/ui/page";
+import { Stat } from "@/components/ui/stat";
 
 export default function AdminEventsPage() {
   const [user, loading] = useAuthState(auth);
@@ -426,357 +435,173 @@ export default function AdminEventsPage() {
   }, [qrCodeModalOpen]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-gray-200">Loading...</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">Loading...</p>;
   }
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-red-500">Access Denied</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        Access Denied
+      </p>
     );
   }
 
+  const rowAction = "h-11 md:h-9";
+  const codeChip = "rounded-sm bg-paper-2 px-1.5 py-0.5 font-outlier text-xs";
+  const codeBlock = "rounded-sm bg-paper-2 p-2 font-outlier text-xs";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 sm:p-6">
-      {/* Back to Admin Panel Button */}
-      <div className="mb-6 sm:mb-8">
-        <Link
-          href="/admin"
-          className="inline-flex items-center px-4 py-3 text-sm sm:text-base bg-gray-800/70 backdrop-blur-lg text-gray-200 rounded-2xl hover:bg-gray-700/90 transition-all duration-300 border border-gray-700/50 shadow-lg hover:shadow-xl transform hover:scale-105"
-        >
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Admin Paneline Geri Dön
-        </Link>
-      </div>
+    <div>
+      <PageHeader
+        title="Etkinlik Yönetimi"
+        description="Tüm etkinlikleri görüntüleyin ve yönetin"
+      />
 
-      {/* Header */}
-      <div className="text-center mb-8 sm:mb-12">
-        <div className="inline-block">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent mb-2">
-            Etkinlik Yönetimi
-          </h1>
-          <div className="h-1 bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 rounded-full"></div>
-        </div>
-        <p className="text-gray-300 mt-4 text-lg">
-          Tüm etkinlikleri görüntüleyin ve yönetin
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6 mb-8">
-        <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-300">
-                Aktif Etkinlik
-              </p>
-              <p className="text-3xl font-bold text-blue-400">
-                {getCurrentEvents().length}
-              </p>
-            </div>
-            <div className="p-3 bg-blue-500/20 rounded-xl">
-              <svg
-                className="w-6 h-6 text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-300">Arşivlenen</p>
-              <p className="text-3xl font-bold text-orange-400">
-                {getArchivedEvents().length}
-              </p>
-            </div>
-            <div className="p-3 bg-orange-500/20 rounded-xl">
-              <svg
-                className="w-6 h-6 text-orange-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 8l6 6m0 0l6-6m-6 6V3"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-300">Sponsorlu</p>
-              <p className="text-3xl font-bold text-purple-400">
-                {
-                  getCurrentEvents().filter(
-                    (e) => e.sponsors && e.sponsors.length > 0
-                  ).length
-                }
-              </p>
-            </div>
-            <div className="p-3 bg-purple-500/20 rounded-xl">
-              <svg
-                className="w-6 h-6 text-purple-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l5.5-3.5L16 21z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/50 shadow-xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-300">Kategoriler</p>
-              <p className="text-3xl font-bold text-cyan-400">
-                {new Set(getCurrentEvents().map((e) => e.category)).size}
-              </p>
-            </div>
-            <div className="p-3 bg-cyan-500/20 rounded-xl">
-              <svg
-                className="w-6 h-6 text-cyan-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-2 mb-8 border border-gray-700/50 shadow-xl">
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setActiveTab("current")}
-            className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-300 ${
-              activeTab === "current"
-                ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg transform scale-105"
-                : "text-gray-300 hover:bg-gray-700/50"
-            }`}
-          >
-            Aktif Etkinlikler ({getCurrentEvents().length})
-          </button>
-          <button
-            onClick={() => setActiveTab("archive")}
-            className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-300 ${
-              activeTab === "archive"
-                ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg transform scale-105"
-                : "text-gray-300 hover:bg-gray-700/50"
-            }`}
-          >
-            Arşiv ({getArchivedEvents().length})
-          </button>
-        </div>
-      </div>
+      {/* Stats */}
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4 md:max-w-2xl">
+        <Stat label="Aktif Etkinlik" value={getCurrentEvents().length} />
+        <Stat label="Arşivlenen" value={getArchivedEvents().length} />
+        <Stat
+          label="Sponsorlu"
+          value={
+            getCurrentEvents().filter((e) => e.sponsors && e.sponsors.length > 0)
+              .length
+          }
+        />
+        <Stat
+          label="Kategoriler"
+          value={new Set(getCurrentEvents().map((e) => e.category)).size}
+        />
+      </dl>
 
       {/* Add / Edit Event Form */}
-      <section className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 sm:p-8 mb-8 border border-gray-700/50 shadow-xl">
-        <div className="flex items-center mb-6">
-          <div className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg mr-3">
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-100">
-            {isEditing ? "Etkinlik Düzenle" : "Yeni Etkinlik Ekle"}
-          </h2>
-        </div>
+      <Section
+        title={isEditing ? "Etkinlik Düzenle" : "Yeni Etkinlik Ekle"}
+        className="md:mt-16"
+      >
         <form
           onSubmit={isEditing ? handleUpdateEvent : handleAddEvent}
-          className="space-y-6"
+          className="max-w-3xl space-y-4"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                Etkinlik Adı *
-              </label>
-              <input
+          <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
+            <Field id="event-name" label="Etkinlik Adı" required>
+              <Input
                 type="text"
                 name="name"
                 placeholder="Etkinlik adını girin..."
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300 text-gray-200 placeholder-gray-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                English Event Name
-              </label>
-              <input
+            </Field>
+            <Field id="event-name-en" label="English Event Name">
+              <Input
                 type="text"
                 name="nameEn"
                 placeholder="Enter the event name in English..."
                 value={formData.nameEn}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300 text-gray-200 placeholder-gray-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                Kategori *
-              </label>
+            </Field>
+            <Field id="event-category" label="Kategori" required>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300 text-gray-200"
+                className={cn(fieldClasses, "h-control")}
               >
                 <option value="Konferans">Konferans</option>
                 <option value="DevFest">DevFest</option>
                 <option value="Gezi">Gezi</option>
                 <option value="Eğitim">Eğitim</option>
               </select>
-            </div>
+            </Field>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-200">
-                Açıklama *
-              </label>
-              <button
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="event-description">Açıklama *</Label>
+              <Button
                 type="button"
+                variant="link"
                 onClick={() => setShowPreview(!showPreview)}
-                className="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200"
               >
                 {showPreview ? "Düzenle" : "Önizleme"}
-              </button>
+              </Button>
             </div>
             {showPreview ? (
-              <div className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl min-h-[120px] focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300">
+              <div
+                id="event-description"
+                className="min-h-[120px] w-full rounded border border-input bg-background px-3 py-2"
+              >
                 <MarkdownRenderer content={formData.description} />
               </div>
             ) : (
-              <textarea
+              <Textarea
+                id="event-description"
                 name="description"
                 placeholder="Etkinlik açıklamasını girin... (Markdown destekli)"
                 value={formData.description}
                 onChange={handleChange}
                 required
                 rows={4}
-                className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300 text-gray-200 placeholder-gray-500 resize-none"
               />
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              English Description
-            </label>
-            <textarea
+          <Field id="event-description-en" label="English Description">
+            <Textarea
               name="descriptionEn"
               placeholder="Enter the event description in English..."
               value={formData.descriptionEn}
               onChange={handleChange}
               rows={4}
-              className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300 text-gray-200 placeholder-gray-500 resize-none"
             />
-          </div>
+          </Field>
+
           {/* Markdown Help Guide */}
-          <details className="group">
-            <summary className="cursor-pointer select-none list-none">
-              <div className="flex items-center space-x-2 text-sm text-gray-400 hover:text-gray-300 transition-colors duration-200">
-                <span className="inline-block w-4 h-4 group-open:rotate-90 transition-transform duration-200">
-                  ▶
-                </span>
-                <span className="font-medium">Markdown Formatını Nasıl Kullanacağım?</span>
-              </div>
+          <details className="group border-y border-rule">
+            <summary className="flex min-h-11 cursor-pointer select-none list-none items-center gap-2 text-sm text-muted-foreground transition-colors duration-micro hover:text-ink">
+              <ChevronRight
+                className="h-4 w-4 shrink-0 transition-transform duration-short ease-out group-open:rotate-90"
+                aria-hidden="true"
+              />
+              <span className="font-medium">Markdown Formatını Nasıl Kullanacağım?</span>
             </summary>
-            <div className="mt-4 p-4 bg-gray-800/60 rounded-2xl border border-gray-700/50 space-y-4">
+            <div className="space-y-5 pb-5 pt-2">
               <div>
-                <h4 className="text-sm font-semibold text-gray-300 mb-3">Temel Formatlar</h4>
-                <div className="space-y-2 text-sm text-gray-400">
-                  <p><code className="bg-gray-900/80 px-2 py-1 rounded">**kalın metin**</code> → <strong>kalın metin</strong></p>
-                  <p><code className="bg-gray-900/80 px-2 py-1 rounded">*italik metin*</code> → <em>italik metin</em></p>
-                  <p><code className="bg-gray-900/80 px-2 py-1 rounded">~~çizili metin~~</code> → <s>çizili metin</s></p>
+                <h4 className="mb-2 text-sm font-semibold text-ink">Temel Formatlar</h4>
+                <div className="space-y-2 text-sm text-ink-2">
+                  <p><code className={codeChip}>**kalın metin**</code> → <strong>kalın metin</strong></p>
+                  <p><code className={codeChip}>*italik metin*</code> → <em>italik metin</em></p>
+                  <p><code className={codeChip}>~~çizili metin~~</code> → <s>çizili metin</s></p>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-gray-300 mb-3">Başlıklar</h4>
-                <div className="space-y-2 text-sm text-gray-400 font-mono">
-                  <p><code className="bg-gray-900/80 px-2 py-1 rounded"># Büyük Başlık</code></p>
-                  <p><code className="bg-gray-900/80 px-2 py-1 rounded">## Orta Başlık</code></p>
-                  <p><code className="bg-gray-900/80 px-2 py-1 rounded">### Küçük Başlık</code></p>
+                <h4 className="mb-2 text-sm font-semibold text-ink">Başlıklar</h4>
+                <div className="space-y-2 text-sm text-ink-2">
+                  <p><code className={codeChip}># Büyük Başlık</code></p>
+                  <p><code className={codeChip}>## Orta Başlık</code></p>
+                  <p><code className={codeChip}>### Küçük Başlık</code></p>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-gray-300 mb-3">Linkler</h4>
-                <div className="space-y-2 text-sm text-gray-400">
-                  <p><code className="bg-gray-900/80 px-2 py-1 rounded">[Metin](https://example.com)</code></p>
-                  <p className="text-gray-500 text-xs">Kare parantez içine gösterilecek metni, normal parantez içine de URL'yi yazın.</p>
+                <h4 className="mb-2 text-sm font-semibold text-ink">Linkler</h4>
+                <div className="space-y-2 text-sm text-ink-2">
+                  <p><code className={codeChip}>[Metin](https://example.com)</code></p>
+                  <p className="text-xs text-muted-foreground">Kare parantez içine gösterilecek metni, normal parantez içine de URL'yi yazın.</p>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-gray-300 mb-3">Kod</h4>
-                <div className="space-y-2 text-sm text-gray-400">
-                  <p><code className="bg-gray-900/80 px-2 py-1 rounded">`inline kod`</code> → inline kod</p>
-                  <p className="text-gray-500 text-xs">Kod bloğu için üç backtick (`) kullanın:</p>
-                  <div className="bg-gray-900/80 p-2 rounded font-mono text-xs text-cyan-400">
+                <h4 className="mb-2 text-sm font-semibold text-ink">Kod</h4>
+                <div className="space-y-2 text-sm text-ink-2">
+                  <p><code className={codeChip}>`inline kod`</code> → inline kod</p>
+                  <p className="text-xs text-muted-foreground">Kod bloğu için üç backtick (`) kullanın:</p>
+                  <div className={codeBlock}>
                     ```<br/>
                     kodunuz burada<br/>
                     ```
@@ -785,19 +610,19 @@ export default function AdminEventsPage() {
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-gray-300 mb-3">Listeler</h4>
-                <div className="space-y-3 text-sm text-gray-400">
+                <h4 className="mb-2 text-sm font-semibold text-ink">Listeler</h4>
+                <div className="space-y-3 text-sm text-ink-2">
                   <div>
-                    <p className="text-gray-300 mb-1">Maddeli Liste:</p>
-                    <div className="bg-gray-900/80 p-2 rounded font-mono text-xs">
+                    <p className="mb-1">Maddeli Liste:</p>
+                    <div className={codeBlock}>
                       - Madde 1<br/>
                       - Madde 2<br/>
                       - Madde 3
                     </div>
                   </div>
                   <div>
-                    <p className="text-gray-300 mb-1">Numaralı Liste:</p>
-                    <div className="bg-gray-900/80 p-2 rounded font-mono text-xs">
+                    <p className="mb-1">Numaralı Liste:</p>
+                    <div className={codeBlock}>
                       1. Madde 1<br/>
                       2. Madde 2<br/>
                       3. Madde 3
@@ -807,254 +632,193 @@ export default function AdminEventsPage() {
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-gray-300 mb-3">Dikkat Kutusu (Bloktur)</h4>
-                <div className="space-y-2 text-sm text-gray-400">
-                  <p><code className="bg-gray-900/80 px-2 py-1 rounded">&gt; Önemli bilgi</code></p>
-                  <p className="text-gray-500 text-xs">Başına &gt; koyduğunuz satırlar dikkat kutusu olarak gösterilir.</p>
+                <h4 className="mb-2 text-sm font-semibold text-ink">Dikkat Kutusu (Bloktur)</h4>
+                <div className="space-y-2 text-sm text-ink-2">
+                  <p><code className={codeChip}>&gt; Önemli bilgi</code></p>
+                  <p className="text-xs text-muted-foreground">Başına &gt; koyduğunuz satırlar dikkat kutusu olarak gösterilir.</p>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-gray-700/50">
-                <p className="text-xs text-gray-500">
-                  💡 <strong>İpucu:</strong> Sağ üstteki "Önizleme" butonunu kullanarak yazarken nasıl görüneceğini görebilirsiniz!
+              <div className="border-t border-rule pt-3">
+                <p className="text-xs text-muted-foreground">
+                  <strong>İpucu:</strong> Sağ üstteki "Önizleme" butonunu kullanarak yazarken nasıl görüneceğini görebilirsiniz!
                 </p>
               </div>
             </div>
           </details>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                Tarih *
-              </label>
-              <input
+          <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
+            <Field id="event-date" label="Tarih" required>
+              <Input
                 type="date"
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300 text-gray-200"
+                className="font-outlier"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                Saat *
-              </label>
-              <input
+            </Field>
+            <Field id="event-time" label="Saat" required>
+              <Input
                 type="time"
                 name="time"
                 value={formData.time}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300 text-gray-200"
+                className="font-outlier"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                Konum *
-              </label>
-              <input
+            </Field>
+            <Field id="event-location" label="Konum" required>
+              <Input
                 type="text"
                 name="location"
                 placeholder="Etkinlik konumunu girin..."
                 value={formData.location}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300 text-gray-200 placeholder-gray-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                English Location
-              </label>
-              <input
+            </Field>
+            <Field id="event-location-en" label="English Location">
+              <Input
                 type="text"
                 name="locationEn"
                 placeholder="Enter the event location in English..."
                 value={formData.locationEn}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300 text-gray-200 placeholder-gray-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                Konum *
-              </label>
-              <input
-                type="text"
-                name="location"
-                placeholder="Etkinlik konumunu girin..."
-                value={formData.location}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300 text-gray-200 placeholder-gray-500"
-              />
-            </div>
+            </Field>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              Etkinlik Resmi
-            </label>
-            <div className="bg-gray-700/40 rounded-xl p-4">
-              <ImageUpload
-                onImageUpload={handleImageUpload}
-                currentImageUrl={formData.imageUrl}
-                folder={StoragePaths.EVENTS}
-                prefix="event_"
-                placeholder="Etkinlik Resmi Yükle"
-              />
-            </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium leading-none">Etkinlik Resmi</span>
+            <ImageUpload
+              onImageUpload={handleImageUpload}
+              currentImageUrl={formData.imageUrl}
+              folder={StoragePaths.EVENTS}
+              prefix="event_"
+              placeholder="Etkinlik Resmi Yükle"
+            />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              Doküman URL'si
-            </label>
-            <input
+          <Field id="event-file-url" label="Doküman URL'si">
+            <Input
               type="url"
               name="file_url"
               placeholder="https://example.com/document.pdf"
               value={formData.file_url}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl focus:outline-none focus:border-blue-400 focus:bg-gray-700/80 transition-all duration-300 text-gray-200 placeholder-gray-500"
             />
-          </div>
+          </Field>
 
           {/* Sponsors Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              Sponsorlar
-            </label>
-            <div className="bg-gray-700/40 rounded-xl p-4">
-              <div className="relative">
-                <button
-                  type="button"
-                  className="w-full px-4 py-3 bg-gray-700/60 backdrop-blur-sm border-2 border-transparent rounded-2xl text-left text-gray-200 focus:outline-none focus:border-blue-400 transition-all duration-300"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                >
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium leading-none">Sponsorlar</span>
+            <div className="relative">
+              <button
+                type="button"
+                className={cn(
+                  fieldClasses,
+                  "flex h-control items-center justify-between gap-2 text-left"
+                )}
+                aria-expanded={isDropdownOpen}
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <span className="min-w-0 truncate">
                   {formData.sponsors.length > 0
                     ? `${formData.sponsors.length} sponsor seçildi`
                     : "Sponsor seçin"}
-                  <svg
-                    className="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-                {isDropdownOpen && (
-                  <div className="absolute z-20 mt-2 bg-gray-800 border border-gray-600 rounded-2xl shadow-2xl max-h-60 w-full overflow-auto">
-                    {sponsors.map((sponsor) => (
-                      <div
-                        key={sponsor.firestoreId}
-                        className="px-4 py-3 cursor-pointer hover:bg-gray-700 transition-colors duration-200"
-                        onClick={() => {
-                          if (
-                            !formData.sponsors.includes(sponsor.firestoreId)
-                          ) {
-                            setFormData((prev) => ({
-                              ...prev,
-                              sponsors: [...prev.sponsors, sponsor.firestoreId],
-                            }));
-                          }
-                          setIsDropdownOpen(false);
-                        }}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={sponsor.img_url}
-                            alt={sponsor.name}
-                            className="w-8 h-8 object-contain rounded-lg"
-                            onError={(e) => (e.target.style.display = "none")}
-                          />
-                          <span className="font-medium text-gray-200">{sponsor.name}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {/* Display selected sponsors */}
-              {formData.sponsors.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {formData.sponsors.map((sponsorId, index) => {
-                    const sponsor = sponsors.find(
-                      (s) => s.firestoreId === sponsorId
-                    );
-                    return (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-3 py-2 bg-blue-500/20 text-blue-800 text-sm rounded-xl font-medium"
-                      >
-                        {sponsor?.name || "Bilinmeyen Sponsor"}
-                        <button
-                          type="button"
-                          className="ml-2 text-blue-400 hover:text-blue-800 font-bold"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              sponsors: prev.sponsors.filter(
-                                (id) => id !== sponsorId
-                              ),
-                            }))
-                          }
-                        >
-                          ×
-                        </button>
-                      </span>
-                    );
-                  })}
+                </span>
+                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
+              </button>
+              {isDropdownOpen && (
+                <div className="absolute z-dropdown mt-1 max-h-60 w-full overflow-auto rounded-lg border border-rule bg-background shadow-whisper">
+                  {sponsors.map((sponsor) => (
+                    <button
+                      type="button"
+                      key={sponsor.firestoreId}
+                      className="flex min-h-11 w-full items-center gap-3 px-3 py-2 text-left transition-colors duration-micro hover:bg-secondary"
+                      onClick={() => {
+                        if (
+                          !formData.sponsors.includes(sponsor.firestoreId)
+                        ) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            sponsors: [...prev.sponsors, sponsor.firestoreId],
+                          }));
+                        }
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      <img
+                        src={sponsor.img_url}
+                        alt={sponsor.name}
+                        className="h-8 w-8 rounded object-contain"
+                        onError={(e) => (e.target.style.display = "none")}
+                      />
+                      <span className="min-w-0 font-medium">{sponsor.name}</span>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
+            {/* Display selected sponsors */}
+            {formData.sponsors.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {formData.sponsors.map((sponsorId, index) => {
+                  const sponsor = sponsors.find(
+                    (s) => s.firestoreId === sponsorId
+                  );
+                  return (
+                    <Badge key={index} className="gap-2 py-1 text-sm">
+                      {sponsor?.name || "Bilinmeyen Sponsor"}
+                      <button
+                        type="button"
+                        className="-mr-1 inline-flex h-5 w-5 items-center justify-center rounded-sm text-muted-foreground transition-colors duration-micro hover:text-ink"
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            sponsors: prev.sponsors.filter(
+                              (id) => id !== sponsorId
+                            ),
+                          }))
+                        }
+                      >
+                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          <div className="pt-4">
-            <button
-              type="submit"
-              className={`w-full py-4 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] ${
-                isEditing
-                  ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-600 hover:to-orange-600"
-                  : "bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600"
-              }`}
-            >
+          <div className="pt-2">
+            <Button type="submit" size="lg" className="w-full sm:w-auto">
               {isEditing ? "Etkinlik Güncelle" : "Etkinlik Ekle"}
-            </button>
+            </Button>
           </div>
         </form>
-      </section>
+      </Section>
 
       {/* Manage Events */}
-      <section className="bg-gray-800/70 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border border-gray-700/50 shadow-xl">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg mr-3">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-100">
-              Tüm Etkinlikler ({events.length})
-            </h2>
-          </div>
+      <Section title={`Tüm Etkinlikler (${events.length})`} className="md:mt-16">
+        <div className="mb-2 flex gap-6 border-b border-rule">
+          <button
+            type="button"
+            onClick={() => setActiveTab("current")}
+            aria-current={activeTab === "current" ? "true" : undefined}
+            className="-mb-px min-h-11 whitespace-nowrap border-b-2 border-transparent text-sm font-medium text-muted-foreground transition-colors duration-micro hover:text-ink aria-[current=true]:border-brand aria-[current=true]:font-semibold aria-[current=true]:text-ink"
+          >
+            Aktif Etkinlikler ({getCurrentEvents().length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("archive")}
+            aria-current={activeTab === "archive" ? "true" : undefined}
+            className="-mb-px min-h-11 whitespace-nowrap border-b-2 border-transparent text-sm font-medium text-muted-foreground transition-colors duration-micro hover:text-ink aria-[current=true]:border-brand aria-[current=true]:font-semibold aria-[current=true]:text-ink"
+          >
+            Arşiv ({getArchivedEvents().length})
+          </button>
         </div>
 
         {(() => {
@@ -1063,265 +827,168 @@ export default function AdminEventsPage() {
 
           if (displayEvents.length === 0) {
             return (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto bg-gray-900 rounded-full flex items-center justify-center mb-4">
-                  <svg
-                    className="w-8 h-8 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <p className="text-lg text-gray-400 mb-2">
-                  {activeTab === "current"
+              <EmptyState
+                title={
+                  activeTab === "current"
                     ? "Henüz aktif etkinlik bulunmuyor"
-                    : "Arşivlenmiş etkinlik bulunmuyor"}
-                </p>
-                <p className="text-sm text-gray-400">
-                  {activeTab === "current"
+                    : "Arşivlenmiş etkinlik bulunmuyor"
+                }
+                description={
+                  activeTab === "current"
                     ? "İlk etkinliği eklemek için yukarıdaki formu kullanın"
-                    : "1 haftadan eski etkinlikler burada görünür"}
-                </p>
-              </div>
+                    : "1 haftadan eski etkinlikler burada görünür"
+                }
+                className="border-t-0"
+              />
             );
           }
 
           return (
-            <div className="space-y-6">
+            <ul>
               {displayEvents.map((event) => {
                 const isArchived = isEventArchived(event.date);
                 return (
-                  <div
+                  <li
                     key={event.firestoreId}
-                    className="bg-gray-700/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/30 shadow-md hover:shadow-lg transition-all duration-300"
+                    className="grid gap-4 border-b border-rule py-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-8"
                   >
-                    <div className="flex flex-col lg:flex-row gap-6">
-                      {/* Event Info */}
-                      <div className="flex-1">
-                        <div className="flex items-start space-x-4">
-                          {event.imageUrl && (
-                            <img
-                              src={event.imageUrl}
-                              alt={event.name}
-                              className="w-16 h-16 rounded-xl object-cover border border-gray-600"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
-                              <h3 className="text-xl font-bold text-gray-100 mb-1">
-                                {event.name}
-                              </h3>
-                              <span
-                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                                  event.category === "DevFest"
-                                    ? "bg-purple-500/20 text-purple-800"
-                                    : event.category === "Konferans"
-                                    ? "bg-blue-500/20 text-blue-800"
-                                    : event.category === "Gezi"
-                                    ? "bg-green-500/20 text-green-800"
-                                    : "bg-yellow-500/20 text-yellow-800"
-                                }`}
-                              >
-                                {event.category}
-                              </span>
-                            </div>
-                            <div className="text-gray-300 mb-3 line-clamp-2">
-                              <MarkdownRenderer
-                                content={event.description}
-                                className="[&>*]:mb-0 [&>*]:leading-tight"
-                              />
-                            </div>
-                            <div className="flex flex-wrap gap-3 text-sm text-gray-400">
-                              <div className="flex items-center">
-                                <svg
-                                  className="w-4 h-4 mr-1 text-blue-500"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                  />
-                                </svg>
-                                {event.date} - {event.time}
-                              </div>
-                              <div className="flex items-center">
-                                <svg
-                                  className="w-4 h-4 mr-1 text-green-500"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                  />
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                  />
-                                </svg>
-                                {event.location}
-                              </div>
-                              {event.sponsors && event.sponsors.length > 0 && (
-                                <div className="flex items-center">
-                                  <svg
-                                    className="w-4 h-4 mr-1 text-purple-500"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l5.5-3.5L16 21z"
-                                    />
-                                  </svg>
-                                  {event.sponsors.length} sponsor
-                                </div>
-                              )}
-                            </div>
+                    {/* Event Info */}
+                    <div className="flex min-w-0 items-start gap-4">
+                      {event.imageUrl && (
+                        <img
+                          src={event.imageUrl}
+                          alt={event.name}
+                          className="aspect-square w-16 shrink-0 rounded object-cover"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <h3 className="text-lg font-bold">{event.name}</h3>
+                          <Badge>{event.category}</Badge>
+                        </div>
+                        <div className="mb-3 line-clamp-2 text-ink-2">
+                          <MarkdownRenderer
+                            content={event.description}
+                            className="[&>*]:mb-0 [&>*]:leading-tight"
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            <span className="font-outlier tabular-nums">
+                              {event.date} - {event.time}
+                            </span>
                           </div>
+                          <div className="flex min-w-0 items-center gap-1.5">
+                            <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            <span className="min-w-0">{event.location}</span>
+                          </div>
+                          {event.sponsors && event.sponsors.length > 0 && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="tabular-nums">{event.sponsors.length}</span> sponsor
+                            </div>
+                          )}
                         </div>
                       </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:w-48">
-                        <button
-                          onClick={() => handleEditEvent(event)}
-                          disabled={isArchived}
-                          className={`flex-1 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-300 shadow-md hover:shadow-lg ${
-                            isArchived
-                              ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                              : "bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600 transform hover:scale-105"
-                          }`}
-                        >
-                          Düzenle
-                        </button>
-                        <button
-                          onClick={() => handleDeleteEvent(event.firestoreId)}
-                          className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-2 rounded-xl hover:from-red-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg font-medium text-sm"
-                        >
-                          Sil
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleSendEmailToRegisteredUsers(event.id)
-                          }
-                          disabled={isArchived}
-                          className={`flex-1 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-300 shadow-md ${
-                            isArchived
-                              ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                              : "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 transform hover:scale-105 hover:shadow-lg"
-                          }`}
-                          title={
-                            isArchived
-                              ? "Arşivlenen etkinlikler için email gönderilemez"
-                              : ""
-                          }
-                        >
-                          Email Gönder
-                        </button>
-                        <button
-                          onClick={() => handleGenerateQRCode(event.id)}
-                          disabled={isArchived}
-                          className={`flex-1 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-300 shadow-md ${
-                            isArchived
-                              ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                              : "bg-gradient-to-r from-purple-500 to-violet-500 text-white hover:from-purple-600 hover:to-violet-600 transform hover:scale-105 hover:shadow-lg"
-                          }`}
-                          title={
-                            isArchived
-                              ? "Arşivlenen etkinlikler için QR kod oluşturulamaz"
-                              : ""
-                          }
-                        >
-                          QR Kodu
-                        </button>
-                      </div>
                     </div>
-                  </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap items-start gap-2 lg:w-52 lg:justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={rowAction}
+                        onClick={() => handleEditEvent(event)}
+                        disabled={isArchived}
+                      >
+                        Düzenle
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className={rowAction}
+                        onClick={() => handleDeleteEvent(event.firestoreId)}
+                      >
+                        Sil
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={rowAction}
+                        onClick={() =>
+                          handleSendEmailToRegisteredUsers(event.id)
+                        }
+                        disabled={isArchived}
+                        title={
+                          isArchived
+                            ? "Arşivlenen etkinlikler için email gönderilemez"
+                            : ""
+                        }
+                      >
+                        Email Gönder
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={rowAction}
+                        onClick={() => handleGenerateQRCode(event.id)}
+                        disabled={isArchived}
+                        title={
+                          isArchived
+                            ? "Arşivlenen etkinlikler için QR kod oluşturulamaz"
+                            : ""
+                        }
+                      >
+                        QR Kodu
+                      </Button>
+                    </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           );
         })()}
-      </section>
+      </Section>
 
       {/* QR Code Modal */}
       {qrCodeModalOpen && (
-        <div 
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4"
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4 animate-in fade-in-0 duration-short"
           style={{ overscrollBehavior: 'contain' }}
           onClick={() => setQRCodeModalOpen(false)}
         >
-          <div 
-            className="bg-gray-700/90 backdrop-blur-lg p-8 rounded-3xl shadow-2xl max-w-md w-full border border-gray-700/50"
+          <div
+            className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-lg border border-rule bg-background p-6 text-foreground"
             style={{ overscrollBehavior: 'contain' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-6">
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl mr-3">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V6a1 1 0 00-1-1H5a1 1 0 00-1 1v1a1 1 0 001 1zm12 0h2a1 1 0 001-1V6a1 1 0 00-1-1h-2a1 1 0 00-1 1v1a1 1 0 001 1zM5 20h2a1 1 0 001-1v-1a1 1 0 00-1-1H5a1 1 0 00-1 1v1a1 1 0 001 1z"
-                    />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-gray-100">QR Kodu</h2>
-              </div>
+            <h2 className="font-display text-2xl font-bold">QR Kodu</h2>
 
-              <div className="bg-gray-800 rounded-2xl p-6 mb-6 shadow-inner border border-gray-100">
-                <img
-                  src={currentQRCodeDataURL}
-                  alt="QR Kodu"
-                  className="w-full max-w-xs mx-auto rounded-xl shadow-lg"
-                />
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-700 to-gray-800 rounded-2xl p-4 mb-6">
-                <p className="text-sm text-gray-300 font-medium">QR Kodu ID:</p>
-                <p className="text-lg font-bold text-gray-100 font-mono">
-                  {currentQRCodeId}
-                </p>
-              </div>
-
-              <button
-                onClick={() => setQRCodeModalOpen(false)}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-2xl hover:from-blue-600 hover:to-purple-600 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold text-lg"
-              >
-                Kapat
-              </button>
+            <div className="my-6 border-y border-rule py-6">
+              <img
+                src={currentQRCodeDataURL}
+                alt="QR Kodu"
+                className="mx-auto w-full max-w-xs"
+              />
             </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-muted-foreground">QR Kodu ID:</p>
+              <p className="break-all font-outlier text-md font-semibold">
+                {currentQRCodeId}
+              </p>
+            </div>
+
+            <Button onClick={() => setQRCodeModalOpen(false)} className="w-full">
+              Kapat
+            </Button>
           </div>
         </div>
       )}
 
-      <ToastContainer theme="dark" />
+      <ToastContainer theme="light" />
     </div>
   );
 }

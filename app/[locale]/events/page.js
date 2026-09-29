@@ -29,7 +29,10 @@ import {
 } from "@/components/ui/drawer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { motion, AnimatePresence } from "framer-motion";
+import { Check, ChevronLeft, ChevronRight, Clock, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState, PageContainer, PageHeader, Skeleton } from "@/components/ui/page";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import {
   formatLocalizedDate,
@@ -52,11 +55,13 @@ const COPY = {
     location: "Lokasyon",
     sponsors: "Sponsorluk",
     documents: "Etkinlik Dokümanları",
-    signedUp: "✓ Kayıt Olundu",
+    signedUp: "Kayıt Olundu",
     signUp: "Kayıt Ol",
     signInToSignUp: "Kayıt Olmak için Giriş Yapın",
-    eventEnded: "⏱ Bu etkinlik sona erdi.",
+    eventEnded: "Bu etkinlik sona erdi.",
     close: "Kapat",
+    previous: "Önceki etkinlik",
+    next: "Sonraki etkinlik",
     loginRequired: "Kayıt olmak için giriş yapmalısınız.",
     profileMissing: "Profil bilgileriniz bulunamadı.",
     profileIncomplete:
@@ -83,11 +88,13 @@ const COPY = {
     location: "Location",
     sponsors: "Sponsors",
     documents: "Event Documents",
-    signedUp: "✓ Registered",
+    signedUp: "Registered",
     signUp: "Register",
     signInToSignUp: "Sign in to register",
-    eventEnded: "⏱ This event has ended.",
+    eventEnded: "This event has ended.",
     close: "Close",
+    previous: "Previous event",
+    next: "Next event",
     loginRequired: "You need to sign in before registering.",
     profileMissing: "Your profile information could not be found.",
     profileIncomplete:
@@ -133,9 +140,9 @@ function EventsPageFallback() {
   const copy = COPY[locale];
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#0a0a19] to-black font-sans text-white">
-      <div className="text-2xl">{copy.loading}</div>
-    </div>
+    <PageContainer>
+      <p className="text-lg text-muted-foreground">{copy.loading}</p>
+    </PageContainer>
   );
 }
 
@@ -540,34 +547,8 @@ function EventsPageContent() {
     sponsors.filter((sponsor) => sponsorIds.includes(sponsor.id));
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex min-h-screen flex-col items-center bg-gradient-to-b from-[#0a0a19] to-black p-6 font-sans text-white"
-    >
-      <motion.header
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="mb-6 flex flex-col items-center"
-      >
-        <motion.h1
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="mb-3 text-5xl font-bold"
-        >
-          {copy.title}
-        </motion.h1>
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="text-lg text-gray-400"
-        >
-          {copy.subtitle}
-        </motion.div>
-      </motion.header>
+    <PageContainer>
+      <PageHeader title={copy.title} description={copy.subtitle} />
 
       <Suspense fallback={null}>
         <SearchParamsHandler
@@ -576,345 +557,175 @@ function EventsPageContent() {
         />
       </Suspense>
 
-      <main className="flex w-full max-w-5xl flex-col justify-center gap-6 lg:flex-row">
-        <motion.div
-          initial={{ x: -50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
-          className="order-1 mx-auto flex w-full max-w-sm flex-col gap-4 lg:order-2 lg:sticky lg:top-5 lg:w-1/3"
-        >
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-          >
-            {currentMonth && (
-              <Calendar
-                currentMonth={currentMonth}
-                setCurrentMonth={setCurrentMonth}
-                selectedDate={selectedDate}
-                handleDateClick={handleDateClick}
-                eventDates={eventDates}
-              />
-            )}
-          </motion.div>
+      <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
+        <aside className="min-w-0 lg:order-2 lg:sticky lg:top-6 lg:col-span-4 lg:self-start">
+          {currentMonth && (
+            <Calendar
+              currentMonth={currentMonth}
+              setCurrentMonth={setCurrentMonth}
+              selectedDate={selectedDate}
+              handleDateClick={handleDateClick}
+              eventDates={eventDates}
+            />
+          )}
+        </aside>
 
+        <section className="min-w-0 lg:order-1 lg:col-span-8">
           {!selectedDate && (
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-              className="flex gap-3"
-            >
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition-all shadow-md ${
+            <div role="group" className="flex gap-6 border-b border-rule">
+              <button
+                type="button"
+                aria-pressed={filterStatus === "upcoming"}
+                className={`-mb-px min-h-11 whitespace-nowrap border-b-2 text-sm font-medium transition-colors duration-micro ease-out ${
                   filterStatus === "upcoming"
-                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-blue-500/30"
-                    : "border border-gray-600/50 bg-gray-700/50 text-gray-300 hover:bg-gray-700"
+                    ? "border-ink text-ink"
+                    : "border-transparent text-muted-foreground hover:text-ink"
                 }`}
                 onClick={() => {
                   setFilterStatus("upcoming");
                   setSelectedDate(null);
                 }}
               >
-                <div className="flex items-center justify-center gap-2">
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                  {copy.upcoming}
-                </div>
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition-all shadow-md ${
+                {copy.upcoming}
+              </button>
+              <button
+                type="button"
+                aria-pressed={filterStatus === "past"}
+                className={`-mb-px min-h-11 whitespace-nowrap border-b-2 text-sm font-medium transition-colors duration-micro ease-out ${
                   filterStatus === "past"
-                    ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-gray-500/30"
-                    : "border border-gray-600/50 bg-gray-700/50 text-gray-300 hover:bg-gray-700"
+                    ? "border-ink text-ink"
+                    : "border-transparent text-muted-foreground hover:text-ink"
                 }`}
                 onClick={() => {
                   setFilterStatus("past");
                   setSelectedDate(null);
                 }}
               >
-                <div className="flex items-center justify-center gap-2">
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  {copy.past}
-                </div>
-              </motion.button>
-            </motion.div>
+                {copy.past}
+              </button>
+            </div>
           )}
-        </motion.div>
 
-        <motion.div
-          initial={{ x: 50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
-          className="relative order-2 max-w-[900px] flex-1 lg:order-1"
-        >
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: "100%" }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="absolute bottom-0 left-10 top-0 w-px bg-gray-600"
-          />
-          <div className="ml-14 flex flex-col gap-6">
-            <AnimatePresence>
-              {filteredEvents.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="space-y-6"
-                >
-                  {filteredEvents.map((event, index) => {
-                    const status = isExpired(event.date, event.time)
-                      ? copy.past
-                      : copy.upcoming;
-                    const statusColor =
-                      status === copy.upcoming ? "bg-green-600" : "bg-red-600";
+          {filteredEvents.length > 0 ? (
+            <ul>
+              {filteredEvents.map((event) => {
+                const expired = isExpired(event.date, event.time);
 
-                    return (
-                      <motion.div
-                        key={event.id}
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: 20, opacity: 0 }}
-                        transition={{
-                          delay: index * 0.05,
-                          duration: 0.3,
-                          ease: "easeOut",
-                        }}
-                        whileHover={{
-                          scale: 1.01,
-                          transition: { duration: 0.1 },
-                        }}
-                        className="relative flex cursor-pointer flex-col items-start rounded-xl border border-gray-700/50 bg-gray-800/50 p-4 shadow-lg backdrop-blur-sm transition-all hover:bg-gray-700/50 hover:shadow-xl active:scale-95 sm:flex-row sm:p-5"
-                        onClick={() => handleEventClick(event)}
-                      >
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{
-                            delay: index * 0.1 + 0.3,
-                            duration: 0.3,
-                          }}
-                          className="absolute left-[-60px] top-6 flex flex-col items-center"
-                        >
-                          <motion.div
-                            whileHover={{ scale: 1.2 }}
-                            className={`z-10 h-5 w-5 rounded-full shadow-lg ${statusColor}`}
+                return (
+                  <li key={event.id}>
+                    <button
+                      type="button"
+                      className="group grid w-full gap-x-6 gap-y-3 border-b border-rule py-5 text-left transition-colors duration-micro ease-out hover:bg-paper-2 focus-visible:outline-offset-[-2px] sm:grid-cols-[minmax(0,1fr)_10rem]"
+                      onClick={() => handleEventClick(event)}
+                    >
+                      {event.imageUrl && (
+                        <span className="block aspect-[16/9] overflow-hidden rounded bg-paper-2 sm:order-2 sm:aspect-[4/3]">
+                          <img
+                            src={event.imageUrl}
+                            alt={getEventName(event)}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                           />
-                        </motion.div>
+                        </span>
+                      )}
 
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: index * 0.1 + 0.2 }}
-                          className="mb-4 w-full sm:mb-0 sm:mr-6 sm:w-auto"
-                        >
-                          <div className="group relative overflow-hidden rounded-lg">
-                            <img
-                              src={event.imageUrl}
-                              alt={getEventName(event)}
-                              className="h-auto w-full rounded-lg object-cover transition-transform duration-300 group-hover:scale-105 sm:w-52 md:w-56"
-                              loading="lazy"
-                              decoding="async"
-                            />
-                            <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                          </div>
-                        </motion.div>
-
-                        <div className="flex w-full flex-col">
-                          <h4 className="text-base font-medium text-blue-400 sm:text-lg">
-                            {getDayLabel(event.date)}
-                          </h4>
-                          <h3 className="mt-2 text-xl font-bold text-white sm:text-2xl md:text-3xl">
-                            {getEventName(event)}
-                          </h3>
-                          <div className="mt-2 flex items-center gap-2 text-sm text-gray-400 sm:text-base">
-                            <svg
-                              className="h-4 w-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            {event.time}
-                          </div>
-                          <div className="mt-1 flex items-center gap-2 text-sm text-gray-400 sm:text-base">
-                            <svg
-                              className="h-4 w-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                            </svg>
-                            {getEventLocation(event)}
-                          </div>
-
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <span className="inline-flex items-center rounded-lg border border-blue-500/30 bg-blue-500/20 px-3 py-1.5 text-xs font-medium text-blue-300 sm:text-sm">
-                              {getEventCategory(event)}
-                            </span>
-                            <span
-                              className={`inline-flex items-center rounded-lg border px-3 py-1.5 text-xs font-medium sm:text-sm ${
-                                status === copy.upcoming
-                                  ? "border-green-500/30 bg-green-500/20 text-green-300"
-                                  : "border-red-500/30 bg-red-500/20 text-red-300"
-                              }`}
-                            >
-                              {status}
-                            </span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="no-events"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
-                  className="mt-6 text-center text-gray-400"
-                >
-                  <div className="mt-10 text-lg text-gray-400">{copy.noEvents}</div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-      </main>
+                      <span className="block min-w-0 sm:order-1">
+                        <span className="block font-outlier text-sm capitalize text-muted-foreground">
+                          {getDayLabel(event.date)} · {event.time}
+                        </span>
+                        <span className="mt-1 block font-display text-xl font-bold leading-tight tracking-tight group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4 md:text-2xl">
+                          {getEventName(event)}
+                        </span>
+                        <span className="mt-1 block text-ink-2">
+                          {getEventLocation(event)}
+                        </span>
+                        <span className="mt-3 flex flex-wrap gap-2">
+                          <Badge>{getEventCategory(event)}</Badge>
+                          <Badge variant={expired ? "neutral" : "success"}>
+                            {expired ? copy.past : copy.upcoming}
+                          </Badge>
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <EmptyState title={copy.noEvents} className="mt-6" />
+          )}
+        </section>
+      </div>
 
       <Drawer open={!!selectedEvent} onOpenChange={(open) => !open && closeDrawer()}>
-        <DrawerContent className="max-md:inset-x-0 max-md:bottom-0 max-md:h-[85vh] max-md:rounded-t-[10px] max-md:border-t md:bottom-0 md:left-auto md:right-0 md:top-0 md:h-screen md:w-[400px] md:rounded-none md:border-l border-gray-600 bg-[#0a0a19] text-white">
-          <div className="h-full touch-pan-y overflow-y-auto overscroll-contain p-6 md:scrollbar-thin md:scrollbar-thumb-gray-600 md:scrollbar-track-transparent">
-            <DrawerHeader className="p-0">
-              <div className="mb-6 flex justify-end space-x-3">
-                <button
-                  className="h-10 w-10 rounded-full border border-gray-600/50 bg-gray-700/50 text-white backdrop-blur-sm transition-all hover:scale-110 hover:bg-gray-600 active:scale-95"
+        <DrawerContent className="max-md:inset-x-0 max-md:bottom-0 max-md:h-[85vh] max-md:border-t md:bottom-0 md:left-auto md:right-0 md:top-0 md:h-screen md:w-[400px] md:rounded-none md:border-l">
+          <div className="h-full touch-pan-y overflow-y-auto overscroll-contain p-6">
+            <DrawerHeader className="p-0 text-left sm:text-left">
+              <div className="mb-6 flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  aria-label={copy.previous}
                   onClick={() => showRelativeEvent(-1)}
                 >
-                  <svg
-                    className="mx-auto h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-                <button
-                  className="h-10 w-10 rounded-full border border-gray-600/50 bg-gray-700/50 text-white backdrop-blur-sm transition-all hover:scale-110 hover:bg-gray-600 active:scale-95"
+                  <ChevronLeft aria-hidden="true" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  aria-label={copy.next}
                   onClick={() => showRelativeEvent(1)}
                 >
-                  <svg
-                    className="mx-auto h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
+                  <ChevronRight aria-hidden="true" />
+                </Button>
               </div>
               {selectedEvent && (
                 <>
-                  <div className="mb-6 w-full">
-                    <img
-                      src={selectedEvent.imageUrl}
-                      alt={getEventName(selectedEvent)}
-                      className="pointer-events-none h-auto w-full select-none rounded"
-                      draggable="false"
-                      loading="eager"
-                      decoding="async"
-                    />
-                  </div>
+                  {selectedEvent.imageUrl && (
+                    <div className="mb-6 w-full">
+                      <img
+                        src={selectedEvent.imageUrl}
+                        alt={getEventName(selectedEvent)}
+                        className="pointer-events-none h-auto w-full select-none rounded"
+                        draggable="false"
+                        loading="eager"
+                        decoding="async"
+                      />
+                    </div>
+                  )}
 
-                  <DrawerTitle className="mb-3 text-3xl font-bold">
+                  <DrawerTitle className="mb-3 text-2xl font-bold">
                     {drawerLoading ? copy.loading : getEventName(selectedEvent)}
                   </DrawerTitle>
 
                   {drawerLoading && (
-                    <div className="animate-pulse space-y-4">
-                      <div className="h-4 w-1/2 rounded bg-gray-700" />
-                      <div className="h-4 w-2/3 rounded bg-gray-700" />
+                    <div className="space-y-4">
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-4 w-2/3" />
                     </div>
                   )}
 
                   <DrawerDescription asChild>
                     {drawerLoading ? (
-                      <div className="animate-pulse space-y-3">
-                        <div className="h-4 w-2/3 rounded bg-gray-700" />
-                        <div className="h-4 w-1/2 rounded bg-gray-700" />
-                        <div className="h-4 w-3/5 rounded bg-gray-700" />
+                      <div className="space-y-3">
+                        <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-4 w-3/5" />
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        <div className="text-lg text-gray-400">
+                      <div className="space-y-2 text-base text-ink-2">
+                        <div className="font-outlier text-sm capitalize text-muted-foreground">
                           {getDayLabel(selectedEvent.date)}, {selectedEvent.time}
                         </div>
-                        <div className="text-lg text-gray-400">
-                          <strong>{copy.category}:</strong>{" "}
+                        <div>
+                          <strong className="font-medium text-ink">{copy.category}:</strong>{" "}
                           {getEventCategory(selectedEvent)}
                         </div>
-                        <div className="text-lg text-gray-400">
-                          <strong>{copy.location}:</strong>{" "}
+                        <div>
+                          <strong className="font-medium text-ink">{copy.location}:</strong>{" "}
                           {getEventLocation(selectedEvent)}
                         </div>
                       </div>
@@ -925,23 +736,21 @@ function EventsPageContent() {
             </DrawerHeader>
 
             {selectedEvent && !drawerLoading && (
-              <div className="space-y-6 px-6">
-                <div className="border-t border-gray-700/50 pt-4">
-                  <div className="prose prose-invert prose-sm max-w-none [&>*]:mb-3 [&>a]:text-blue-400 [&>a]:hover:text-blue-300 [&>blockquote]:border-l-4 [&>blockquote]:border-blue-500 [&>blockquote]:pl-4 [&>blockquote]:text-gray-300 [&>code]:rounded [&>code]:bg-gray-800/60 [&>code]:px-1.5 [&>code]:py-0.5 [&>h1]:text-2xl [&>h2]:text-xl [&>h3]:text-lg [&>ol]:list-decimal [&>ol]:pl-5 [&>ul]:list-disc [&>ul]:pl-5">
-                    <MarkdownRenderer content={getEventDescription(selectedEvent)} />
-                  </div>
-                </div>
+              <div className="mt-6 border-t border-rule pt-4">
+                <MarkdownRenderer content={getEventDescription(selectedEvent)} />
               </div>
             )}
 
             {selectedEvent && !drawerLoading && (
-              <div className="space-y-6 px-6">
+              <div className="mt-6 space-y-6">
                 {selectedEvent.sponsors && selectedEvent.sponsors.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="mb-3 text-2xl font-semibold">{copy.sponsors}</h3>
+                  <div>
+                    <h3 className="mb-3 border-t-2 border-ink pt-3 font-display text-lg font-bold">
+                      {copy.sponsors}
+                    </h3>
                     <div className="flex flex-wrap gap-4">
                       {getSponsorsDetails(selectedEvent.sponsors).map((sponsor) => (
-                        <div key={sponsor.id} className="flex items-center space-x-2">
+                        <div key={sponsor.id} className="flex items-center gap-2">
                           <img
                             src={sponsor.img_url}
                             alt={getSponsorName(sponsor)}
@@ -949,7 +758,7 @@ function EventsPageContent() {
                             loading="lazy"
                             decoding="async"
                           />
-                          <span className="text-lg">{getSponsorName(sponsor)}</span>
+                          <span className="text-base">{getSponsorName(sponsor)}</span>
                         </div>
                       ))}
                     </div>
@@ -957,30 +766,16 @@ function EventsPageContent() {
                 )}
 
                 {selectedEvent.file_url && (
-                  <div className="mb-6">
+                  <Button asChild variant="outline" className="w-full">
                     <a
                       href={selectedEvent.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:from-blue-600 hover:to-blue-700"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
+                      <Download aria-hidden="true" />
                       {copy.documents}
                     </a>
-                  </div>
+                  </Button>
                 )}
               </div>
             )}
@@ -989,39 +784,36 @@ function EventsPageContent() {
               {selectedEvent && !isExpired(selectedEvent.date, selectedEvent.time) ? (
                 user ? (
                   hasSignedUp ? (
-                    <button
-                      className="w-full cursor-not-allowed rounded-xl border border-gray-600/50 bg-gray-600/50 py-3.5 font-semibold text-gray-300"
-                      disabled
-                    >
+                    <Button type="button" variant="secondary" className="w-full" disabled>
+                      <Check aria-hidden="true" />
                       {copy.signedUp}
-                    </button>
+                    </Button>
                   ) : (
-                    <button
-                      className="w-full rounded-xl bg-gradient-to-r from-green-500 to-green-600 py-3.5 font-semibold text-white shadow-lg shadow-green-500/30 transition-all hover:from-green-600 hover:to-green-700"
-                      onClick={handleSignup}
-                    >
+                    <Button type="button" className="w-full" onClick={handleSignup}>
                       {copy.signUp}
-                    </button>
+                    </Button>
                   )
                 ) : (
-                  <button
-                    className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 py-3.5 font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:from-blue-600 hover:to-blue-700"
+                  <Button
+                    type="button"
+                    className="w-full"
                     onClick={() => router.push("/login")}
                   >
                     {copy.signInToSignUp}
-                  </button>
+                  </Button>
                 )
               ) : (
                 selectedEvent && (
-                  <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-center text-sm font-medium text-red-400">
+                  <p className="flex items-center gap-2 border border-error px-4 py-3 text-sm font-medium text-error">
+                    <Clock aria-hidden="true" className="h-4 w-4 shrink-0" />
                     {copy.eventEnded}
-                  </div>
+                  </p>
                 )
               )}
               <DrawerClose asChild>
-                <button className="mt-3 w-full rounded-xl border border-gray-600/50 bg-gray-700/50 py-3.5 font-semibold text-white transition-all hover:bg-gray-600">
+                <Button type="button" variant="outline" className="mt-3 w-full">
                   {copy.close}
-                </button>
+                </Button>
               </DrawerClose>
             </DrawerFooter>
           </div>
@@ -1029,13 +821,15 @@ function EventsPageContent() {
       </Drawer>
 
       {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-          <div className="text-2xl text-white">{copy.loading}</div>
+        <div className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60">
+          <div className="rounded-lg border border-rule bg-background px-6 py-4 text-lg text-foreground">
+            {copy.loading}
+          </div>
         </div>
       )}
       {error && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-red-700 bg-opacity-80">
-          <div className="text-2xl text-white">
+        <div className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60">
+          <div className="rounded-lg border border-error bg-background px-6 py-4 text-lg text-error">
             {copy.error}: {error.message}
           </div>
         </div>
@@ -1051,9 +845,9 @@ function EventsPageContent() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
+        theme="light"
       />
-    </motion.div>
+    </PageContainer>
   );
 }
 

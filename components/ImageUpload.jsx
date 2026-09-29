@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import { uploadImage } from '../utils/storageUtils';
 import { toast } from 'react-toastify';
 import { logger } from "@/utils/logger";
+import { Button } from "@/components/ui/button";
 
 const ImageUpload = ({ 
   onImageUpload, 
@@ -55,27 +56,29 @@ const ImageUpload = ({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <div className="flex items-center space-x-2">
-        <button
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
           type="button"
+          variant="outline"
           onClick={handleClick}
           disabled={uploading}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
         >
           {uploading ? 'Yükleniyor...' : placeholder}
-        </button>
-        
+        </Button>
+
         {previewUrl && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={handleRemove}
-            className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm"
+            className="text-error"
           >
             Kaldır
-          </button>
+          </Button>
         )}
       </div>
-      
+
       <input
         ref={fileInputRef}
         type="file"
@@ -83,18 +86,18 @@ const ImageUpload = ({
         onChange={handleFileSelect}
         className="hidden"
       />
-      
+
       {previewUrl && (
         <div className="mt-2">
           <img
             src={previewUrl}
             alt="Önizleme"
-            className="w-32 h-32 object-cover rounded-md border border-gray-300"
+            className="h-32 w-32 rounded bg-paper-2 object-cover"
           />
         </div>
       )}
-      
-      <p className="text-xs text-gray-500">
+
+      <p className="text-xs text-muted-foreground">
         JPEG, PNG, WebP, HEIC formatları desteklenir. Maksimum 10MB.
       </p>
     </div>

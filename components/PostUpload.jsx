@@ -11,6 +11,10 @@ import { toast } from "react-toastify";
 import { logger } from "@/utils/logger";
 import { useLocale } from "next-intl";
 import { getLocalizedField } from "@/utils/localeUtils";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Field } from "@/components/ui/field";
+import { fieldClasses } from "@/components/ui/input";
 
 export default function PostUpload({ onUploadComplete, onCancel }) {
   const locale = useLocale();
@@ -228,16 +232,19 @@ export default function PostUpload({ onUploadComplete, onCancel }) {
   };
 
   return (
-    <div className="relative mx-auto rounded-xl bg-gray-800/50 backdrop-blur-sm p-6 max-w-lg shadow-xl border border-gray-700/50">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white">{copy.title}</h2>
+    <div className="relative w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-lg border border-rule bg-background text-foreground p-6">
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <h2 id="post-upload-title" className="text-xl font-bold">{copy.title}</h2>
         {onCancel && (
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             onClick={onCancel}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="-mr-3 text-muted-foreground hover:text-foreground"
           >
-            <X className="w-6 h-6" />
-          </button>
+            <X className="w-5 h-5" />
+          </Button>
         )}
       </div>
 
@@ -245,14 +252,14 @@ export default function PostUpload({ onUploadComplete, onCancel }) {
         <div className="space-y-4">
           {!imagePreview ? (
             <div
-              className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors"
+              className="border border-dashed border-input rounded-lg p-8 text-left cursor-pointer transition-colors duration-micro hover:bg-secondary"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onClick={() => fileInputRef.current?.click()}
             >
-              <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-[#d1d1e0] text-lg mb-2">{copy.selectOrDrag}</p>
-              <p className="text-gray-400 text-sm">{copy.fileHelp}</p>
+              <ImageIcon className="w-8 h-8 text-muted-foreground mb-4" />
+              <p className="text-ink text-md font-medium mb-1">{copy.selectOrDrag}</p>
+              <p className="text-muted-foreground text-sm">{copy.fileHelp}</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -262,33 +269,42 @@ export default function PostUpload({ onUploadComplete, onCancel }) {
               />
             </div>
           ) : (
-            <div className="relative">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-paper-2">
               <Image
                 src={imagePreview}
                 alt="Preview"
                 width={400}
                 height={300}
-                className="w-full h-64 object-cover rounded-lg"
+                className="w-full h-full object-cover"
               />
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="icon"
                 onClick={clearImage}
-                className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition-colors"
+                className="absolute top-2 right-2 border border-rule"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           )}
         </div>
 
-        <div>
-          <label className="block text-white text-sm font-medium mb-2">
-            {copy.eventSelection}
-          </label>
+        <Field
+          id="post-upload-event"
+          label={copy.eventSelection}
+          help={
+            selectedEvent
+              ? copy.raffleHelp
+              : activeEvents.length === 0
+                ? copy.noActiveEvents
+                : undefined
+          }
+        >
           <select
             value={selectedEvent}
             onChange={(e) => setSelectedEvent(e.target.value)}
-            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`${fieldClasses} h-control py-2`}
             required
           >
             <option value="">{copy.chooseEvent}</option>
@@ -299,37 +315,22 @@ export default function PostUpload({ onUploadComplete, onCancel }) {
               </option>
             ))}
           </select>
-          {selectedEvent && (
-            <p className="text-green-400 text-xs mt-1 flex items-center">
-              {copy.raffleHelp}
-            </p>
-          )}
-          {activeEvents.length === 0 && (
-            <p className="text-yellow-400 text-xs mt-2">{copy.noActiveEvents}</p>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label className="block text-white text-sm font-medium mb-2">
-            {copy.description}
-          </label>
-          <textarea
+        <Field id="post-upload-description" label={copy.description}>
+          <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder={copy.descriptionPlaceholder}
             rows={3}
             maxLength={500}
-            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="resize-none"
           />
-        </div>
+        </Field>
 
-        <button
-          type="submit"
-          disabled={isUploading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-        >
+        <Button type="submit" disabled={isUploading} className="w-full">
           {isUploading ? copy.sharing : copy.share}
-        </button>
+        </Button>
       </form>
     </div>
   );

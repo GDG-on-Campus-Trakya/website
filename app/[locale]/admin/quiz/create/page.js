@@ -13,6 +13,18 @@ import {
   uploadCompressedImage,
   validateImageFile
 } from "@/utils/imageUtils";
+import { Check, Download, Upload, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Field } from "@/components/ui/field";
+import { Input, fieldClasses } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { PageHeader, Section } from "@/components/ui/page";
+
+// Answer colours are data: red, blue, yellow, green in option order
+const OPTION_MARKS = ["bg-mark-red", "bg-mark-blue", "bg-mark-yellow", "bg-mark-green"];
 
 export default function CreateQuizPage() {
   const [user, loading] = useAuthState(auth);
@@ -361,90 +373,77 @@ export default function CreateQuizPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-white">Yükleniyor...</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">Yükleniyor...</p>;
   }
 
   if (!userRole) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Erişim Reddedildi</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        Erişim Reddedildi
+      </p>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-3 sm:p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2">Quiz Oluştur</h1>
-          <p className="text-sm sm:text-base text-gray-300">Yeni bir canlı quiz'i oluşturun</p>
-        </div>
+    <div>
+      <PageHeader
+        title="Quiz Oluştur"
+        description="Yeni bir canlı quiz'i oluşturun"
+        actions={
+          <>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".json"
+              onChange={handleJSONImport}
+              className="hidden"
+            />
+            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+              <Upload aria-hidden="true" />
+              JSON Import
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={exportToJSON}
+              disabled={!quizTitle || questions.length === 0}
+            >
+              <Download aria-hidden="true" />
+              JSON Export
+            </Button>
+          </>
+        }
+      />
 
-        {/* Import/Export Buttons */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept=".json"
-            onChange={handleJSONImport}
-            className="hidden"
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm sm:text-base"
-          >
-            📥 JSON Import
-          </button>
-          <button
-            type="button"
-            onClick={exportToJSON}
-            disabled={!quizTitle || questions.length === 0}
-            className="w-full sm:w-auto px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm sm:text-base"
-          >
-            📤 JSON Export
-          </button>
-        </div>
+      <form onSubmit={handleSubmit} className="max-w-3xl">
+        {/* Quiz Info */}
+        <Section title="Quiz Bilgileri">
+          <div className="space-y-2">
+            <Field id="quiz-title" label="Başlık *">
+              <Input
+                type="text"
+                value={quizTitle}
+                onChange={(e) => setQuizTitle(e.target.value)}
+                placeholder="Quiz başlığını girin"
+                required
+              />
+            </Field>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          {/* Quiz Info */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">Quiz Bilgileri</h2>
+            <Field id="quiz-description" label="Açıklama">
+              <Textarea
+                value={quizDescription}
+                onChange={(e) => setQuizDescription(e.target.value)}
+                placeholder="Quiz açıklaması (opsiyonel)"
+                rows="3"
+              />
+            </Field>
 
-            <div className="space-y-3 sm:space-y-4">
-              <div>
-                <label className="block text-white mb-2 text-sm sm:text-base">Başlık *</label>
-                <input
-                  type="text"
-                  value={quizTitle}
-                  onChange={(e) => setQuizTitle(e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-sm sm:text-base"
-                  placeholder="Quiz başlığını girin"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-white mb-2 text-sm sm:text-base">Açıklama</label>
-                <textarea
-                  value={quizDescription}
-                  onChange={(e) => setQuizDescription(e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-sm sm:text-base"
-                  placeholder="Quiz açıklaması (opsiyonel)"
-                  rows="3"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white mb-2 text-sm sm:text-base">Kategori</label>
+            <div className="grid gap-x-6 md:grid-cols-2">
+              <Field id="quiz-category" label="Kategori">
                 <select
                   value={quizCategory}
                   onChange={(e) => setQuizCategory(e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-sm sm:text-base"
+                  className={cn(fieldClasses, "h-control")}
                 >
                   <option value="Genel">Genel</option>
                   <option value="Teknoloji">Teknoloji</option>
@@ -454,231 +453,242 @@ export default function CreateQuizPage() {
                   <option value="Tarih">Tarih</option>
                   <option value="Eğlence">Eğlence</option>
                 </select>
-              </div>
+              </Field>
 
-              <div>
-                <label className="block text-white mb-2 text-sm sm:text-base">Oyun Modu</label>
+              <Field
+                id="quiz-game-mode"
+                label="Oyun Modu"
+                help={
+                  gameMode === "kahoot"
+                    ? "Her soru sonunda en hızlı doğru cevap veren kazanan olarak gösterilir. Final sıralaması yoktur."
+                    : "Oyun sonunda tüm oyuncuların sıralaması gösterilir."
+                }
+              >
                 <select
                   value={gameMode}
                   onChange={(e) => setGameMode(e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-sm sm:text-base"
+                  className={cn(fieldClasses, "h-control")}
                 >
                   <option value="classic">Klasik (Final Sıralaması ile)</option>
                   <option value="kahoot">Kahoot Modu (Her soruda kazanan gösterilir)</option>
                 </select>
-                <p className="text-xs text-gray-400 mt-2">
-                  {gameMode === "kahoot"
-                    ? "Her soru sonunda en hızlı doğru cevap veren kazanan olarak gösterilir. Final sıralaması yoktur."
-                    : "Oyun sonunda tüm oyuncuların sıralaması gösterilir."}
-                </p>
-              </div>
+              </Field>
             </div>
           </div>
+        </Section>
 
-          {/* Questions */}
-          {questions.map((q, qIndex) => (
-            <div
-              key={qIndex}
-              className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20"
-            >
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h3 className="text-lg sm:text-xl font-bold text-white">Soru {qIndex + 1}</h3>
-                {questions.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeQuestion(qIndex)}
-                    className="px-2 sm:px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm"
-                  >
-                    Sil
-                  </button>
+        {/* Questions */}
+        {questions.map((q, qIndex) => (
+          <Section
+            key={qIndex}
+            title={`Soru ${qIndex + 1}`}
+            action={
+              questions.length > 1 && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => removeQuestion(qIndex)}
+                >
+                  Sil
+                </Button>
+              )
+            }
+          >
+            <div className="space-y-2">
+              {/* Image Upload */}
+              <div className="flex flex-col gap-1.5 pb-2">
+                <Label htmlFor={`q${qIndex}-image`}>Soru Görseli (Opsiyonel)</Label>
+                {q.imageUrl ? (
+                  <div className="relative max-w-md">
+                    <img
+                      src={q.imageUrl}
+                      alt="Question"
+                      className="aspect-[16/9] w-full rounded border border-rule object-cover"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeImage(qIndex)}
+                      className="absolute right-2 top-2"
+                    >
+                      Kaldır
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      id={`q${qIndex}-image`}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={(e) => handleImageSelect(qIndex, e.target.files[0])}
+                      disabled={currentImageUpload === qIndex}
+                      className="block w-full text-sm text-muted-foreground file:mr-4 file:h-9 file:cursor-pointer file:rounded file:border-0 file:bg-primary file:px-4 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-brand-hover"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      JPG, PNG veya WebP • Max 10MB • Otomatik &lt;100KB sıkıştırma
+                    </p>
+                  </>
+                )}
+                {currentImageUpload === qIndex && (
+                  <p className="text-sm text-ink-2">Sıkıştırılıyor...</p>
                 )}
               </div>
 
-              <div className="space-y-3 sm:space-y-4">
-                {/* Image Upload */}
-                <div>
-                  <label className="block text-white mb-2 text-sm sm:text-base">Soru Görseli (Opsiyonel)</label>
-                  {q.imageUrl ? (
-                    <div className="relative">
-                      <img
-                        src={q.imageUrl}
-                        alt="Question"
-                        className="w-full max-w-md h-auto rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(qIndex)}
-                        className="absolute top-2 right-2 px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg"
-                      >
-                        Kaldır
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/jpg,image/png,image/webp"
-                        onChange={(e) => handleImageSelect(qIndex, e.target.files[0])}
-                        disabled={currentImageUpload === qIndex}
-                        className="block w-full text-sm text-gray-400
-                          file:mr-4 file:py-2 file:px-4
-                          file:rounded-lg file:border-0
-                          file:text-sm file:font-semibold
-                          file:bg-purple-600 file:text-white
-                          hover:file:bg-purple-700
-                          file:cursor-pointer"
-                      />
-                      <p className="text-xs text-gray-400 mt-2">
-                        JPG, PNG veya WebP • Max 10MB • Otomatik &lt;100KB sıkıştırma
-                      </p>
-                    </div>
-                  )}
-                  {currentImageUpload === qIndex && (
-                    <p className="text-yellow-400 text-sm mt-2">Sıkıştırılıyor...</p>
-                  )}
-                </div>
+              <Field id={`q${qIndex}-question`} label="Soru Metni *">
+                <Input
+                  type="text"
+                  value={q.question}
+                  onChange={(e) => updateQuestion(qIndex, "question", e.target.value)}
+                  placeholder="Soruyu girin"
+                  required
+                />
+              </Field>
 
-                <div>
-                  <label className="block text-white mb-2 text-sm sm:text-base">Soru Metni *</label>
-                  <input
-                    type="text"
-                    value={q.question}
-                    onChange={(e) => updateQuestion(qIndex, "question", e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-sm sm:text-base"
-                    placeholder="Soruyu girin"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-white mb-2 text-sm sm:text-base">
-                    Seçenekler * (2-4 seçenek)
-                  </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
-                    {q.options.map((opt, oIndex) => (
-                      <div key={oIndex} className="relative flex gap-2">
-                        <input
-                          type="text"
-                          value={opt}
-                          onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
-                          className={`flex-1 px-3 sm:px-4 py-2 pr-10 bg-white/5 border rounded-lg text-white focus:outline-none text-sm sm:text-base ${
-                            q.correctAnswer === oIndex
-                              ? "border-green-500 bg-green-500/10"
-                              : "border-white/20"
-                          }`}
-                          placeholder={`Seçenek ${oIndex + 1}`}
-                          required
+              <fieldset className="min-w-0">
+                <legend className="mb-1.5 text-sm font-medium leading-none">
+                  Seçenekler * (2-4 seçenek)
+                </legend>
+                <ul className="grid gap-x-6 gap-y-3 md:grid-cols-2">
+                  {q.options.map((opt, oIndex) => {
+                    const isCorrect = q.correctAnswer === oIndex;
+                    return (
+                      <li key={oIndex} className="flex items-center gap-2">
+                        <span
+                          className={cn("h-3 w-3 shrink-0 rounded-sm", OPTION_MARKS[oIndex])}
+                          aria-hidden="true"
                         />
+                        <div className="relative min-w-0 flex-1">
+                          <Input
+                            type="text"
+                            value={opt}
+                            onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
+                            className={cn(isCorrect && "border-success pr-20")}
+                            placeholder={`Seçenek ${oIndex + 1}`}
+                            aria-label={`Seçenek ${oIndex + 1}`}
+                            required
+                          />
+                          {isCorrect && (
+                            <Badge
+                              variant="success"
+                              className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 bg-background"
+                            >
+                              Doğru
+                            </Badge>
+                          )}
+                        </div>
 
                         {/* Mark Correct Button */}
-                        <button
+                        <Button
                           type="button"
+                          variant="outline"
+                          size="icon"
                           onClick={() => updateQuestion(qIndex, "correctAnswer", oIndex)}
-                          className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-xs ${
-                            q.correctAnswer === oIndex
-                              ? "bg-green-500"
-                              : "bg-white/20 hover:bg-white/30"
-                          } transition-colors`}
+                          aria-pressed={isCorrect}
+                          className={cn(
+                            "shrink-0",
+                            isCorrect
+                              ? "border-success text-success"
+                              : "border-input text-muted-foreground"
+                          )}
                           title="Doğru cevap olarak işaretle"
+                          aria-label="Doğru cevap olarak işaretle"
                         >
-                          {q.correctAnswer === oIndex && "✓"}
-                        </button>
+                          <Check aria-hidden="true" />
+                        </Button>
 
                         {/* Remove Option Button (only if > 2 options) */}
                         {q.options.length > 2 && (
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => removeOption(qIndex, oIndex)}
-                            className="px-2 py-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg transition-colors text-xs"
+                            className="shrink-0 text-error"
                             title="Seçeneği kaldır"
+                            aria-label="Seçeneği kaldır"
                           >
-                            ×
-                          </button>
+                            <X aria-hidden="true" />
+                          </Button>
                         )}
-                      </div>
-                    ))}
-                  </div>
+                      </li>
+                    );
+                  })}
+                </ul>
 
-                  {/* Add Option Button */}
-                  {q.options.length < 4 && (
-                    <button
-                      type="button"
-                      onClick={() => addOption(qIndex)}
-                      className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
-                    >
-                      + Seçenek Ekle
-                    </button>
-                  )}
+                {/* Add Option Button */}
+                {q.options.length < 4 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addOption(qIndex)}
+                    className="mt-3"
+                  >
+                    + Seçenek Ekle
+                  </Button>
+                )}
 
-                  <p className="text-xs text-gray-400 mt-2">
-                    Doğru cevabı seçmek için sağdaki butona tıklayın. En az 2, en fazla 4 seçenek ekleyebilirsiniz.
-                  </p>
-                </div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Doğru cevabı seçmek için sağdaki butona tıklayın. En az 2, en fazla 4 seçenek ekleyebilirsiniz.
+                </p>
+              </fieldset>
 
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <div>
-                    <label className="block text-white mb-2 text-sm sm:text-base">Süre (saniye) *</label>
-                    <input
-                      type="number"
-                      value={q.timeLimit}
-                      onChange={(e) =>
-                        updateQuestion(qIndex, "timeLimit", parseInt(e.target.value))
-                      }
-                      className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-sm sm:text-base"
-                      min="5"
-                      max="120"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white mb-2 text-sm sm:text-base">Puan</label>
-                    <input
-                      type="number"
-                      value={q.points}
-                      onChange={(e) =>
-                        updateQuestion(qIndex, "points", parseInt(e.target.value))
-                      }
-                      className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500 text-sm sm:text-base"
-                      min="100"
-                      max="2000"
-                      step="100"
-                      required
-                    />
-                  </div>
-                </div>
+              <div className="grid grid-cols-2 gap-x-4 pt-2 sm:gap-x-6">
+                <Field id={`q${qIndex}-time`} label="Süre (saniye) *">
+                  <Input
+                    type="number"
+                    value={q.timeLimit}
+                    onChange={(e) => updateQuestion(qIndex, "timeLimit", parseInt(e.target.value))}
+                    className="tabular-nums"
+                    min="5"
+                    max="120"
+                    required
+                  />
+                </Field>
+                <Field id={`q${qIndex}-points`} label="Puan">
+                  <Input
+                    type="number"
+                    value={q.points}
+                    onChange={(e) => updateQuestion(qIndex, "points", parseInt(e.target.value))}
+                    className="tabular-nums"
+                    min="100"
+                    max="2000"
+                    step="100"
+                    required
+                  />
+                </Field>
               </div>
             </div>
-          ))}
+          </Section>
+        ))}
 
-          {/* Add Question Button */}
-          <button
+        {/* Add Question Button */}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={addQuestion}
+          className="mt-10 w-full border-dashed"
+        >
+          + Soru Ekle
+        </Button>
+
+        {/* Submit Buttons */}
+        <div className="mt-10 flex flex-col-reverse gap-3 border-t border-rule pt-6 sm:flex-row sm:justify-end">
+          <Button
             type="button"
-            onClick={addQuestion}
-            className="w-full py-2 sm:py-3 bg-white/10 hover:bg-white/20 border-2 border-dashed border-white/30 text-white rounded-lg transition-colors text-sm sm:text-base"
+            variant="outline"
+            onClick={() => router.push("/admin/quiz/manage")}
+            disabled={uploading}
           >
-            + Soru Ekle
-          </button>
-
-          {/* Submit Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <button
-              type="button"
-              onClick={() => router.push("/admin/quiz/manage")}
-              className="w-full sm:flex-1 py-2 sm:py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm sm:text-base"
-              disabled={uploading}
-            >
-              İptal
-            </button>
-            <button
-              type="submit"
-              disabled={uploading}
-              className="w-full sm:flex-1 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors font-semibold disabled:opacity-50 text-sm sm:text-base"
-            >
-              {uploading ? "Yükleniyor..." : "Quiz Oluştur"}
-            </button>
-          </div>
-        </form>
-      </div>
+            İptal
+          </Button>
+          <Button type="submit" disabled={uploading}>
+            {uploading ? "Yükleniyor..." : "Quiz Oluştur"}
+          </Button>
+        </div>
+      </form>
 
       <ToastContainer
         position="top-right"
@@ -686,7 +696,7 @@ export default function CreateQuizPage() {
         hideProgressBar={false}
         newestOnTop
         closeOnClick
-        theme="dark"
+        theme="light"
       />
     </div>
   );

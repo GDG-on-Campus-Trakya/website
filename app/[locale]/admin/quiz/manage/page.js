@@ -19,6 +19,11 @@ import "react-toastify/dist/ReactToastify.css";
 import { checkUserRole, ROLES } from "@/utils/roleUtils";
 import { createGame } from "@/utils/quizUtils";
 import { Link } from "@/i18n/navigation";
+import { ArrowLeft, Clock, Pause, Pencil, Play, Trash2, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Stat } from "@/components/ui/stat";
+import { PageHeader, EmptyState } from "@/components/ui/page";
 
 export default function ManageQuizzesPage() {
   const [user, loading] = useAuthState(auth);
@@ -136,173 +141,144 @@ export default function ManageQuizzesPage() {
   };
 
   if (loading || loadingQuizzes) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-white">Yükleniyor...</p>
-      </div>
-    );
+    return <p className="py-12 text-ink-2">Yükleniyor...</p>;
   }
 
   if (!userRole) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <p className="text-lg text-red-500">Erişim Reddedildi</p>
-      </div>
+      <p role="alert" className="py-12 font-medium text-error">
+        Erişim Reddedildi
+      </p>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-3 sm:p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2">Quiz Yönetimi</h1>
-            <p className="text-sm sm:text-base text-gray-300">canlı quiz'lerinizi yönetin ve oyun başlatın</p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-            <Link
-              href="/admin/quiz/history"
-              className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors font-semibold text-center text-sm sm:text-base"
-            >
-              📊 Oyun Geçmişi
-            </Link>
-            <Link
-              href="/admin/quiz/create"
-              className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors font-semibold text-center text-sm sm:text-base"
-            >
-              + Yeni Quiz
-            </Link>
-          </div>
-        </div>
+    <div>
+      <PageHeader
+        title="Quiz Yönetimi"
+        description="canlı quiz'lerinizi yönetin ve oyun başlatın"
+        actions={
+          <>
+            <Button asChild variant="outline">
+              <Link href="/admin/quiz/history">Oyun Geçmişi</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/admin/quiz/create">+ Yeni Quiz</Link>
+            </Button>
+          </>
+        }
+      />
 
-        {/* Statistics */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20">
-            <div className="text-gray-400 text-xs sm:text-sm mb-1">Toplam Quiz</div>
-            <div className="text-2xl sm:text-3xl font-bold text-white">{quizzes.length}</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20">
-            <div className="text-gray-400 text-xs sm:text-sm mb-1">Aktif Quiz</div>
-            <div className="text-2xl sm:text-3xl font-bold text-green-400">
-              {quizzes.filter((q) => q.isActive).length}
-            </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20">
-            <div className="text-gray-400 text-xs sm:text-sm mb-1">Toplam Oynama</div>
-            <div className="text-2xl sm:text-3xl font-bold text-purple-400">
-              {quizzes.reduce((sum, q) => sum + (q.playCount || 0), 0)}
-            </div>
-          </div>
-        </div>
+      {/* Statistics */}
+      <dl className="grid grid-cols-3 gap-4 sm:gap-8">
+        <Stat label="Toplam Quiz" value={quizzes.length} />
+        <Stat label="Aktif Quiz" value={quizzes.filter((q) => q.isActive).length} />
+        <Stat
+          label="Toplam Oynama"
+          value={quizzes.reduce((sum, q) => sum + (q.playCount || 0), 0)}
+        />
+      </dl>
 
-        {/* Quizzes List */}
-        {quizzes.length === 0 ? (
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-8 sm:p-12 border border-white/20 text-center">
-            <p className="text-gray-400 text-base sm:text-lg mb-4">Henüz quiz oluşturulmamış</p>
-            <Link
-              href="/admin/quiz/create"
-              className="inline-block px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm sm:text-base"
-            >
-              İlk Quiz'i Oluştur
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-3 sm:space-y-4">
-            {quizzes.map((quiz) => (
-              <div
-                key={quiz.id}
-                className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/20 hover:bg-white/15 transition-colors"
-              >
-                <div className="flex flex-col gap-4">
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <h3 className="text-lg sm:text-xl font-bold text-white">{quiz.title}</h3>
-                      <span
-                        className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
-                          quiz.isActive
-                            ? "bg-green-500/20 text-green-400"
-                            : "bg-gray-500/20 text-gray-400"
-                        }`}
-                      >
-                        {quiz.isActive ? "Aktif" : "Pasif"}
-                      </span>
-                      <span className="px-2 sm:px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs font-semibold">
-                        {quiz.category}
-                      </span>
-                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
-                        quiz.gameMode === "kahoot"
-                          ? "bg-orange-500/20 text-orange-400"
-                          : "bg-blue-500/20 text-blue-400"
-                      }`}>
-                        {quiz.gameMode === "kahoot" ? "🏆 Kahoot" : "📊 Klasik"}
-                      </span>
-                    </div>
-
-                    {quiz.description && (
-                      <p className="text-gray-400 text-xs sm:text-sm mb-3">{quiz.description}</p>
-                    )}
-
-                    <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-400">
-                      <span>📝 {quiz.questionCount} Soru</span>
-                      <span>🎮 {quiz.playCount || 0} Kez</span>
-                      <span className="hidden sm:inline">👤 {quiz.createdByName || quiz.createdBy}</span>
-                      {quiz.lastPlayedAt && (
-                        <span className="hidden sm:inline">
-                          🕐 {new Date(quiz.lastPlayedAt.seconds * 1000).toLocaleDateString("tr-TR")}
-                        </span>
-                      )}
-                    </div>
+      {/* Quizzes List */}
+      {quizzes.length === 0 ? (
+        <EmptyState
+          className="mt-10"
+          title="Henüz quiz oluşturulmamış"
+          action={
+            <Button asChild>
+              <Link href="/admin/quiz/create">İlk Quiz'i Oluştur</Link>
+            </Button>
+          }
+        />
+      ) : (
+        <ul className="mt-10 border-t-2 border-ink">
+          {quizzes.map((quiz) => (
+            <li key={quiz.id} className="border-b border-rule py-5">
+              <div className="flex flex-col gap-4">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="mr-1 min-w-0 break-words font-display text-lg font-bold">
+                      {quiz.title}
+                    </h2>
+                    <Badge variant={quiz.isActive ? "success" : "neutral"}>
+                      {quiz.isActive ? "Aktif" : "Pasif"}
+                    </Badge>
+                    <Badge>{quiz.category}</Badge>
+                    <Badge>{quiz.gameMode === "kahoot" ? "Kahoot" : "Klasik"}</Badge>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row flex-wrap gap-2">
-                    <button
-                      onClick={() => handleStartGame(quiz)}
-                      className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-colors font-semibold text-sm"
-                      disabled={!quiz.isActive}
-                    >
-                      🎮 Oyun Başlat
-                    </button>
+                  {quiz.description && (
+                    <p className="mt-2 max-w-measure text-sm text-muted-foreground">
+                      {quiz.description}
+                    </p>
+                  )}
 
-                    <Link
-                      href={`/admin/quiz/edit/${quiz.id}`}
-                      className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors text-sm text-center"
-                    >
-                      ✏️ Düzenle
-                    </Link>
-
-                    <button
-                      onClick={() => handleToggleActive(quiz.id, quiz.isActive)}
-                      className={`w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm ${
-                        quiz.isActive
-                          ? "bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400"
-                          : "bg-green-500/20 hover:bg-green-500/30 text-green-400"
-                      }`}
-                    >
-                      {quiz.isActive ? "⏸ Pasifleştir" : "▶ Aktifleştir"}
-                    </button>
-
-                    <button
-                      onClick={() => handleDeleteQuiz(quiz.id)}
-                      className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm"
-                    >
-                      🗑 Sil
-                    </button>
+                  <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
+                    <span>
+                      <span className="font-outlier tabular-nums">{quiz.questionCount}</span> Soru
+                    </span>
+                    <span>
+                      <span className="font-outlier tabular-nums">{quiz.playCount || 0}</span> Kez
+                    </span>
+                    <span className="hidden items-center gap-1.5 sm:inline-flex">
+                      <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      {quiz.createdByName || quiz.createdBy}
+                    </span>
+                    {quiz.lastPlayedAt && (
+                      <span className="hidden items-center gap-1.5 sm:inline-flex">
+                        <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        <span className="font-outlier tabular-nums">
+                          {new Date(quiz.lastPlayedAt.seconds * 1000).toLocaleDateString("tr-TR")}
+                        </span>
+                      </span>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
 
-        {/* Back to Admin */}
-        <div className="mt-6 sm:mt-8">
-          <Link
-            href="/admin"
-            className="inline-block px-4 sm:px-6 py-2 sm:py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm sm:text-base"
-          >
-            ← Admin Paneline Dön
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={() => handleStartGame(quiz)} disabled={!quiz.isActive}>
+                    <Play aria-hidden="true" />
+                    Oyun Başlat
+                  </Button>
+
+                  <Button asChild variant="outline">
+                    <Link href={`/admin/quiz/edit/${quiz.id}`}>
+                      <Pencil aria-hidden="true" />
+                      Düzenle
+                    </Link>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => handleToggleActive(quiz.id, quiz.isActive)}
+                  >
+                    {quiz.isActive ? (
+                      <Pause aria-hidden="true" />
+                    ) : (
+                      <Play aria-hidden="true" />
+                    )}
+                    {quiz.isActive ? "Pasifleştir" : "Aktifleştir"}
+                  </Button>
+
+                  <Button variant="destructive" onClick={() => handleDeleteQuiz(quiz.id)}>
+                    <Trash2 aria-hidden="true" />
+                    Sil
+                  </Button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Back to Admin */}
+      <div className="mt-10">
+        <Button asChild variant="link">
+          <Link href="/admin">
+            <ArrowLeft aria-hidden="true" />
+            Admin Paneline Dön
           </Link>
-        </div>
+        </Button>
       </div>
 
       <ToastContainer
@@ -311,7 +287,7 @@ export default function ManageQuizzesPage() {
         hideProgressBar={false}
         newestOnTop
         closeOnClick
-        theme="dark"
+        theme="light"
       />
     </div>
   );
