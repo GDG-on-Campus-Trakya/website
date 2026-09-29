@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -199,42 +198,28 @@ export default async function LandingPage({ params }) {
         )}
       </section>
 
-      {/* Things to try, and the board photo */}
-      <section className="grid items-end gap-10 pb-20 pt-10 lg:grid-cols-12 lg:gap-10 lg:pt-16">
-        <div className="lg:col-span-5">
-          <RailHeader title={t("try")} />
-          <ul>
-            {tryItems.map((item) => (
-              <li key={item.href}>
-                <Link href={item.href} className={`${rowLink} grid-cols-1`}>
-                  <span className="font-medium text-ink group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
-                    {item.title}
-                  </span>
-                  <span className="text-sm text-muted-foreground">{item.text}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <figure className="lg:col-span-7">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-paper-2">
-            <Image
-              src="/yonetim-kurulu.webp"
-              alt={t("teamAlt")}
-              fill
-              sizes="(min-width: 1152px) 640px, (min-width: 1024px) 55vw, 100vw"
-              className="object-cover"
-            />
-          </div>
-          <figcaption className="mt-2 flex items-baseline justify-between gap-4 text-sm text-muted-foreground">
-            <span>{t("teamCaption")}</span>
-            <Link href="/about" className={textLink}>
-              {t("teamLink")}
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </figcaption>
-        </figure>
+      {/* Things to try */}
+      <section className="pb-20 pt-10 lg:pt-16">
+        <RailHeader title={t("try")} />
+        <ul>
+          {tryItems.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className={`${rowLink} grid-cols-1 sm:grid-cols-[minmax(0,16rem)_1fr_auto]`}
+              >
+                <span className="font-medium text-ink group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
+                  {item.title}
+                </span>
+                <span className="text-sm text-muted-foreground">{item.text}</span>
+                <ArrowRight
+                  className="hidden h-4 w-4 text-muted-foreground group-hover:text-ink sm:block"
+                  aria-hidden="true"
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="sr-only">
