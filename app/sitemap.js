@@ -1,76 +1,63 @@
-// app/sitemap.js
+import { locales } from '@/i18n/locales';
+import {
+  getAllEvents,
+  getProjects,
+  getPublishedAnnouncements
+} from '@/lib/content-data';
 import { getAllTests } from '@/lib/personality-test';
+import { absoluteUrl, languageAlternates } from '@/lib/seo';
+
+// Public pages only. Login, profile, tickets, admin and the live game screens are
+// noindex and stay out of the sitemap. Google ignores changeFrequency and priority,
+// and lastModified is only sent when a document really has one.
+const STATIC_ROUTES = [
+  '',
+  '/about',
+  '/events',
+  '/announcements',
+  '/projects',
+  '/faq',
+  '/social',
+  '/personality-test',
+  '/typing-test',
+  '/privacy',
+  '/terms',
+  '/cookie-policy'
+];
+
+function entriesFor(path, lastModified) {
+  return locales.map((locale) => ({
+    url: absoluteUrl(locale, path),
+    ...(lastModified && { lastModified: new Date(lastModified) }),
+    alternates: { languages: languageAlternates(path) }
+  }));
+}
 
 export default async function sitemap() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://gdgoncampustu.com';
+  const [events, announcements, projects, tests] = await Promise.all([
+    getAllEvents(),
+    getPublishedAnnouncements(),
+    getProjects(),
+    getAllTests().catch(() => [])
+  ]);
 
-  const staticRoutes = [
-    '',
-    '/about',
-    '/events',
-    '/projects',
-    '/faq',
-    '/login',
-    '/profile',
-    '/tickets',
-    '/social',
-    '/privacy',
-    '/terms',
-    '/cookie-policy',
-    '/personality-test',
+  return [
+    ...STATIC_ROUTES.flatMap((route) => entriesFor(route)),
+    ...events.flatMap((event) =>
+      entriesFor(`/events/${event.docId}`, event.updatedAt)
+    ),
+    ...announcements.flatMap((announcement) =>
+      entriesFor(
+        `/announcements/${announcement.docId}`,
+        announcement.updatedAt || announcement.createdAt
+      )
+    ),
+    ...projects.flatMap((project) =>
+      entriesFor(
+        `/projects/${project.docId}`,
+        project.updatedAt || project.createdAt
+      )
+    ),
+    ...tests.flatMap((test) => entriesFor(`/personality-test/${test.slug}`))
   ];
-
-  const localizedStaticRoutes = staticRoutes.flatMap((route) => {
-    const priority =
-      route === ''
-        ? 1
-        : route === '/events' || route === '/about'
-          ? 0.8
-          : route === '/personality-test'
-            ? 0.9
-            : 0.5;
-    const changeFrequency =
-      route === '' || route === '/events' || route === '/personality-test'
-        ? 'daily'
-        : 'weekly';
-
-    return [
-      {
-        url: `${baseUrl}${route}`,
-        lastModified: new Date(),
-        changeFrequency,
-        priority
-      },
-      {
-        url: `${baseUrl}/en${route}`,
-        lastModified: new Date(),
-        changeFrequency,
-        priority: priority === 1 ? 0.9 : priority
-      }
-    ];
-  });
-
-  // Fetch personality tests with slugs for dynamic routes
-  let testRoutes = [];
-  try {
-    const tests = await getAllTests();
-    testRoutes = tests.flatMap((test) => [
-      {
-        url: `${baseUrl}/personality-test/${test.slug}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly',
-        priority: 0.8
-      },
-      {
-        url: `${baseUrl}/en/personality-test/${test.slug}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly',
-        priority: 0.8
-      }
-    ]);
-  } catch (error) {
-    console.error('Error fetching personality tests for sitemap:', error);
-  }
-
-  return [...localizedStaticRoutes, ...testRoutes];
 }

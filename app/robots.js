@@ -1,41 +1,39 @@
-// app/robots.js
-export default function robots() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://gdgoncampustu.com';
-  const host = process.env.VERCEL_URL;
+import { baseUrl } from '@/lib/seo';
 
+// Only the admin panel and the API are blocked from crawling. Login, profile and the
+// other private pages are kept out of the index with `X-Robots-Tag: noindex` (middleware),
+// which crawlers can only see if they are allowed to fetch the page.
+export default function robots() {
   return {
     rules: [
-      // İyi botlar (SEO için gerekli)
-      {
-        userAgent: ['Googlebot', 'Googlebot-Image', 'Googlebot-News', 'Googlebot-Video'],
-        allow: '/',
-        disallow: ['/admin/', '/api/', '/profile/'],
-        crawlDelay: 1,
-      },
-      {
-        userAgent: ['Bingbot', 'Slurp', 'DuckDuckBot'],
-        allow: '/',
-        disallow: ['/admin/', '/api/', '/profile/'],
-        crawlDelay: 2,
-      },
-      // Kötü/Agresif botları engelle
+      // Aggressive SEO scrapers
       {
         userAgent: [
-          'AhrefsBot', 'SemrushBot', 'DotBot', 'MJ12bot', 'SEMrushBot',
-          'PetalBot', 'Yandex', 'Baiduspider', 'Sogou', 'Exabot',
-          'BLEXBot', 'DataForSeoBot', 'ZoominfoBot', 'serpstatbot',
-          'MegaIndex', 'linkdexbot', 'rogerbot', 'spbot',
+          'AhrefsBot',
+          'SemrushBot',
+          'DotBot',
+          'MJ12bot',
+          'PetalBot',
+          'Baiduspider',
+          'Sogou',
+          'Exabot',
+          'BLEXBot',
+          'DataForSeoBot',
+          'ZoominfoBot',
+          'serpstatbot',
+          'MegaIndex',
+          'linkdexbot',
+          'rogerbot',
+          'spbot'
         ],
-        disallow: '/',
+        disallow: '/'
       },
-      // Diğer tüm botlar için genel kural
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin/', '/api/', '/profile/', '/login/', '/welcome/'],
-        crawlDelay: 2,
-      },
+        disallow: ['/api/', '/admin', '/en/admin']
+      }
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${baseUrl}/sitemap.xml`
   };
 }

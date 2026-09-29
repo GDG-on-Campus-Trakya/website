@@ -11,7 +11,6 @@ const BLOCKED_BOTS = [
   'ahrefsbot',
   'serpstat',
   'petalbot',
-  'yandex',
   'baidu',
   'sogou',
   'exabot',
@@ -30,13 +29,10 @@ const BLOCKED_BOTS = [
   'go-http-client',
   'curl',
   'wget',
-  'headlesschrome',
-  'headless',
   'puppeteer',
   'playwright',
   'selenium',
   'phantomjs',
-  'chrome-lighthouse',
   'squarespace',
   'claudebot',
   'java/',
@@ -49,6 +45,9 @@ const BLOCKED_BOTS = [
 const ALLOWED_BOTS = [
   'googlebot',
   'bingbot',
+  'duckduckbot',
+  'applebot',
+  'yandexbot',
   'slackbot',
   'twitterbot',
   'facebookexternalhit',
@@ -57,6 +56,11 @@ const ALLOWED_BOTS = [
   'telegrambot',
   'discordbot'
 ];
+
+// Pages that exist only for signed-in users or live sessions: never index them.
+// Crawling is not blocked in robots.txt (except /admin), so crawlers can read this header.
+const PRIVATE_PATHS =
+  /^\/(?:en\/)?(?:admin|login|profile|tickets|welcome|quiz|poll|game|social\/upload)(?:\/|$)/;
 
 const handleI18nRouting = createMiddleware(routing);
 
@@ -106,12 +110,17 @@ export function middleware(request) {
 
   const response = handleI18nRouting(request);
   response.headers.set('X-DNS-Prefetch-Control', 'on');
-  response.headers.set('X-Robots-Tag', 'index, follow');
+  if (PRIVATE_PATHS.test(pathname)) {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  }
   response.headers.set('X-Content-Type-Options', 'nosniff');
 
   return response;
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|favicon.ico|.*\\..*).*)']
+  // Metadata image routes (opengraph-image, twitter-image, apple-icon) have no file extension
+  matcher: [
+    '/((?!api|_next|favicon.ico|opengraph-image|twitter-image|apple-icon|.*\\..*).*)'
+  ]
 };
