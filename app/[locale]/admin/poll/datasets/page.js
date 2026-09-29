@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { useRouter } from "@/i18n/navigation";
@@ -28,8 +29,95 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader, EmptyState } from "@/components/ui/page";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    datasetsLoadError: "Veri setleri yüklenirken hata oluştu!",
+    onlyImages: "Sadece resim dosyaları yüklenebilir!",
+    itemNameRequired: "Öğe adı gerekli!",
+    imageRequired: "Resim gerekli!",
+    itemAdded: "Öğe eklendi!",
+    itemRemoved: "Öğe kaldırıldı",
+    datasetNameRequired: "Veri seti adı gerekli!",
+    minItemsToAdd: "En az 8 öğe eklemelisiniz!",
+    uploadingImage: (i, total) => `Resim yükleniyor ${i}/${total}...`,
+    datasetCreated: "Veri seti oluşturuldu!",
+    datasetCreateError: "Veri seti oluşturulurken hata oluştu!",
+    confirmDeleteDataset: "Bu veri setini silmek istediğinizden emin misiniz?",
+    datasetDeleted: "Veri seti silindi!",
+    datasetDeleteError: "Veri seti silinirken hata oluştu!",
+    pageTitle: "Veri Setleri",
+    pageSubtitle: "Poll veri setlerinizi yönetin",
+    pollManagement: "Poll Yönetimi",
+    newDatasetButton: "+ Yeni Veri Seti Oluştur",
+    datasetsLoading: "Veri setleri yükleniyor...",
+    noDatasets: "Henüz veri seti yok. Hemen bir tane oluşturun!",
+    noDescription: "Açıklama yok",
+    itemCountLabel: "Öğe Sayısı:",
+    createdByLabel: "Oluşturan:",
+    newDatasetHeading: "Yeni Veri Seti Oluştur",
+    datasetNameLabel: "Veri Seti Adı *",
+    datasetNamePlaceholder: "Örn: En İyi Futbolcular",
+    descriptionLabel: "Açıklama",
+    descriptionPlaceholder: "Veri seti hakkında kısa açıklama",
+    addItemHeading: "Öğe Ekle",
+    itemNameLabel: "Öğe Adı *",
+    itemNamePlaceholder: "Örn: Lionel Messi",
+    itemDescriptionPlaceholder: "Örn: 8 Ballon d'Or",
+    imageLabel: "Resim *",
+    addItemButton: "Öğe Ekle",
+    addedItemsHeading: (n) => `Eklenen Öğeler (${n})`,
+    noItemsYet: "Henüz öğe eklenmedi. En az 8 öğe eklemelisiniz.",
+    creating: "Oluşturuluyor...",
+    createDatasetButton: "Veri Seti Oluştur",
+  },
+  en: {
+    datasetsLoadError: "An error occurred while loading datasets!",
+    onlyImages: "Only image files can be uploaded!",
+    itemNameRequired: "Item name is required!",
+    imageRequired: "Image is required!",
+    itemAdded: "Item added!",
+    itemRemoved: "Item removed",
+    datasetNameRequired: "Dataset name is required!",
+    minItemsToAdd: "You must add at least 8 items!",
+    uploadingImage: (i, total) => `Uploading image ${i}/${total}...`,
+    datasetCreated: "Dataset created!",
+    datasetCreateError: "An error occurred while creating the dataset!",
+    confirmDeleteDataset: "Are you sure you want to delete this dataset?",
+    datasetDeleted: "Dataset deleted!",
+    datasetDeleteError: "An error occurred while deleting the dataset!",
+    pageTitle: "Datasets",
+    pageSubtitle: "Manage your poll datasets",
+    pollManagement: "Poll Management",
+    newDatasetButton: "+ Create New Dataset",
+    datasetsLoading: "Loading datasets...",
+    noDatasets: "No datasets yet. Create one now!",
+    noDescription: "No description",
+    itemCountLabel: "Item Count:",
+    createdByLabel: "Created By:",
+    newDatasetHeading: "Create New Dataset",
+    datasetNameLabel: "Dataset Name *",
+    datasetNamePlaceholder: "e.g.: Best Footballers",
+    descriptionLabel: "Description",
+    descriptionPlaceholder: "A short description of the dataset",
+    addItemHeading: "Add Item",
+    itemNameLabel: "Item Name *",
+    itemNamePlaceholder: "e.g.: Lionel Messi",
+    itemDescriptionPlaceholder: "e.g.: 8 Ballon d'Or",
+    imageLabel: "Image *",
+    addItemButton: "Add Item",
+    addedItemsHeading: (n) => `Added Items (${n})`,
+    noItemsYet: "No items added yet. You must add at least 8 items.",
+    creating: "Creating...",
+    createDatasetButton: "Create Dataset",
+  },
+};
 
 export default function DatasetsPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
 
@@ -64,7 +152,7 @@ export default function DatasetsPage() {
       setDatasets(data);
     } catch (error) {
       logger.error("Error loading datasets:", error);
-      toast.error("Veri setleri yüklenirken hata oluştu!");
+      toast.error(copy.datasetsLoadError);
     }
     setLoadingDatasets(false);
   };
@@ -74,7 +162,7 @@ export default function DatasetsPage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Sadece resim dosyaları yüklenebilir!");
+      toast.error(copy.onlyImages);
       return;
     }
 
@@ -83,12 +171,12 @@ export default function DatasetsPage() {
 
   const handleAddItem = () => {
     if (!currentItemName.trim()) {
-      toast.error("Öğe adı gerekli!");
+      toast.error(copy.itemNameRequired);
       return;
     }
 
     if (!currentItemImage) {
-      toast.error("Resim gerekli!");
+      toast.error(copy.imageRequired);
       return;
     }
 
@@ -108,22 +196,22 @@ export default function DatasetsPage() {
     const fileInput = document.getElementById("item-image-input");
     if (fileInput) fileInput.value = "";
 
-    toast.success("Öğe eklendi!");
+    toast.success(copy.itemAdded);
   };
 
   const handleRemoveItem = (itemId) => {
     setItems(items.filter(item => item.id !== itemId));
-    toast.info("Öğe kaldırıldı");
+    toast.info(copy.itemRemoved);
   };
 
   const handleCreateDataset = async () => {
     if (!datasetName.trim()) {
-      toast.error("Veri seti adı gerekli!");
+      toast.error(copy.datasetNameRequired);
       return;
     }
 
     if (items.length < 8) {
-      toast.error("En az 8 öğe eklemelisiniz!");
+      toast.error(copy.minItemsToAdd);
       return;
     }
 
@@ -143,7 +231,7 @@ export default function DatasetsPage() {
       const itemsWithUrls = [];
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        toast.info(`Resim yükleniyor ${i + 1}/${items.length}...`);
+        toast.info(copy.uploadingImage(i + 1, items.length));
 
         const imageUrl = await uploadDatasetImage(item.imageFile, datasetId);
 
@@ -158,28 +246,28 @@ export default function DatasetsPage() {
       // Update dataset with items
       await updateDataset(datasetId, { items: itemsWithUrls });
 
-      toast.success("Veri seti oluşturuldu!");
+      toast.success(copy.datasetCreated);
       setShowCreateModal(false);
       resetForm();
       loadDatasets();
     } catch (error) {
       logger.error("Error creating dataset:", error);
-      toast.error("Veri seti oluşturulurken hata oluştu!");
+      toast.error(copy.datasetCreateError);
     }
 
     setCreatingDataset(false);
   };
 
   const handleDeleteDataset = async (datasetId) => {
-    if (!confirm("Bu veri setini silmek istediğinizden emin misiniz?")) return;
+    if (!confirm(copy.confirmDeleteDataset)) return;
 
     try {
       await deleteDataset(datasetId);
-      toast.success("Veri seti silindi!");
+      toast.success(copy.datasetDeleted);
       loadDatasets();
     } catch (error) {
       logger.error("Error deleting dataset:", error);
-      toast.error("Veri seti silinirken hata oluştu!");
+      toast.error(copy.datasetDeleteError);
     }
   };
 
@@ -193,7 +281,7 @@ export default function DatasetsPage() {
   };
 
   if (loading) {
-    return <p className="py-12 text-ink-2">Yükleniyor...</p>;
+    return <p className="py-12 text-ink-2">{a.loading}</p>;
   }
 
   if (!user) {
@@ -203,40 +291,40 @@ export default function DatasetsPage() {
   return (
     <div>
       <PageHeader
-        title="Veri Setleri"
-        description="Poll veri setlerinizi yönetin"
+        title={copy.pageTitle}
+        description={copy.pageSubtitle}
         actions={
           <>
             <Button variant="outline" onClick={() => router.push("/admin/poll")}>
               <ArrowLeft aria-hidden="true" />
-              Poll Yönetimi
+              {copy.pollManagement}
             </Button>
-            <Button onClick={() => setShowCreateModal(true)}>+ Yeni Veri Seti Oluştur</Button>
+            <Button onClick={() => setShowCreateModal(true)}>{copy.newDatasetButton}</Button>
           </>
         }
       />
 
       {/* Datasets Grid */}
       {loadingDatasets ? (
-        <p className="py-12 text-ink-2">Veri setleri yükleniyor...</p>
+        <p className="py-12 text-ink-2">{copy.datasetsLoading}</p>
       ) : datasets.length === 0 ? (
-        <EmptyState title="Henüz veri seti yok. Hemen bir tane oluşturun!" />
+        <EmptyState title={copy.noDatasets} />
       ) : (
         <div className="grid gap-6 md:grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-[repeat(3,minmax(0,1fr))]">
           {datasets.map((dataset) => (
             <Card key={dataset.id} className="flex min-w-0 flex-col p-5">
               <h2 className="break-words font-display text-lg font-bold">{dataset.name}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {dataset.description || "Açıklama yok"}
+                {dataset.description || copy.noDescription}
               </p>
 
               <dl className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Öğe Sayısı:</dt>
+                  <dt className="text-muted-foreground">{copy.itemCountLabel}</dt>
                   <dd className="font-outlier tabular-nums">{dataset.items?.length || 0}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="shrink-0 text-muted-foreground">Oluşturan:</dt>
+                  <dt className="shrink-0 text-muted-foreground">{copy.createdByLabel}</dt>
                   <dd className="min-w-0 truncate">{dataset.createdByName || "N/A"}</dd>
                 </div>
               </dl>
@@ -262,14 +350,14 @@ export default function DatasetsPage() {
                   className="flex-1"
                   onClick={() => router.push(`/admin/poll/datasets/edit/${dataset.id}`)}
                 >
-                  Düzenle
+                  {a.edit}
                 </Button>
                 <Button
                   variant="destructive"
                   className="flex-1"
                   onClick={() => handleDeleteDataset(dataset.id)}
                 >
-                  Sil
+                  {a.delete}
                 </Button>
               </div>
             </Card>
@@ -289,56 +377,56 @@ export default function DatasetsPage() {
       >
         <DialogContent className="max-w-4xl" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle>Yeni Veri Seti Oluştur</DialogTitle>
+            <DialogTitle>{copy.newDatasetHeading}</DialogTitle>
           </DialogHeader>
 
           {/* Dataset Info */}
           <div>
-            <Field id="dataset-name" label="Veri Seti Adı *">
+            <Field id="dataset-name" label={copy.datasetNameLabel}>
               <Input
                 type="text"
                 value={datasetName}
                 onChange={(e) => setDatasetName(e.target.value)}
-                placeholder="Örn: En İyi Futbolcular"
+                placeholder={copy.datasetNamePlaceholder}
               />
             </Field>
 
-            <Field id="dataset-description" label="Açıklama">
+            <Field id="dataset-description" label={copy.descriptionLabel}>
               <Textarea
                 value={datasetDescription}
                 onChange={(e) => setDatasetDescription(e.target.value)}
                 rows={3}
-                placeholder="Veri seti hakkında kısa açıklama"
+                placeholder={copy.descriptionPlaceholder}
               />
             </Field>
           </div>
 
           {/* Add Item Section */}
           <div className="border-t-2 border-ink pt-4">
-            <h3 className="mb-4 font-display text-lg font-bold">Öğe Ekle</h3>
+            <h3 className="mb-4 font-display text-lg font-bold">{copy.addItemHeading}</h3>
 
             <div className="grid gap-x-4 md:grid-cols-2">
-              <Field id="dataset-item-name" label="Öğe Adı *">
+              <Field id="dataset-item-name" label={copy.itemNameLabel}>
                 <Input
                   type="text"
                   value={currentItemName}
                   onChange={(e) => setCurrentItemName(e.target.value)}
-                  placeholder="Örn: Lionel Messi"
+                  placeholder={copy.itemNamePlaceholder}
                 />
               </Field>
 
-              <Field id="dataset-item-description" label="Açıklama">
+              <Field id="dataset-item-description" label={copy.descriptionLabel}>
                 <Input
                   type="text"
                   value={currentItemDescription}
                   onChange={(e) => setCurrentItemDescription(e.target.value)}
-                  placeholder="Örn: 8 Ballon d'Or"
+                  placeholder={copy.itemDescriptionPlaceholder}
                 />
               </Field>
             </div>
 
             <div className="mb-4 flex flex-col gap-1.5">
-              <Label htmlFor="item-image-input">Resim *</Label>
+              <Label htmlFor="item-image-input">{copy.imageLabel}</Label>
               <input
                 id="item-image-input"
                 type="file"
@@ -355,19 +443,19 @@ export default function DatasetsPage() {
             </div>
 
             <Button variant="outline" className="w-full" onClick={handleAddItem}>
-              Öğe Ekle
+              {copy.addItemButton}
             </Button>
           </div>
 
           {/* Items List */}
           <div>
             <h3 className="mb-3 font-display text-lg font-bold">
-              Eklenen Öğeler ({items.length})
+              {copy.addedItemsHeading(items.length)}
             </h3>
 
             {items.length === 0 ? (
               <p className="border-y border-rule py-6 text-sm text-muted-foreground">
-                Henüz öğe eklenmedi. En az 8 öğe eklemelisiniz.
+                {copy.noItemsYet}
               </p>
             ) : (
               <ul className="border-t border-ink">
@@ -391,8 +479,8 @@ export default function DatasetsPage() {
                       size="icon"
                       className="shrink-0 text-error"
                       onClick={() => handleRemoveItem(item.id)}
-                      aria-label="Kaldır"
-                      title="Kaldır"
+                      aria-label={a.remove}
+                      title={a.remove}
                     >
                       <X aria-hidden="true" />
                     </Button>
@@ -412,13 +500,13 @@ export default function DatasetsPage() {
                 resetForm();
               }}
             >
-              İptal
+              {a.cancel}
             </Button>
             <Button
               onClick={handleCreateDataset}
               disabled={items.length < 8 || creatingDataset}
             >
-              {creatingDataset ? "Oluşturuluyor..." : "Veri Seti Oluştur"}
+              {creatingDataset ? copy.creating : copy.createDatasetButton}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -16,12 +16,96 @@ import { useRouter } from "@/i18n/navigation";
 import { ArrowLeft, Plus, Edit3, Trash2, Play, Settings, Trophy } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useLocale } from "next-intl";
+import { adminCopy } from "@/utils/adminCopy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Field } from "@/components/ui/field";
 
+const COPY = {
+  tr: {
+    adminPanel: "Admin Panel",
+    pageTitle: "Çekiliş Çarkı",
+    pageSubtitle: "Çark için ürün ekleyin ve çevirerek kazanan belirleyin",
+    addItem: "Ürün Ekle",
+    wheelHeading: "Çark",
+    spinning: "Dönüyor...",
+    spinWheel: "Çarkı Çevir!",
+    winnerTitle: "Kazanan!",
+    itemsHeading: "Ürünler",
+    probabilityPrefix: "Olasılık:",
+    noItemsYet: "Henüz ürün eklenmemiş",
+    addFirstItem: "İlk Ürünü Ekle",
+    addItemModalTitle: "Yeni Ürün Ekle",
+    editItemModalTitle: "Ürün Düzenle",
+    wheelEmptyPrompt: "Ürün eklemek için yukarıdaki butona tıklayın",
+    itemNameLabel: "Ürün Adı",
+    itemNamePlaceholder: "Örn: iPhone 15",
+    probabilityFieldLabel: "Olasılık (%)",
+    probabilityHint: "Yüksek olasılık = daha fazla kazanma şansı",
+    colorLabel: "Renk",
+    cancel: "İptal",
+    update: "Güncelle",
+    add: "Ekle",
+    // Toasts / confirms
+    itemsLoadError: "Ürünler yüklenirken hata oluştu!",
+    itemAdded: "Ürün başarıyla eklendi!",
+    itemAddError: "Ürün eklenirken hata oluştu!",
+    itemUpdated: "Ürün başarıyla güncellendi!",
+    itemUpdateError: "Ürün güncellenirken hata oluştu!",
+    confirmDeleteItem: "Bu ürünü silmek istediğinizden emin misiniz?",
+    itemDeleted: "Ürün başarıyla silindi!",
+    itemDeleteError: "Ürün silinirken hata oluştu!",
+    needAtLeastOneItem: "Çark döndürmek için en az bir ürün eklemelisiniz!",
+    winnerToast: (name) => `Kazanan: ${name}!`,
+    itemNameRequired: "Ürün adı zorunludur!",
+    probabilityRange: "Olasılık 1-100 arasında olmalıdır!",
+  },
+  en: {
+    adminPanel: "Admin Panel",
+    pageTitle: "Raffle Wheel",
+    pageSubtitle: "Add items to the wheel and spin to pick a winner",
+    addItem: "Add Item",
+    wheelHeading: "Wheel",
+    spinning: "Spinning...",
+    spinWheel: "Spin the Wheel!",
+    winnerTitle: "Winner!",
+    itemsHeading: "Items",
+    probabilityPrefix: "Probability:",
+    noItemsYet: "No items added yet",
+    addFirstItem: "Add First Item",
+    addItemModalTitle: "Add New Item",
+    editItemModalTitle: "Edit Item",
+    wheelEmptyPrompt: "Click the button above to add an item",
+    itemNameLabel: "Item Name",
+    itemNamePlaceholder: "e.g. iPhone 15",
+    probabilityFieldLabel: "Probability (%)",
+    probabilityHint: "Higher probability = greater chance of winning",
+    colorLabel: "Color",
+    cancel: "Cancel",
+    update: "Update",
+    add: "Add",
+    // Toasts / confirms
+    itemsLoadError: "An error occurred while loading items!",
+    itemAdded: "Item added successfully!",
+    itemAddError: "An error occurred while adding the item!",
+    itemUpdated: "Item updated successfully!",
+    itemUpdateError: "An error occurred while updating the item!",
+    confirmDeleteItem: "Are you sure you want to delete this item?",
+    itemDeleted: "Item deleted successfully!",
+    itemDeleteError: "An error occurred while deleting the item!",
+    needAtLeastOneItem: "You need to add at least one item to spin the wheel!",
+    winnerToast: (name) => `Winner: ${name}!`,
+    itemNameRequired: "Item name is required!",
+    probabilityRange: "Probability must be between 1 and 100!",
+  },
+};
+
 export default function RaffleWheelPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
   const [items, setItems] = useState([]);
@@ -74,7 +158,7 @@ export default function RaffleWheelPage() {
       setItems(itemsList);
     } catch (error) {
       console.error("Error loading items:", error);
-      toast.error("Ürünler yüklenirken hata oluştu!");
+      toast.error(copy.itemsLoadError);
     }
   };
 
@@ -86,12 +170,12 @@ export default function RaffleWheelPage() {
         createdAt: serverTimestamp(),
         createdBy: user.uid
       });
-      toast.success("Ürün başarıyla eklendi!");
+      toast.success(copy.itemAdded);
       loadItems();
       setShowAddModal(false);
     } catch (error) {
       console.error("Error adding item:", error);
-      toast.error("Ürün eklenirken hata oluştu!");
+      toast.error(copy.itemAddError);
     }
   };
 
@@ -102,33 +186,33 @@ export default function RaffleWheelPage() {
         ...formData,
         updatedAt: serverTimestamp()
       });
-      toast.success("Ürün başarıyla güncellendi!");
+      toast.success(copy.itemUpdated);
       loadItems();
       setShowEditModal(false);
       setEditingItem(null);
     } catch (error) {
       console.error("Error updating item:", error);
-      toast.error("Ürün güncellenirken hata oluştu!");
+      toast.error(copy.itemUpdateError);
     }
   };
 
   const handleDeleteItem = async (itemId) => {
-    if (!confirm("Bu ürünü silmek istediğinizden emin misiniz?")) return;
+    if (!confirm(copy.confirmDeleteItem)) return;
 
     try {
       const itemRef = doc(db, "raffleWheelItems", itemId);
       await deleteDoc(itemRef);
-      toast.success("Ürün başarıyla silindi!");
+      toast.success(copy.itemDeleted);
       loadItems();
     } catch (error) {
       console.error("Error deleting item:", error);
-      toast.error("Ürün silinirken hata oluştu!");
+      toast.error(copy.itemDeleteError);
     }
   };
 
   const spinWheel = () => {
     if (items.length === 0) {
-      toast.error("Çark döndürmek için en az bir ürün eklemelisiniz!");
+      toast.error(copy.needAtLeastOneItem);
       return;
     }
 
@@ -154,19 +238,19 @@ export default function RaffleWheelPage() {
     setTimeout(() => {
       setSelectedWinner(winner);
       setSpinning(false);
-      toast.success(`Kazanan: ${winner.name}!`);
+      toast.success(copy.winnerToast(winner.name));
     }, 5000);
   };
 
   if (loading) {
     return (
-      <p className="py-12 text-lg text-muted-foreground">Loading...</p>
+      <p className="py-12 text-lg text-muted-foreground">{a.loading}</p>
     );
   }
 
   if (!isAdmin) {
     return (
-      <p className="py-12 text-lg text-error">Access Denied</p>
+      <p className="py-12 text-lg text-error">{a.accessDenied}</p>
     );
   }
 
@@ -183,26 +267,26 @@ export default function RaffleWheelPage() {
             className="mb-3 inline-flex min-h-11 items-center gap-2 whitespace-nowrap text-sm text-stage-muted transition-colors duration-micro ease-out hover:text-stage-ink"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            <span>Admin Panel</span>
+            <span>{copy.adminPanel}</span>
           </button>
           <h1 className="font-display text-3xl font-bold text-stage-ink md:text-5xl">
-            Çekiliş Çarkı
+            {copy.pageTitle}
           </h1>
           <p className="mt-2 max-w-prose text-stage-muted">
-            Çark için ürün ekleyin ve çevirerek kazanan belirleyin
+            {copy.pageSubtitle}
           </p>
         </div>
 
         <Button onClick={() => setShowAddModal(true)}>
           <Plus aria-hidden="true" />
-          <span>Ürün Ekle</span>
+          <span>{copy.addItem}</span>
         </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-12">
         {/* Wheel Section */}
         <div className="min-w-0">
-          <h2 className="mb-6 font-display text-xl font-bold text-stage-ink">Çark</h2>
+          <h2 className="mb-6 font-display text-xl font-bold text-stage-ink">{copy.wheelHeading}</h2>
 
           <div className="relative mx-auto w-full max-w-xl">
             <WheelComponent
@@ -219,7 +303,7 @@ export default function RaffleWheelPage() {
             className="mt-8 h-14 w-full text-lg font-bold"
           >
             <Play aria-hidden="true" />
-            <span>{spinning ? "Dönüyor..." : "Çarkı Çevir!"}</span>
+            <span>{spinning ? copy.spinning : copy.spinWheel}</span>
           </Button>
 
           {selectedWinner && (
@@ -229,7 +313,7 @@ export default function RaffleWheelPage() {
             >
               <Trophy className="h-10 w-10 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
-                <p className="text-lg font-semibold">Kazanan!</p>
+                <p className="text-lg font-semibold">{copy.winnerTitle}</p>
                 <p className="break-words font-display text-3xl font-bold md:text-4xl">
                   {selectedWinner.name}
                 </p>
@@ -241,7 +325,7 @@ export default function RaffleWheelPage() {
         {/* Items List */}
         <div className="min-w-0 lg:border-l lg:border-stage-rule lg:pl-12">
           <h2 className="mb-6 font-display text-xl font-bold text-stage-ink">
-            Ürünler (<span className="font-outlier tabular-nums">{items.length}</span>)
+            {copy.itemsHeading} (<span className="font-outlier tabular-nums">{items.length}</span>)
           </h2>
 
           <div className="max-h-[600px] overflow-y-auto">
@@ -259,7 +343,7 @@ export default function RaffleWheelPage() {
                     <div className="min-w-0 flex-1">
                       <h3 className="break-words font-sans text-base font-semibold text-stage-ink">{item.name}</h3>
                       <span className="text-sm text-stage-muted">
-                        Olasılık: <span className="font-outlier tabular-nums">{item.probability}%</span>
+                        {copy.probabilityPrefix} <span className="font-outlier tabular-nums">{item.probability}%</span>
                       </span>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
@@ -268,7 +352,7 @@ export default function RaffleWheelPage() {
                           setEditingItem(item);
                           setShowEditModal(true);
                         }}
-                        aria-label="Düzenle"
+                        aria-label={a.edit}
                         className={`${stageSecondary} w-11 px-0`}
                       >
                         <Edit3 className="h-4 w-4" aria-hidden="true" />
@@ -277,7 +361,7 @@ export default function RaffleWheelPage() {
                         variant="destructive"
                         size="icon"
                         onClick={() => handleDeleteItem(item.id)}
-                        aria-label="Sil"
+                        aria-label={a.delete}
                       >
                         <Trash2 aria-hidden="true" />
                       </Button>
@@ -288,12 +372,12 @@ export default function RaffleWheelPage() {
             ) : (
               <div className="border-t border-stage-rule py-12">
                 <Settings className="mb-4 h-10 w-10 text-stage-muted" aria-hidden="true" />
-                <p className="text-stage-muted">Henüz ürün eklenmemiş</p>
+                <p className="text-stage-muted">{copy.noItemsYet}</p>
                 <Button
                   onClick={() => setShowAddModal(true)}
                   className="mt-4"
                 >
-                  İlk Ürünü Ekle
+                  {copy.addFirstItem}
                 </Button>
               </div>
             )}
@@ -306,7 +390,8 @@ export default function RaffleWheelPage() {
         <ItemModal
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddItem}
-          title="Yeni Ürün Ekle"
+          title={copy.addItemModalTitle}
+          copy={copy}
         />
       )}
 
@@ -318,8 +403,9 @@ export default function RaffleWheelPage() {
             setEditingItem(null);
           }}
           onSubmit={handleEditItem}
-          title="Ürün Düzenle"
+          title={copy.editItemModalTitle}
           initialData={editingItem}
+          copy={copy}
         />
       )}
 
@@ -341,6 +427,8 @@ export default function RaffleWheelPage() {
 
 // Wheel Component
 function WheelComponent({ items, spinning, selectedWinner }) {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
   const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
@@ -357,7 +445,7 @@ function WheelComponent({ items, spinning, selectedWinner }) {
     return (
       <div className="flex aspect-square w-full items-center justify-center rounded-full border border-stage-rule bg-stage-2">
         <p className="px-8 text-center text-stage-muted">
-          Ürün eklemek için yukarıdaki butona tıklayın
+          {copy.wheelEmptyPrompt}
         </p>
       </div>
     );
@@ -428,7 +516,7 @@ function WheelComponent({ items, spinning, selectedWinner }) {
 }
 
 // Item Modal Component
-function ItemModal({ onClose, onSubmit, title, initialData = null }) {
+function ItemModal({ onClose, onSubmit, title, initialData = null, copy }) {
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     probability: initialData?.probability || 10,
@@ -438,11 +526,11 @@ function ItemModal({ onClose, onSubmit, title, initialData = null }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      toast.error("Ürün adı zorunludur!");
+      toast.error(copy.itemNameRequired);
       return;
     }
     if (formData.probability <= 0 || formData.probability > 100) {
-      toast.error("Olasılık 1-100 arasında olmalıdır!");
+      toast.error(copy.probabilityRange);
       return;
     }
     onSubmit(formData);
@@ -467,20 +555,20 @@ function ItemModal({ onClose, onSubmit, title, initialData = null }) {
         <h2 className="mb-4 text-xl font-bold">{title}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-2">
-          <Field id="raffle-item-name" label="Ürün Adı" required>
+          <Field id="raffle-item-name" label={copy.itemNameLabel} required>
             <Input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               required
-              placeholder="Örn: iPhone 15"
+              placeholder={copy.itemNamePlaceholder}
             />
           </Field>
 
           <Field
             id="raffle-item-probability"
-            label="Olasılık (%)"
-            help="Yüksek olasılık = daha fazla kazanma şansı"
+            label={copy.probabilityFieldLabel}
+            help={copy.probabilityHint}
             required
           >
             <Input
@@ -496,14 +584,14 @@ function ItemModal({ onClose, onSubmit, title, initialData = null }) {
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="raffle-item-color">
-              Renk<span aria-hidden="true"> *</span>
+              {copy.colorLabel}<span aria-hidden="true"> *</span>
             </Label>
             <div className="flex items-center gap-2">
               <input
                 type="color"
                 value={formData.color}
                 onChange={(e) => setFormData({...formData, color: e.target.value})}
-                aria-label="Renk"
+                aria-label={copy.colorLabel}
                 className="h-control w-12 shrink-0 cursor-pointer rounded border border-input bg-background p-1"
               />
               <Input
@@ -537,13 +625,13 @@ function ItemModal({ onClose, onSubmit, title, initialData = null }) {
               onClick={onClose}
               className="flex-1"
             >
-              İptal
+              {copy.cancel}
             </Button>
             <Button
               type="submit"
               className="flex-1"
             >
-              {initialData ? "Güncelle" : "Ekle"}
+              {initialData ? copy.update : copy.add}
             </Button>
           </div>
         </form>

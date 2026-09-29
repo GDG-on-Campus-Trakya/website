@@ -17,8 +17,198 @@ import { Field } from "@/components/ui/field";
 import { PageHeader, EmptyState, Skeleton } from "@/components/ui/page";
 import { logger } from "@/utils/logger";
 import { checkUserRole, ROLES } from "@/utils/roleUtils";
+import { useLocale } from "next-intl";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    adminPanel: "Admin Panel",
+    pageTitle: "Kişilik Testleri Yönetimi",
+    pageSubtitle: "Kişilik testlerini oluşturun, düzenleyin ve yönetin",
+    searchPlaceholder: "Test ara...",
+    jsonImport: "JSON Import",
+    newTest: "Yeni Test",
+    soruSuffix: (n) => `${n} soru`,
+    orderLabel: (n) => `Sıra: ${n}`,
+    edit: "Düzenle",
+    delete: "Sil",
+    noTestsFound: "Test bulunamadı",
+    noTestsHint: 'Yeni bir test oluşturmak için "Yeni Test" butonuna tıklayın.',
+    jsonImportTitle: "JSON Import",
+    pasteJsonHint: "JSON dosyanızı yapıştırın. Format örneği:",
+    jsonExample: `{
+  "title": "Test Başlığı",
+  "description": "Test açıklaması",
+  "order": 1,
+  "questions": [
+    {
+      "question": "Soru metni?",
+      "options": [
+        {
+          "text": "Seçenek 1",
+          "points": { "result1": 3, "result2": 1 }
+        }
+      ]
+    }
+  ],
+  "results": {
+    "result1": {
+      "title": "Sonuç Başlığı",
+      "description": "Sonuç açıklaması",
+      "color": "#FF0000",
+      "traits": ["Özellik 1", "Özellik 2"]
+    }
+  }
+}`,
+    jsonInputPlaceholder: "JSON verilerinizi buraya yapıştırın...",
+    importBtn: "İçe Aktar",
+    cancel: "İptal",
+    editTestTitle: "Test Düzenle",
+    newTestTitle: "Yeni Test Oluştur",
+    basicInfo: "Temel Bilgiler",
+    testTitle: "Test Başlığı *",
+    description: "Açıklama *",
+    order: "Sıra",
+    coverImage: "Kapak Resmi",
+    dragNewImage: "Yeni resim yüklemek için sürükle-bırak veya tıkla",
+    dropHere: "Bırakın...",
+    dragOrClick: "Resmi sürükle-bırak veya tıkla",
+    coverImageFormats: "PNG, JPG, GIF (Max 5MB)",
+    questions: (n) => `Sorular (${n})`,
+    addQuestion: "Soru Ekle",
+    questionLabel: (n) => `Soru ${n}`,
+    questionTextPlaceholder: "Soru metni",
+    options: (n) => `Seçenekler (${n})`,
+    addOption: "Seçenek Ekle",
+    optionTextPlaceholder: "Seçenek metni",
+    pointsLabel: "Puanlar:",
+    results: (n) => `Sonuçlar (${n})`,
+    addResult: "Sonuç Ekle",
+    titlePlaceholder: "Başlık",
+    descriptionPlaceholder: "Açıklama",
+    color: "Renk",
+    resultImage: "Sonuç Resmi",
+    dragNewImageShort: "Yeni resim için sürükle-bırak veya tıkla",
+    resultImageFormats: "PNG, JPG, GIF",
+    update: "Güncelle",
+    coverAlt: "Kapak resmi",
+    create: "Oluştur",
+    // Toasts / prompts
+    loadTestsError: "Testler yüklenirken hata oluştu!",
+    confirmDeleteTest: "Bu testi silmek istediğinizden emin misiniz?",
+    deleteSuccess: "Test başarıyla silindi!",
+    deleteError: "Test silinirken hata oluştu!",
+    selectImageFile: "Lütfen bir resim dosyası seçin!",
+    coverUploaded: "Kapak resmi yüklendi!",
+    imageUploadError: "Resim yüklenirken hata oluştu!",
+    resultUploaded: "Sonuç resmi yüklendi!",
+    fillRequired: "Lütfen tüm zorunlu alanları doldurun!",
+    testUpdated: "Test güncellendi!",
+    testCreated: "Test oluşturuldu!",
+    saveError: "Test kaydedilirken hata oluştu!",
+    resultKeyPrompt: "Sonuç anahtarı girin (örn: gmail, youtube):",
+    invalidJsonStructure:
+      "Geçersiz JSON formatı! title, questions ve results alanları gerekli.",
+    jsonImported: "JSON başarıyla içe aktarıldı! Görselleri yükleyebilirsiniz.",
+    invalidJson: "Geçersiz JSON formatı!",
+  },
+  en: {
+    adminPanel: "Admin Panel",
+    pageTitle: "Personality Tests Management",
+    pageSubtitle: "Create, edit and manage personality tests",
+    searchPlaceholder: "Search test...",
+    jsonImport: "JSON Import",
+    newTest: "New Test",
+    soruSuffix: (n) => `${n} questions`,
+    orderLabel: (n) => `Order: ${n}`,
+    edit: "Edit",
+    delete: "Delete",
+    noTestsFound: "No tests found",
+    noTestsHint: 'Click the "New Test" button to create a new test.',
+    jsonImportTitle: "JSON Import",
+    pasteJsonHint: "Paste your JSON file. Format example:",
+    jsonExample: `{
+  "title": "Test Title",
+  "description": "Test description",
+  "order": 1,
+  "questions": [
+    {
+      "question": "Question text?",
+      "options": [
+        {
+          "text": "Option 1",
+          "points": { "result1": 3, "result2": 1 }
+        }
+      ]
+    }
+  ],
+  "results": {
+    "result1": {
+      "title": "Result Title",
+      "description": "Result description",
+      "color": "#FF0000",
+      "traits": ["Trait 1", "Trait 2"]
+    }
+  }
+}`,
+    jsonInputPlaceholder: "Paste your JSON data here...",
+    importBtn: "Import",
+    cancel: "Cancel",
+    editTestTitle: "Edit Test",
+    newTestTitle: "Create New Test",
+    basicInfo: "Basic Information",
+    testTitle: "Test Title *",
+    description: "Description *",
+    order: "Order",
+    coverImage: "Cover Image",
+    dragNewImage: "Drag and drop or click to upload a new image",
+    dropHere: "Drop it...",
+    dragOrClick: "Drag and drop or click an image",
+    coverImageFormats: "PNG, JPG, GIF (Max 5MB)",
+    questions: (n) => `Questions (${n})`,
+    addQuestion: "Add Question",
+    questionLabel: (n) => `Question ${n}`,
+    questionTextPlaceholder: "Question text",
+    options: (n) => `Options (${n})`,
+    addOption: "Add Option",
+    optionTextPlaceholder: "Option text",
+    pointsLabel: "Points:",
+    results: (n) => `Results (${n})`,
+    addResult: "Add Result",
+    titlePlaceholder: "Title",
+    descriptionPlaceholder: "Description",
+    color: "Color",
+    resultImage: "Result Image",
+    dragNewImageShort: "Drag and drop or click for a new image",
+    resultImageFormats: "PNG, JPG, GIF",
+    update: "Update",
+    coverAlt: "Cover image",
+    create: "Create",
+    // Toasts / prompts
+    loadTestsError: "An error occurred while loading tests!",
+    confirmDeleteTest: "Are you sure you want to delete this test?",
+    deleteSuccess: "Test deleted successfully!",
+    deleteError: "An error occurred while deleting the test!",
+    selectImageFile: "Please select an image file!",
+    coverUploaded: "Cover image uploaded!",
+    imageUploadError: "An error occurred while uploading the image!",
+    resultUploaded: "Result image uploaded!",
+    fillRequired: "Please fill in all required fields!",
+    testUpdated: "Test updated!",
+    testCreated: "Test created!",
+    saveError: "An error occurred while saving the test!",
+    resultKeyPrompt: "Enter a result key (e.g. gmail, youtube):",
+    invalidJsonStructure:
+      "Invalid JSON format! The title, questions and results fields are required.",
+    jsonImported: "JSON imported successfully! You can now upload images.",
+    invalidJson: "Invalid JSON format!",
+  },
+};
 
 export default function AdminPersonalityTestsPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [userRole, setUserRole] = useState(null);
   const [tests, setTests] = useState([]);
@@ -100,7 +290,7 @@ export default function AdminPersonalityTestsPage() {
       setTests(testsData);
     } catch (error) {
       logger.error("Error loading tests:", error);
-      toast.error("Testler yüklenirken hata oluştu!");
+      toast.error(copy.loadTestsError);
     }
     setIsLoading(false);
   };
@@ -119,15 +309,15 @@ export default function AdminPersonalityTestsPage() {
   };
 
   const handleDelete = async (testId) => {
-    if (!confirm("Bu testi silmek istediğinizden emin misiniz?")) return;
+    if (!confirm(copy.confirmDeleteTest)) return;
 
     try {
       await deleteDoc(doc(db, "personality_tests", testId));
-      toast.success("Test başarıyla silindi!");
+      toast.success(copy.deleteSuccess);
       loadTests();
     } catch (error) {
       logger.error("Error deleting test:", error);
-      toast.error("Test silinirken hata oluştu!");
+      toast.error(copy.deleteError);
     }
   };
 
@@ -136,7 +326,7 @@ export default function AdminPersonalityTestsPage() {
 
     // Check if file is an image
     if (!file.type.startsWith('image/')) {
-      toast.error("Lütfen bir resim dosyası seçin!");
+      toast.error(copy.selectImageFile);
       return;
     }
 
@@ -150,10 +340,10 @@ export default function AdminPersonalityTestsPage() {
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
       setFormData({ ...formData, imageUrl: url });
-      toast.success("Kapak resmi yüklendi!");
+      toast.success(copy.coverUploaded);
     } catch (error) {
       logger.error("Error uploading cover image:", error);
-      toast.error("Resim yüklenirken hata oluştu!");
+      toast.error(copy.imageUploadError);
     }
     setUploadingCover(false);
   };
@@ -186,7 +376,7 @@ export default function AdminPersonalityTestsPage() {
 
     // Check if file is an image
     if (!file.type.startsWith('image/')) {
-      toast.error("Lütfen bir resim dosyası seçin!");
+      toast.error(copy.selectImageFile);
       return;
     }
 
@@ -209,10 +399,10 @@ export default function AdminPersonalityTestsPage() {
           },
         },
       });
-      toast.success("Sonuç resmi yüklendi!");
+      toast.success(copy.resultUploaded);
     } catch (error) {
       logger.error("Error uploading result image:", error);
-      toast.error("Resim yüklenirken hata oluştu!");
+      toast.error(copy.imageUploadError);
     }
   };
 
@@ -243,7 +433,7 @@ export default function AdminPersonalityTestsPage() {
     e.preventDefault();
 
     if (!formData.title || !formData.description) {
-      toast.error("Lütfen tüm zorunlu alanları doldurun!");
+      toast.error(copy.fillRequired);
       return;
     }
 
@@ -256,18 +446,18 @@ export default function AdminPersonalityTestsPage() {
 
       if (editingTest) {
         await updateDoc(doc(db, "personality_tests", editingTest.id), testData);
-        toast.success("Test güncellendi!");
+        toast.success(copy.testUpdated);
       } else {
         testData.createdAt = serverTimestamp();
         await addDoc(collection(db, "personality_tests"), testData);
-        toast.success("Test oluşturuldu!");
+        toast.success(copy.testCreated);
       }
 
       loadTests();
       handleFormClose();
     } catch (error) {
       logger.error("Error saving test:", error);
-      toast.error("Test kaydedilirken hata oluştu!");
+      toast.error(copy.saveError);
     }
   };
 
@@ -335,7 +525,7 @@ export default function AdminPersonalityTestsPage() {
   };
 
   const addResult = () => {
-    const key = prompt("Sonuç anahtarı girin (örn: gmail, youtube):");
+    const key = prompt(copy.resultKeyPrompt);
     if (!key) return;
 
     setFormData({
@@ -378,7 +568,7 @@ export default function AdminPersonalityTestsPage() {
 
       // Validate JSON structure
       if (!jsonData.title || !jsonData.questions || !jsonData.results) {
-        toast.error("Geçersiz JSON formatı! title, questions ve results alanları gerekli.");
+        toast.error(copy.invalidJsonStructure);
         return;
       }
 
@@ -394,21 +584,21 @@ export default function AdminPersonalityTestsPage() {
 
       setShowJsonImport(false);
       setShowForm(true);
-      toast.success("JSON başarıyla içe aktarıldı! Görselleri yükleyebilirsiniz.");
+      toast.success(copy.jsonImported);
     } catch (error) {
       logger.error("JSON parse error:", error);
-      toast.error("Geçersiz JSON formatı!");
+      toast.error(copy.invalidJson);
     }
   };
 
   if (loading) {
-    return <p className="py-12 text-ink-2">Loading...</p>;
+    return <p className="py-12 text-ink-2">{a.loading}</p>;
   }
 
   if (userRole !== ROLES.ADMIN) {
     return (
       <p role="alert" className="py-12 font-medium text-error">
-        Access Denied
+        {a.accessDenied}
       </p>
     );
   }
@@ -416,13 +606,13 @@ export default function AdminPersonalityTestsPage() {
   return (
     <div>
       <PageHeader
-        title="Kişilik Testleri Yönetimi"
-        description="Kişilik testlerini oluşturun, düzenleyin ve yönetin"
+        title={copy.pageTitle}
+        description={copy.pageSubtitle}
         actions={
           <>
             <Button type="button" variant="outline" onClick={() => setShowJsonImport(true)}>
               <Upload aria-hidden="true" />
-              JSON Import
+              {copy.jsonImport}
             </Button>
             <Button
               type="button"
@@ -440,7 +630,7 @@ export default function AdminPersonalityTestsPage() {
               }}
             >
               <Plus aria-hidden="true" />
-              Yeni Test
+              {copy.newTest}
             </Button>
           </>
         }
@@ -454,8 +644,8 @@ export default function AdminPersonalityTestsPage() {
         />
         <Input
           type="text"
-          aria-label="Test ara..."
-          placeholder="Test ara..."
+          aria-label={copy.searchPlaceholder}
+          placeholder={copy.searchPlaceholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
@@ -491,8 +681,8 @@ export default function AdminPersonalityTestsPage() {
                   {test.description}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 font-outlier text-sm tabular-nums text-muted-foreground">
-                  <span>{test.questionCount || 0} soru</span>
-                  <span>Sıra: {test.order}</span>
+                  <span>{copy.soruSuffix(test.questionCount || 0)}</span>
+                  <span>{copy.orderLabel(test.order)}</span>
                 </div>
               </div>
               <div className="flex gap-2 sm:shrink-0">
@@ -502,7 +692,7 @@ export default function AdminPersonalityTestsPage() {
                   size="sm"
                   onClick={() => handleEdit(test)}
                 >
-                  Düzenle
+                  {copy.edit}
                 </Button>
                 <Button
                   type="button"
@@ -510,7 +700,7 @@ export default function AdminPersonalityTestsPage() {
                   size="sm"
                   onClick={() => handleDelete(test.id)}
                 >
-                  Sil
+                  {copy.delete}
                 </Button>
               </div>
             </li>
@@ -518,8 +708,8 @@ export default function AdminPersonalityTestsPage() {
         </ul>
       ) : (
         <EmptyState
-          title="Test bulunamadı"
-          description={'Yeni bir test oluşturmak için "Yeni Test" butonuna tıklayın.'}
+          title={copy.noTestsFound}
+          description={copy.noTestsHint}
         />
       )}
 
@@ -534,13 +724,13 @@ export default function AdminPersonalityTestsPage() {
           >
             <div className="flex items-center justify-between gap-4 border-b border-rule p-4 sm:p-6">
               <h2 id="json-import-title" className="font-display text-2xl font-bold">
-                JSON Import
+                {copy.jsonImportTitle}
               </h2>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label="İptal"
+                aria-label={copy.cancel}
                 onClick={() => {
                   setShowJsonImport(false);
                   setJsonInput("");
@@ -553,41 +743,18 @@ export default function AdminPersonalityTestsPage() {
 
             <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               <p className="mb-4 text-ink-2">
-                JSON dosyanızı yapıştırın. Format örneği:
+                {copy.pasteJsonHint}
               </p>
 
               <pre className="mb-4 overflow-x-auto rounded border border-rule bg-paper-2 p-4 font-mono text-sm text-ink-2">
-{`{
-  "title": "Test Başlığı",
-  "description": "Test açıklaması",
-  "order": 1,
-  "questions": [
-    {
-      "question": "Soru metni?",
-      "options": [
-        {
-          "text": "Seçenek 1",
-          "points": { "result1": 3, "result2": 1 }
-        }
-      ]
-    }
-  ],
-  "results": {
-    "result1": {
-      "title": "Sonuç Başlığı",
-      "description": "Sonuç açıklaması",
-      "color": "#FF0000",
-      "traits": ["Özellik 1", "Özellik 2"]
-    }
-  }
-}`}
+{copy.jsonExample}
               </pre>
 
               <Textarea
                 value={jsonInput}
                 onChange={(e) => setJsonInput(e.target.value)}
-                aria-label="JSON Import"
-                placeholder="JSON verilerinizi buraya yapıştırın..."
+                aria-label={copy.jsonImportTitle}
+                placeholder={copy.jsonInputPlaceholder}
                 rows={15}
                 className="font-mono text-sm"
               />
@@ -596,7 +763,7 @@ export default function AdminPersonalityTestsPage() {
             <div className="flex flex-col gap-3 border-t border-rule p-4 sm:flex-row sm:p-6">
               <Button type="button" onClick={handleJsonImport}>
                 <Upload aria-hidden="true" />
-                İçe Aktar
+                {copy.importBtn}
               </Button>
               <Button
                 type="button"
@@ -606,7 +773,7 @@ export default function AdminPersonalityTestsPage() {
                   setJsonInput("");
                 }}
               >
-                İptal
+                {copy.cancel}
               </Button>
             </div>
           </div>
@@ -624,13 +791,13 @@ export default function AdminPersonalityTestsPage() {
           >
             <div className="sticky top-0 z-raised flex items-center justify-between gap-4 rounded-t-lg border-b border-rule bg-background p-4 sm:p-6">
               <h2 id="test-form-title" className="font-display text-2xl font-bold">
-                {editingTest ? "Test Düzenle" : "Yeni Test Oluştur"}
+                {editingTest ? copy.editTestTitle : copy.newTestTitle}
               </h2>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label="İptal"
+                aria-label={copy.cancel}
                 onClick={handleFormClose}
                 className="-mr-2 shrink-0"
               >
@@ -642,10 +809,10 @@ export default function AdminPersonalityTestsPage() {
               {/* Basic Info */}
               <div className="space-y-2">
                 <h3 className="mb-2 font-display text-lg font-semibold">
-                  Temel Bilgiler
+                  {copy.basicInfo}
                 </h3>
 
-                <Field id="test-title" label="Test Başlığı *">
+                <Field id="test-title" label={copy.testTitle}>
                   <Input
                     type="text"
                     value={formData.title}
@@ -656,7 +823,7 @@ export default function AdminPersonalityTestsPage() {
                   />
                 </Field>
 
-                <Field id="test-description" label="Açıklama *">
+                <Field id="test-description" label={copy.description}>
                   <Textarea
                     value={formData.description}
                     onChange={(e) =>
@@ -667,7 +834,7 @@ export default function AdminPersonalityTestsPage() {
                   />
                 </Field>
 
-                <Field id="test-order" label="Sıra" className="max-w-40">
+                <Field id="test-order" label={copy.order} className="max-w-40">
                   <Input
                     type="number"
                     value={formData.order}
@@ -680,7 +847,7 @@ export default function AdminPersonalityTestsPage() {
                 </Field>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="test-cover">Kapak Resmi</Label>
+                  <Label htmlFor="test-cover">{copy.coverImage}</Label>
 
                   {/* Drag and Drop Area */}
                   <div
@@ -701,21 +868,21 @@ export default function AdminPersonalityTestsPage() {
                       <div className="space-y-3">
                         <img
                           src={formData.imageUrl}
-                          alt="Cover"
+                          alt={copy.coverAlt}
                           className="aspect-[16/9] w-full rounded object-cover"
                         />
                         <p className="text-sm text-muted-foreground">
-                          Yeni resim yüklemek için sürükle-bırak veya tıkla
+                          {copy.dragNewImage}
                         </p>
                       </div>
                     ) : (
                       <div className="space-y-2">
                         <Upload className="mx-auto h-10 w-10 text-muted-foreground" aria-hidden="true" />
                         <p className="font-medium">
-                          {isDraggingCover ? 'Bırakın...' : 'Resmi sürükle-bırak veya tıkla'}
+                          {isDraggingCover ? copy.dropHere : copy.dragOrClick}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          PNG, JPG, GIF (Max 5MB)
+                          {copy.coverImageFormats}
                         </p>
                       </div>
                     )}
@@ -742,11 +909,11 @@ export default function AdminPersonalityTestsPage() {
               <div>
                 <div className="mb-2 flex items-center justify-between gap-4 border-t-2 border-ink pt-3">
                   <h3 className="font-display text-lg font-semibold">
-                    Sorular ({formData.questions.length})
+                    {copy.questions(formData.questions.length)}
                   </h3>
                   <Button type="button" variant="outline" size="sm" onClick={addQuestion}>
                     <Plus aria-hidden="true" />
-                    Soru Ekle
+                    {copy.addQuestion}
                   </Button>
                 </div>
 
@@ -757,13 +924,13 @@ export default function AdminPersonalityTestsPage() {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <h4 className="font-display text-base font-semibold">
-                        Soru {qIndex + 1}
+                        {copy.questionLabel(qIndex + 1)}
                       </h4>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        aria-label="Sil"
+                        aria-label={copy.delete}
                         onClick={() => removeQuestion(qIndex)}
                         className="-mr-2 text-error"
                       >
@@ -773,8 +940,8 @@ export default function AdminPersonalityTestsPage() {
 
                     <Input
                       type="text"
-                      aria-label="Soru metni"
-                      placeholder="Soru metni"
+                      aria-label={copy.questionTextPlaceholder}
+                      placeholder={copy.questionTextPlaceholder}
                       value={question.question}
                       onChange={(e) =>
                         updateQuestion(qIndex, "question", e.target.value)
@@ -784,7 +951,7 @@ export default function AdminPersonalityTestsPage() {
                     <div>
                       <div className="mb-1 flex items-center justify-between gap-4">
                         <span className="text-sm text-ink-2">
-                          Seçenekler ({question.options.length})
+                          {copy.options(question.options.length)}
                         </span>
                         <Button
                           type="button"
@@ -792,7 +959,7 @@ export default function AdminPersonalityTestsPage() {
                           size="sm"
                           onClick={() => addOption(qIndex)}
                         >
-                          Seçenek Ekle
+                          {copy.addOption}
                         </Button>
                       </div>
 
@@ -804,8 +971,8 @@ export default function AdminPersonalityTestsPage() {
                           <div className="flex items-start gap-2">
                             <Input
                               type="text"
-                              aria-label="Seçenek metni"
-                              placeholder="Seçenek metni"
+                              aria-label={copy.optionTextPlaceholder}
+                              placeholder={copy.optionTextPlaceholder}
                               value={option.text}
                               onChange={(e) =>
                                 updateOption(qIndex, oIndex, "text", e.target.value)
@@ -816,7 +983,7 @@ export default function AdminPersonalityTestsPage() {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              aria-label="Sil"
+                              aria-label={copy.delete}
                               onClick={() => removeOption(qIndex, oIndex)}
                               className="shrink-0 text-error"
                             >
@@ -824,7 +991,7 @@ export default function AdminPersonalityTestsPage() {
                             </Button>
                           </div>
                           <div className="mt-1 break-all font-outlier text-xs text-muted-foreground">
-                            Puanlar: {JSON.stringify(option.points)}
+                            {copy.pointsLabel} {JSON.stringify(option.points)}
                           </div>
                         </div>
                       ))}
@@ -837,11 +1004,11 @@ export default function AdminPersonalityTestsPage() {
               <div>
                 <div className="mb-2 flex items-center justify-between gap-4 border-t-2 border-ink pt-3">
                   <h3 className="font-display text-lg font-semibold">
-                    Sonuçlar ({Object.keys(formData.results).length})
+                    {copy.results(Object.keys(formData.results).length)}
                   </h3>
                   <Button type="button" variant="outline" size="sm" onClick={addResult}>
                     <Plus aria-hidden="true" />
-                    Sonuç Ekle
+                    {copy.addResult}
                   </Button>
                 </div>
 
@@ -858,7 +1025,7 @@ export default function AdminPersonalityTestsPage() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        aria-label="Sil"
+                        aria-label={copy.delete}
                         onClick={() => removeResult(key)}
                         className="-mr-2 shrink-0 text-error"
                       >
@@ -868,8 +1035,8 @@ export default function AdminPersonalityTestsPage() {
 
                     <Input
                       type="text"
-                      aria-label="Başlık"
-                      placeholder="Başlık"
+                      aria-label={copy.titlePlaceholder}
+                      placeholder={copy.titlePlaceholder}
                       value={result.title}
                       onChange={(e) =>
                         updateResult(key, "title", e.target.value)
@@ -877,8 +1044,8 @@ export default function AdminPersonalityTestsPage() {
                     />
 
                     <Textarea
-                      aria-label="Açıklama"
-                      placeholder="Açıklama"
+                      aria-label={copy.descriptionPlaceholder}
+                      placeholder={copy.descriptionPlaceholder}
                       value={result.description}
                       onChange={(e) =>
                         updateResult(key, "description", e.target.value)
@@ -889,7 +1056,7 @@ export default function AdminPersonalityTestsPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="mb-1.5 block text-sm font-medium">
-                          Renk
+                          {copy.color}
                           <input
                             type="color"
                             value={result.color}
@@ -905,7 +1072,7 @@ export default function AdminPersonalityTestsPage() {
                     {/* Result Image Drag and Drop */}
                     <div>
                       <p className="mb-1.5 text-sm font-medium leading-none">
-                        Sonuç Resmi
+                        {copy.resultImage}
                       </p>
                       <div
                         onDrop={(e) => handleResultDrop(e, key)}
@@ -926,17 +1093,17 @@ export default function AdminPersonalityTestsPage() {
                               className="aspect-[16/9] w-full rounded object-cover"
                             />
                             <p className="text-xs text-muted-foreground">
-                              Yeni resim için sürükle-bırak veya tıkla
+                              {copy.dragNewImageShort}
                             </p>
                           </div>
                         ) : (
                           <div className="space-y-2 py-4">
                             <Upload className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
                             <p className="text-sm">
-                              {draggingResultKey === key ? 'Bırakın...' : 'Resmi sürükle-bırak veya tıkla'}
+                              {draggingResultKey === key ? copy.dropHere : copy.dragOrClick}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              PNG, JPG, GIF
+                              {copy.resultImageFormats}
                             </p>
                           </div>
                         )}
@@ -944,7 +1111,7 @@ export default function AdminPersonalityTestsPage() {
                         <input
                           type="file"
                           accept="image/*"
-                          aria-label="Sonuç Resmi"
+                          aria-label={copy.resultImage}
                           onChange={(e) => handleResultImageUpload(e, key)}
                           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                         />
@@ -957,10 +1124,10 @@ export default function AdminPersonalityTestsPage() {
               {/* Submit Buttons */}
               <div className="flex flex-col gap-3 border-t border-rule pt-6 sm:flex-row">
                 <Button type="submit">
-                  {editingTest ? "Güncelle" : "Oluştur"}
+                  {editingTest ? copy.update : copy.create}
                 </Button>
                 <Button type="button" variant="outline" onClick={handleFormClose}>
-                  İptal
+                  {copy.cancel}
                 </Button>
               </div>
             </form>

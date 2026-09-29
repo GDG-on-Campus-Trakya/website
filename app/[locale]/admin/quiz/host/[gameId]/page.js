@@ -24,8 +24,92 @@ import {
   deleteGame,
   allPlayersAnswered
 } from "@/utils/quizUtils";
+import { useLocale } from "next-intl";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    gameNotFound: "Oyun bulunamadı!",
+    gameStarted: "Oyun başladı!",
+    gameStartError: "Oyun başlatılırken hata oluştu!",
+    resultsError: "Sonuçlar gösterilirken hata oluştu!",
+    nextQuestionToast: "Sonraki soru!",
+    nextQuestionError: "Sonraki soruya geçilirken hata oluştu!",
+    confirmEndGame: "Oyunu sonlandırmak istediğinize emin misiniz?",
+    gameEnded: "Oyun sonlandı!",
+    endGameError: "Oyun sonlandırılırken hata oluştu!",
+    confirmDeleteAndExit: "Oyunu silip çıkmak istediğinize emin misiniz?",
+    gameDeleted: "Oyun silindi!",
+    deleteGameError: "Oyun silinirken hata oluştu!",
+    exit: "Çıkış",
+    finish: "Bitir",
+    joinHint: "Oyuncular bu kodu kullanarak katılabilir",
+    startGameBtn: (n) => `Oyunu Başlat (${n})`,
+    timeLeft: "Kalan Süre",
+    questionAlt: "Soru",
+    answered: "Cevaplayan",
+    showResults: "Sonuçları Göster",
+    winner: "Kazanan!",
+    fastestCorrectLabel: "En hızlı doğru cevap:",
+    secondsUnit: "saniye",
+    answerUnit: "cevap",
+    correct: "Doğru",
+    correctLabel: "Doğru:",
+    finishGame: "Oyunu Bitir",
+    nextQuestion: "Sonraki Soru →",
+    gameOver: "Oyun Bitti!",
+    kahootFinishedDesc: "Her soru için kazananlar gösterildi!",
+    classicFinishedDesc: "Kazananları görmek için yan paneli kontrol edin",
+    backToManage: "Quiz Yönetimine Dön",
+    ranking: "Sıralama",
+    correctWord: "doğru",
+    noRanking: "Henüz sıralama yok",
+    playersTitle: "Oyuncular",
+  },
+  en: {
+    gameNotFound: "Game not found!",
+    gameStarted: "Game started!",
+    gameStartError: "An error occurred while starting the game!",
+    resultsError: "An error occurred while showing the results!",
+    nextQuestionToast: "Next question!",
+    nextQuestionError: "An error occurred while moving to the next question!",
+    confirmEndGame: "Are you sure you want to end the game?",
+    gameEnded: "Game ended!",
+    endGameError: "An error occurred while ending the game!",
+    confirmDeleteAndExit: "Are you sure you want to delete the game and exit?",
+    gameDeleted: "Game deleted!",
+    deleteGameError: "An error occurred while deleting the game!",
+    exit: "Exit",
+    finish: "Finish",
+    joinHint: "Players can join using this code",
+    startGameBtn: (n) => `Start Game (${n})`,
+    timeLeft: "Time Left",
+    questionAlt: "Question",
+    answered: "Answered",
+    showResults: "Show Results",
+    winner: "Winner!",
+    fastestCorrectLabel: "Fastest correct answer:",
+    secondsUnit: "seconds",
+    answerUnit: "answers",
+    correct: "Correct",
+    correctLabel: "Correct:",
+    finishGame: "Finish Game",
+    nextQuestion: "Next Question →",
+    gameOver: "Game Over!",
+    kahootFinishedDesc: "Winners were shown for each question!",
+    classicFinishedDesc: "Check the side panel to see the winners",
+    backToManage: "Back to Quiz Management",
+    ranking: "Ranking",
+    correctWord: "correct",
+    noRanking: "No ranking yet",
+    playersTitle: "Players",
+  },
+};
 
 export default function HostGamePage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [userRole, setUserRole] = useState(null);
   const router = useRouter();
@@ -81,7 +165,7 @@ export default function HostGamePage() {
 
       const role = await checkUserRole(user.email);
       if (!role) {
-        toast.error("Bu sayfaya erişim yetkiniz yok!");
+        toast.error(a.accessDeniedToast);
         router.push("/admin");
         return;
       }
@@ -100,7 +184,7 @@ export default function HostGamePage() {
 
     const unsubscribeGame = subscribeToGame(gameId, (gameData) => {
       if (!gameData) {
-        toast.error("Oyun bulunamadı!");
+        toast.error(copy.gameNotFound);
         router.push("/admin/quiz/manage");
         return;
       }
@@ -179,10 +263,10 @@ export default function HostGamePage() {
     try {
       await nextQuestion(gameId, 0);
       setShowResults(false);
-      toast.success("Oyun başladı!");
+      toast.success(copy.gameStarted);
     } catch (error) {
       logger.error("Error starting game:", error);
-      toast.error("Oyun başlatılırken hata oluştu!");
+      toast.error(copy.gameStartError);
     }
   };
 
@@ -198,7 +282,7 @@ export default function HostGamePage() {
       setShowResults(true);
     } catch (error) {
       logger.error("Error showing results:", error);
-      toast.error("Sonuçlar gösterilirken hata oluştu!");
+      toast.error(copy.resultsError);
     }
   };
 
@@ -213,35 +297,35 @@ export default function HostGamePage() {
 
       await nextQuestion(gameId, nextIndex);
       setShowResults(false);
-      toast.success("Sonraki soru!");
+      toast.success(copy.nextQuestionToast);
     } catch (error) {
       logger.error("Error moving to next question:", error);
-      toast.error("Sonraki soruya geçilirken hata oluştu!");
+      toast.error(copy.nextQuestionError);
     }
   };
 
   const handleEndGame = async () => {
-    if (!confirm("Oyunu sonlandırmak istediğinize emin misiniz?")) return;
+    if (!confirm(copy.confirmEndGame)) return;
 
     try {
       await endGame(gameId);
-      toast.success("Oyun sonlandı!");
+      toast.success(copy.gameEnded);
     } catch (error) {
       logger.error("Error ending game:", error);
-      toast.error("Oyun sonlandırılırken hata oluştu!");
+      toast.error(copy.endGameError);
     }
   };
 
   const handleDeleteAndExit = async () => {
-    if (!confirm("Oyunu silip çıkmak istediğinize emin misiniz?")) return;
+    if (!confirm(copy.confirmDeleteAndExit)) return;
 
     try {
       await deleteGame(gameId);
-      toast.success("Oyun silindi!");
+      toast.success(copy.gameDeleted);
       router.push("/admin/quiz/manage");
     } catch (error) {
       logger.error("Error deleting game:", error);
-      toast.error("Oyun silinirken hata oluştu!");
+      toast.error(copy.deleteGameError);
     }
   };
 
@@ -253,13 +337,13 @@ export default function HostGamePage() {
 
   if (loading || !game) {
     return (
-      <p className="py-10 text-lg">Yükleniyor...</p>
+      <p className="py-10 text-lg">{a.loading}</p>
     );
   }
 
   if (!userRole) {
     return (
-      <p className="py-10 text-lg font-semibold">Erişim Reddedildi</p>
+      <p className="py-10 text-lg font-semibold">{a.accessDenied}</p>
     );
   }
 
@@ -298,7 +382,7 @@ export default function HostGamePage() {
                   onClick={handleDeleteAndExit}
                   className="flex-1 sm:flex-none"
                 >
-                  Çıkış
+                  {copy.exit}
                 </Button>
               ) : (
                 <Button
@@ -306,7 +390,7 @@ export default function HostGamePage() {
                   onClick={handleEndGame}
                   className="flex-1 sm:flex-none"
                 >
-                  Bitir
+                  {copy.finish}
                 </Button>
               )}
             </div>
@@ -322,7 +406,7 @@ export default function HostGamePage() {
                 <div className="mb-6 sm:mb-8">
                   <div className="mb-3 break-all font-outlier text-6xl font-bold tabular-nums sm:mb-4 sm:text-8xl">{game.gameCode}</div>
                   <p className="text-base text-stage-muted sm:text-xl">
-                    Oyuncular bu kodu kullanarak katılabilir
+                    {copy.joinHint}
                   </p>
                   <p className="mt-2 text-sm text-stage-muted sm:text-base">
                     gdgoncampustrakya.com/game
@@ -334,7 +418,7 @@ export default function HostGamePage() {
                   onClick={handleStartGame}
                   disabled={playerCount === 0}
                 >
-                  Oyunu Başlat ({playerCount})
+                  {copy.startGameBtn(playerCount)}
                 </Button>
               </div>
             )}
@@ -345,7 +429,7 @@ export default function HostGamePage() {
                 {/* Timer */}
                 <div>
                   <div className="mb-3 flex items-baseline justify-between sm:mb-4">
-                    <span className="text-sm text-stage-muted sm:text-base">Kalan Süre</span>
+                    <span className="text-sm text-stage-muted sm:text-base">{copy.timeLeft}</span>
                     <div className="font-outlier text-6xl font-bold tabular-nums md:text-7xl">
                       {timeLeft}s
                     </div>
@@ -369,7 +453,7 @@ export default function HostGamePage() {
                     <div className="mb-4 sm:mb-6">
                       <Image
                         src={currentQuestion.imageUrl}
-                        alt="Question"
+                        alt={copy.questionAlt}
                         width={900}
                         height={600}
                         priority
@@ -400,13 +484,13 @@ export default function HostGamePage() {
                 {/* Answer Stats */}
                 <div className="flex flex-col gap-4 border-t border-stage-rule pt-4 sm:flex-row sm:items-center sm:justify-between sm:pt-6">
                   <div className="flex items-baseline gap-4">
-                    <span className="text-sm font-semibold sm:text-base">Cevaplayan</span>
+                    <span className="text-sm font-semibold sm:text-base">{copy.answered}</span>
                     <span className="font-outlier text-3xl font-bold tabular-nums">
                       {questionStats.totalAnswers}/{connectedPlayerCount}
                     </span>
                   </div>
                   <Button onClick={handleShowResults} size="lg">
-                    Sonuçları Göster
+                    {copy.showResults}
                   </Button>
                 </div>
               </div>
@@ -419,12 +503,12 @@ export default function HostGamePage() {
                 {game.gameMode === "kahoot" && questionWinners[game.currentQuestion] && (
                   <div className="rounded-lg bg-warning p-6 text-ink sm:p-8">
                     <Trophy className="mb-3 h-10 w-10 sm:mb-4 sm:h-14 sm:w-14" aria-hidden="true" />
-                    <h2 className="mb-2 font-display text-3xl font-bold sm:text-5xl">Kazanan!</h2>
+                    <h2 className="mb-2 font-display text-3xl font-bold sm:text-5xl">{copy.winner}</h2>
                     <div className="mb-2 break-words font-display text-xl font-bold sm:text-3xl">
                       {questionWinners[game.currentQuestion].name}
                     </div>
                     <div className="text-base sm:text-xl">
-                      En hızlı doğru cevap: <span className="font-outlier tabular-nums">{questionWinners[game.currentQuestion].timeSpent.toFixed(2)}</span> saniye
+                      {copy.fastestCorrectLabel} <span className="font-outlier tabular-nums">{questionWinners[game.currentQuestion].timeSpent.toFixed(2)}</span> {copy.secondsUnit}
                     </div>
                   </div>
                 )}
@@ -436,7 +520,7 @@ export default function HostGamePage() {
                     <div className="mb-4 sm:mb-6">
                       <Image
                         src={currentQuestion.imageUrl}
-                        alt="Question"
+                        alt={copy.questionAlt}
                         width={900}
                         height={600}
                         className="mx-auto h-auto w-full max-w-2xl rounded opacity-50"
@@ -471,13 +555,13 @@ export default function HostGamePage() {
                               {option}
                             </div>
                             <div className="text-xs text-stage-muted sm:text-base">
-                              <span className="font-outlier tabular-nums">{answerCount}</span> cevap (<span className="font-outlier tabular-nums">{percentage}</span>%)
+                              <span className="font-outlier tabular-nums">{answerCount}</span> {copy.answerUnit} (<span className="font-outlier tabular-nums">{percentage}</span>%)
                             </div>
                           </div>
                           {isCorrect && (
                             <span className="inline-flex shrink-0 items-center gap-1 text-success">
                               <Check className="h-6 w-6" aria-hidden="true" />
-                              <span className="sr-only">Doğru</span>
+                              <span className="sr-only">{copy.correct}</span>
                             </span>
                           )}
                         </div>
@@ -487,7 +571,7 @@ export default function HostGamePage() {
 
                   <div className="mt-4 text-sm sm:mt-6 sm:text-lg">
                     <Check className="mr-1.5 inline h-4 w-4 align-[-2px] text-success sm:h-5 sm:w-5" aria-hidden="true" />
-                    Doğru: <span className="font-outlier tabular-nums">{questionStats.correctCount} / {questionStats.totalAnswers}</span>
+                    {copy.correctLabel} <span className="font-outlier tabular-nums">{questionStats.correctCount} / {questionStats.totalAnswers}</span>
                   </div>
                 </div>
 
@@ -498,8 +582,8 @@ export default function HostGamePage() {
                   className="w-full"
                 >
                   {game.currentQuestion + 1 >= game.totalQuestions
-                    ? "Oyunu Bitir"
-                    : "Sonraki Soru →"}
+                    ? copy.finishGame
+                    : copy.nextQuestion}
                 </Button>
               </div>
             )}
@@ -507,17 +591,17 @@ export default function HostGamePage() {
             {/* Finished State */}
             {game.status === "finished" && (
               <div className="border-y border-stage-rule py-8 sm:py-12">
-                <h2 className="mb-3 font-display text-3xl font-bold sm:mb-4 sm:text-5xl">Oyun Bitti!</h2>
+                <h2 className="mb-3 font-display text-3xl font-bold sm:mb-4 sm:text-5xl">{copy.gameOver}</h2>
                 <p className="mb-6 text-base text-stage-muted sm:mb-8 sm:text-xl">
                   {game.gameMode === "kahoot"
-                    ? "Her soru için kazananlar gösterildi!"
-                    : "Kazananları görmek için yan paneli kontrol edin"}
+                    ? copy.kahootFinishedDesc
+                    : copy.classicFinishedDesc}
                 </p>
                 <Button
                   size="lg"
                   onClick={handleDeleteAndExit}
                 >
-                  Quiz Yönetimine Dön
+                  {copy.backToManage}
                 </Button>
               </div>
             )}
@@ -528,7 +612,7 @@ export default function HostGamePage() {
             {/* Leaderboard (Classic Mode Only) */}
             {game.gameMode !== "kahoot" && (
               <div className="border-t-2 border-stage-ink pt-3">
-                <h3 className="mb-3 font-display text-xl font-bold sm:mb-4 sm:text-2xl">Sıralama</h3>
+                <h3 className="mb-3 font-display text-xl font-bold sm:mb-4 sm:text-2xl">{copy.ranking}</h3>
                 {leaderboard.length > 0 ? (
                   <ol>
                     {leaderboard.slice(0, 10).map((player, index) => (
@@ -548,7 +632,7 @@ export default function HostGamePage() {
                               {player.name}
                             </div>
                             <div className={`text-xs ${index === 0 ? "text-ink-2" : "text-stage-muted"}`}>
-                              <span className="font-outlier tabular-nums">{player.correctAnswers}</span> doğru
+                              <span className="font-outlier tabular-nums">{player.correctAnswers}</span> {copy.correctWord}
                             </div>
                           </div>
                         </div>
@@ -559,7 +643,7 @@ export default function HostGamePage() {
                     ))}
                   </ol>
                 ) : (
-                  <p className="text-sm text-stage-muted sm:text-base">Henüz sıralama yok</p>
+                  <p className="text-sm text-stage-muted sm:text-base">{copy.noRanking}</p>
                 )}
               </div>
             )}
@@ -567,7 +651,7 @@ export default function HostGamePage() {
             {/* Players */}
             <div className="border-t-2 border-stage-ink pt-3">
               <h3 className="mb-3 font-display text-lg font-bold sm:mb-4 sm:text-xl">
-                Oyuncular (<span className="font-outlier tabular-nums">{connectedPlayerCount}</span>)
+                {copy.playersTitle} (<span className="font-outlier tabular-nums">{connectedPlayerCount}</span>)
               </h3>
               <ul className="max-h-48 overflow-y-auto sm:max-h-64">
                 {Object.values(players).map((player) => (

@@ -1,11 +1,30 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useLocale } from "next-intl";
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { db } from "../firebase";
 import { Input } from "@/components/ui/input";
 import { logger } from "@/utils/logger";
 
-const UserMentionInput = ({ onUserSelect, selectedUsers = [], placeholder = "Kullanıcı emaili ile ara..." }) => {
+const COPY = {
+  tr: {
+    placeholder: "Kullanıcı emaili ile ara...",
+    searching: "Aranıyor...",
+    noName: "İsim belirtilmemiş",
+    noUsers: "Kullanıcı bulunamadı",
+  },
+  en: {
+    placeholder: "Search by user email...",
+    searching: "Searching...",
+    noName: "Name not specified",
+    noUsers: "No users found",
+  },
+};
+
+const UserMentionInput = ({ onUserSelect, selectedUsers = [], placeholder }) => {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const resolvedPlaceholder = placeholder || copy.placeholder;
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -93,7 +112,7 @@ const UserMentionInput = ({ onUserSelect, selectedUsers = [], placeholder = "Kul
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         onFocus={handleInputFocus}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
       />
 
       {showDropdown && (
@@ -103,7 +122,7 @@ const UserMentionInput = ({ onUserSelect, selectedUsers = [], placeholder = "Kul
         >
           {isLoading ? (
             <div className="p-3 text-center text-sm text-muted-foreground">
-              Aranıyor...
+              {copy.searching}
             </div>
           ) : searchResults.length > 0 ? (
             searchResults.map((user) => (
@@ -120,7 +139,7 @@ const UserMentionInput = ({ onUserSelect, selectedUsers = [], placeholder = "Kul
                 />
                 <div className="min-w-0">
                   <div className="truncate font-medium text-ink">
-                    {user.name || "İsim belirtilmemiş"}
+                    {user.name || copy.noName}
                   </div>
                   <div className="truncate text-sm text-muted-foreground">
                     {user.email}
@@ -130,7 +149,7 @@ const UserMentionInput = ({ onUserSelect, selectedUsers = [], placeholder = "Kul
             ))
           ) : searchTerm.length >= 2 ? (
             <div className="p-3 text-center text-sm text-muted-foreground">
-              Kullanıcı bulunamadı
+              {copy.noUsers}
             </div>
           ) : null}
         </div>

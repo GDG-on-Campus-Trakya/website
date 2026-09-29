@@ -14,34 +14,88 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
+const COPY = {
+  tr: {
+    englishTitle: "İngilizce Başlık",
+    englishDescription: "İngilizce Kısa Açıklama",
+    englishContent: "İngilizce İçerik",
+    englishTitlePlaceholder: "Duyurunun İngilizce başlığı...",
+    englishDescriptionPlaceholder:
+      "Duyurunun İngilizce kısa açıklaması...",
+    englishContentPlaceholder:
+      "Duyurunun İngilizce içeriğini buraya yazın...",
+    invalidImage: "Lütfen geçerli bir resim dosyası seçin!",
+    imageTooLarge: "Resim boyutu 10MB'dan küçük olmalıdır!",
+    loginRequired: "Giriş yapmanız gerekiyor!",
+    titleRequired: "Lütfen bir başlık girin!",
+    imageUploadError: "Resim yüklenirken hata oluştu!",
+    unexpectedError: "Beklenmeyen bir hata oluştu!",
+    editTitle: "Duyuruyu Düzenle",
+    createTitle: "Yeni Duyuru Oluştur",
+    titleLabel: "Başlık",
+    titlePlaceholder: "Duyuru başlığı...",
+    characters: "karakter",
+    descriptionLabel: "Kısa Açıklama (İsteğe Bağlı)",
+    descriptionPlaceholder: "Duyuru hakkında kısa bir açıklama...",
+    contentLabel: "İçerik",
+    contentPlaceholder: "Duyuru içeriğini buraya yazın...",
+    imageLabel: "Resim (İsteğe Bağlı)",
+    imageDropHint: "Resim seç veya sürükle",
+    publishNow: "Duyuruyu hemen yayınla",
+    cancel: "İptal",
+    saving: "Kaydediliyor...",
+    update: "Güncelle",
+    create: "Oluştur",
+    createSuccess: "Duyuru başarıyla oluşturuldu!",
+    createError: "Duyuru oluşturulurken hata oluştu!",
+    updateSuccess: "Duyuru başarıyla güncellendi!",
+    updateError: "Duyuru güncellenirken hata oluştu!",
+  },
+  en: {
+    englishTitle: "English Title",
+    englishDescription: "English Short Description",
+    englishContent: "English Content",
+    englishTitlePlaceholder: "Announcement title in English...",
+    englishDescriptionPlaceholder:
+      "A short English description for the announcement...",
+    englishContentPlaceholder:
+      "Write the English announcement content here...",
+    invalidImage: "Please select a valid image file!",
+    imageTooLarge: "Image size must be smaller than 10MB!",
+    loginRequired: "You need to sign in!",
+    titleRequired: "Please enter a title!",
+    imageUploadError: "An error occurred while uploading the image!",
+    unexpectedError: "An unexpected error occurred!",
+    editTitle: "Edit Announcement",
+    createTitle: "Create New Announcement",
+    titleLabel: "Title",
+    titlePlaceholder: "Announcement title...",
+    characters: "characters",
+    descriptionLabel: "Short Description (Optional)",
+    descriptionPlaceholder: "A short description about the announcement...",
+    contentLabel: "Content",
+    contentPlaceholder: "Write the announcement content here...",
+    imageLabel: "Image (Optional)",
+    imageDropHint: "Select or drag an image",
+    publishNow: "Publish immediately",
+    cancel: "Cancel",
+    saving: "Saving...",
+    update: "Update",
+    create: "Create",
+    createSuccess: "Announcement created successfully!",
+    createError: "An error occurred while creating the announcement!",
+    updateSuccess: "Announcement updated successfully!",
+    updateError: "An error occurred while updating the announcement!",
+  },
+};
+
 export default function AnnouncementForm({ announcement = null, onClose, onSuccess }) {
-  const locale = useLocale();
+  const locale = useLocale() === "en" ? "en" : "tr";
   const [user] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const fileInputRef = useRef(null);
-  const copy =
-    locale === "en"
-      ? {
-          englishTitle: "English Title",
-          englishDescription: "English Short Description",
-          englishContent: "English Content",
-          englishTitlePlaceholder: "Announcement title in English...",
-          englishDescriptionPlaceholder:
-            "A short English description for the announcement...",
-          englishContentPlaceholder:
-            "Write the English announcement content here...",
-        }
-      : {
-          englishTitle: "İngilizce Başlık",
-          englishDescription: "İngilizce Kısa Açıklama",
-          englishContent: "İngilizce İçerik",
-          englishTitlePlaceholder: "Duyurunun İngilizce başlığı...",
-          englishDescriptionPlaceholder:
-            "Duyurunun İngilizce kısa açıklaması...",
-          englishContentPlaceholder:
-            "Duyurunun İngilizce içeriğini buraya yazın...",
-        };
+  const copy = COPY[locale];
 
   // Form state
   const [formData, setFormData] = useState({
@@ -89,13 +143,13 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error("Lütfen geçerli bir resim dosyası seçin!");
+      toast.error(copy.invalidImage);
       return;
     }
 
     // Validate file size (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("Resim boyutu 10MB'dan küçük olmalıdır!");
+      toast.error(copy.imageTooLarge);
       return;
     }
 
@@ -130,12 +184,12 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
     e.preventDefault();
 
     if (!user) {
-      toast.error("Giriş yapmanız gerekiyor!");
+      toast.error(copy.loginRequired);
       return;
     }
 
     if (!formData.title.trim()) {
-      toast.error("Lütfen bir başlık girin!");
+      toast.error(copy.titleRequired);
       return;
     }
 
@@ -153,7 +207,7 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
         );
 
         if (!uploadResult.success) {
-          toast.error("Resim yüklenirken hata oluştu!");
+          toast.error(copy.imageUploadError);
           setIsSubmitting(false);
           return;
         }
@@ -191,15 +245,15 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
       }
 
       if (result.success) {
-        toast.success(result.message);
+        toast.success(announcement ? copy.updateSuccess : copy.createSuccess);
         onSuccess && onSuccess();
         onClose && onClose();
       } else {
-        toast.error(result.message);
+        toast.error(announcement ? copy.updateError : copy.createError);
       }
     } catch (error) {
       logger.error("Form submission error:", error);
-      toast.error("Beklenmeyen bir hata oluştu!");
+      toast.error(copy.unexpectedError);
     }
 
     setIsSubmitting(false);
@@ -216,7 +270,7 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
         {/* Header */}
         <div className="sticky top-0 z-raised -mx-4 mb-4 flex items-center justify-between gap-4 border-b border-rule bg-background px-4 pb-3 sm:static sm:mx-0 sm:mb-6 sm:px-0">
           <h2 id="announcement-form-title" className="font-display text-xl font-bold sm:text-2xl">
-            {announcement ? "Duyuruyu Düzenle" : "Yeni Duyuru Oluştur"}
+            {announcement ? copy.editTitle : copy.createTitle}
           </h2>
           {onClose && (
             <Button type="button" variant="ghost" size="icon" onClick={onClose} className="-mr-2">
@@ -230,16 +284,16 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
           {/* Title */}
           <Field
             id="announcement-title"
-            label="Başlık"
+            label={copy.titleLabel}
             required
-            help={`${formData.title.length}/200 karakter`}
+            help={`${formData.title.length}/200 ${copy.characters}`}
           >
             <Input
               type="text"
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              placeholder="Duyuru başlığı..."
+              placeholder={copy.titlePlaceholder}
               required
               maxLength={200}
             />
@@ -259,14 +313,14 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
           {/* Description */}
           <Field
             id="announcement-description"
-            label="Kısa Açıklama (İsteğe Bağlı)"
-            help={`${formData.description.length}/300 karakter`}
+            label={copy.descriptionLabel}
+            help={`${formData.description.length}/300 ${copy.characters}`}
           >
             <Textarea
               name="description"
               value={formData.description}
               onChange={handleInputChange}
-              placeholder="Duyuru hakkında kısa bir açıklama..."
+              placeholder={copy.descriptionPlaceholder}
               rows={2}
               maxLength={300}
               className="resize-none"
@@ -288,14 +342,14 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
           {/* Content */}
           <Field
             id="announcement-content"
-            label="İçerik"
-            help={`${formData.content.length}/5000 karakter`}
+            label={copy.contentLabel}
+            help={`${formData.content.length}/5000 ${copy.characters}`}
           >
             <Textarea
               name="content"
               value={formData.content}
               onChange={handleInputChange}
-              placeholder="Duyuru içeriğini buraya yazın..."
+              placeholder={copy.contentPlaceholder}
               rows={5}
               maxLength={5000}
               className="resize-none"
@@ -316,14 +370,14 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
 
           {/* Image Upload */}
           <div className="flex flex-col gap-1.5 pb-4">
-            <span className="text-sm font-medium leading-none">Resim (İsteğe Bağlı)</span>
+            <span className="text-sm font-medium leading-none">{copy.imageLabel}</span>
             {!imagePreview ? (
               <div
                 className="cursor-pointer rounded border border-dashed border-input p-6 text-center transition-colors duration-micro hover:bg-secondary sm:p-8"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <ImageIcon className="mx-auto mb-3 h-8 w-8 text-muted-foreground" aria-hidden="true" />
-                <p className="mb-1 text-base text-ink">Resim seç veya sürükle</p>
+                <p className="mb-1 text-base text-ink">{copy.imageDropHint}</p>
                 <p className="text-sm text-muted-foreground">JPG, PNG, HEIC (Max 10MB)</p>
                 <input
                   ref={fileInputRef}
@@ -366,7 +420,7 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
               className="h-5 w-5 shrink-0 accent-brand"
             />
             <label htmlFor="isPublished" className="text-sm">
-              Duyuruyu hemen yayınla
+              {copy.publishNow}
             </label>
           </div>
 
@@ -379,7 +433,7 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
                 onClick={onClose}
                 className="order-2 flex-1 sm:order-1"
               >
-                İptal
+                {copy.cancel}
               </Button>
             )}
             <Button
@@ -388,11 +442,11 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
               className="order-1 flex-1 sm:order-2"
             >
               {isSubmitting ? (
-                <span>Kaydediliyor...</span>
+                <span>{copy.saving}</span>
               ) : (
                 <>
                   <Upload aria-hidden="true" />
-                  <span>{announcement ? "Güncelle" : "Oluştur"}</span>
+                  <span>{announcement ? copy.update : copy.create}</span>
                 </>
               )}
             </Button>

@@ -26,8 +26,68 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import { useLocale } from "next-intl";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    statsLoading: "İstatistikler yükleniyor...",
+    pageTitle: "Etkinlik İstatistikleri",
+    pageSubtitle: "Tüm etkinlik verilerini analiz edin",
+    totalRegistrations: "Toplam Kayıt",
+    totalAttendance: "Toplam Katılım",
+    averageAttendance: "Ortalama Katılım",
+    tabActiveEvents: (n) => `Aktif Etkinlikler (${n})`,
+    tabArchive: (n) => `Arşiv (${n})`,
+    emptyCurrent: "Henüz aktif etkinlik bulunmuyor",
+    emptyArchive: "Arşivlenmiş etkinlik bulunmuyor",
+    dateLabel: "Tarih:",
+    timeLabel: "Saat:",
+    attended: "Katılım Sağlayan",
+    attendanceRate: "Katılım Oranı",
+    colParticipant: "Katılımcı",
+    colEmail: "Email",
+    colStatus: "Durum",
+    colSignupDate: "Kayıt Tarihi",
+    colAttendanceDate: "Katılım Tarihi",
+    colVerifiedBy: "Onaylayan",
+    statusJoined: "Katıldı",
+    statusNotJoined: "Katılmadı",
+    statusRegistered: "Kayıtlı",
+    locale: "tr-TR",
+  },
+  en: {
+    statsLoading: "Loading statistics...",
+    pageTitle: "Event Statistics",
+    pageSubtitle: "Analyze all event data",
+    totalRegistrations: "Total Registrations",
+    totalAttendance: "Total Attendance",
+    averageAttendance: "Average Attendance",
+    tabActiveEvents: (n) => `Active Events (${n})`,
+    tabArchive: (n) => `Archive (${n})`,
+    emptyCurrent: "No active events yet",
+    emptyArchive: "No archived events",
+    dateLabel: "Date:",
+    timeLabel: "Time:",
+    attended: "Attended",
+    attendanceRate: "Attendance Rate",
+    colParticipant: "Participant",
+    colEmail: "Email",
+    colStatus: "Status",
+    colSignupDate: "Registration Date",
+    colAttendanceDate: "Attendance Date",
+    colVerifiedBy: "Verified By",
+    statusJoined: "Attended",
+    statusNotJoined: "Did Not Attend",
+    statusRegistered: "Registered",
+    locale: "en-US",
+  },
+};
 
 export default function AdminEventStatsPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
   const [eventStats, setEventStats] = useState([]);
@@ -288,7 +348,7 @@ export default function AdminEventStatsPage() {
   if (loading || isLoading) {
     return (
       <p role="status" className="py-12 text-ink-2">
-        İstatistikler yükleniyor...
+        {copy.statsLoading}
       </p>
     );
   }
@@ -296,7 +356,7 @@ export default function AdminEventStatsPage() {
   if (!isAdmin) {
     return (
       <p role="alert" className="py-12 font-medium text-error">
-        Erişim Reddedildi
+        {a.accessDenied}
       </p>
     );
   }
@@ -325,15 +385,15 @@ export default function AdminEventStatsPage() {
   return (
     <div>
       <PageHeader
-        title="Etkinlik İstatistikleri"
-        description="Tüm etkinlik verilerini analiz edin"
+        title={copy.pageTitle}
+        description={copy.pageSubtitle}
       />
 
       {/* Overall stats */}
       <dl className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <Stat label="Toplam Kayıt" value={totalRegistrations} />
-        <Stat label="Toplam Katılım" value={totalAttendees} />
-        <Stat label="Ortalama Katılım" value={`${averageAttendance}%`} />
+        <Stat label={copy.totalRegistrations} value={totalRegistrations} />
+        <Stat label={copy.totalAttendance} value={totalAttendees} />
+        <Stat label={copy.averageAttendance} value={`${averageAttendance}%`} />
       </dl>
 
       {/* Tabs */}
@@ -344,7 +404,7 @@ export default function AdminEventStatsPage() {
           aria-pressed={activeTab === 'current'}
           className={tabClass(activeTab === 'current')}
         >
-          Aktif Etkinlikler ({currentEvents.length})
+          {copy.tabActiveEvents(currentEvents.length)}
         </button>
         <button
           type="button"
@@ -352,7 +412,7 @@ export default function AdminEventStatsPage() {
           aria-pressed={activeTab === 'archive'}
           className={tabClass(activeTab === 'archive')}
         >
-          Arşiv ({archivedEvents.length})
+          {copy.tabArchive(archivedEvents.length)}
         </button>
       </div>
 
@@ -360,7 +420,7 @@ export default function AdminEventStatsPage() {
         {filteredEvents.length === 0 ? (
           <EmptyState
             className="border-t-0"
-            title={activeTab === 'current' ? 'Henüz aktif etkinlik bulunmuyor' : 'Arşivlenmiş etkinlik bulunmuyor'}
+            title={activeTab === 'current' ? copy.emptyCurrent : copy.emptyArchive}
           />
         ) : (
           filteredEvents.map((event) => (
@@ -379,9 +439,9 @@ export default function AdminEventStatsPage() {
                   {event.name}
                 </span>
                 <div className="text-sm text-ink-2">
-                  <span className="font-medium">Tarih:</span>{" "}
+                  <span className="font-medium">{copy.dateLabel}</span>{" "}
                   <span className="font-outlier">
-                    {new Date(event.date).toLocaleDateString("tr-TR", {
+                    {new Date(event.date).toLocaleDateString(copy.locale, {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -389,7 +449,7 @@ export default function AdminEventStatsPage() {
                   </span>
                   {event.time && (
                     <span className="ml-2">
-                      <span className="font-medium">Saat:</span>{" "}
+                      <span className="font-medium">{copy.timeLabel}</span>{" "}
                       <span className="font-outlier">{event.time}</span>
                     </span>
                   )}
@@ -407,20 +467,20 @@ export default function AdminEventStatsPage() {
             {expandedEvents[event.id] && (
               <div className="pb-6">
                 <dl className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
-                  <Stat label="Toplam Kayıt" value={event.totalRegistrations} />
-                  <Stat label="Katılım Sağlayan" value={event.verifiedAttendees} />
-                  <Stat label="Katılım Oranı" value={`${event.attendanceRate}%`} />
+                  <Stat label={copy.totalRegistrations} value={event.totalRegistrations} />
+                  <Stat label={copy.attended} value={event.verifiedAttendees} />
+                  <Stat label={copy.attendanceRate} value={`${event.attendanceRate}%`} />
                 </dl>
 
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead>Katılımcı</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Durum</TableHead>
-                      <TableHead>Kayıt Tarihi</TableHead>
-                      <TableHead>Katılım Tarihi</TableHead>
-                      <TableHead>Onaylayan</TableHead>
+                      <TableHead>{copy.colParticipant}</TableHead>
+                      <TableHead>{copy.colEmail}</TableHead>
+                      <TableHead>{copy.colStatus}</TableHead>
+                      <TableHead>{copy.colSignupDate}</TableHead>
+                      <TableHead>{copy.colAttendanceDate}</TableHead>
+                      <TableHead>{copy.colVerifiedBy}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -443,22 +503,22 @@ export default function AdminEventStatsPage() {
                             }
                           >
                             {registrant.didJoinEvent
-                              ? "Katıldı"
+                              ? copy.statusJoined
                               : new Date(event.date) < new Date()
-                              ? "Katılmadı"
-                              : "Kayıtlı"}
+                              ? copy.statusNotJoined
+                              : copy.statusRegistered}
                           </Badge>
                         </TableCell>
                         <TableCell className="whitespace-nowrap font-outlier tabular-nums text-ink-2">
                           {new Date(
                             registrant.signedUpAt?.seconds * 1000
-                          ).toLocaleString("tr-TR")}
+                          ).toLocaleString(copy.locale)}
                         </TableCell>
                         <TableCell className="whitespace-nowrap font-outlier tabular-nums text-ink-2">
                           {registrant.didJoinEvent
                             ? new Date(
                                 registrant.verifiedAt?.seconds * 1000
-                              ).toLocaleString("tr-TR")
+                              ).toLocaleString(copy.locale)
                             : "-"}
                         </TableCell>
                         <TableCell className="whitespace-nowrap text-ink-2">

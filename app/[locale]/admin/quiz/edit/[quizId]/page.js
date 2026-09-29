@@ -23,11 +23,153 @@ import { Input, fieldClasses } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader, Section } from "@/components/ui/page";
+import { useLocale } from "next-intl";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    quizNotFound: "Quiz bulunamadı!",
+    loadError: "Quiz yüklenirken hata oluştu!",
+    minOneQuestion: "En az 1 soru olmalı!",
+    maxFourOptions: "Maksimum 4 seçenek ekleyebilirsiniz!",
+    minTwoOptions: "En az 2 seçenek olmalı!",
+    correctAnswerReset: "Doğru cevap ilk seçenek olarak ayarlandı!",
+    imageCompressed: (kb) => `Resim sıkıştırıldı: ${kb} KB`,
+    imageCompressError: "Resim sıkıştırma hatası!",
+    jsonTitleMissing: "JSON'da 'title' alanı eksik!",
+    jsonQuestionsMissing: "JSON'da 'questions' dizisi eksik!",
+    questionInvalidFormat: (n) => `Soru ${n} geçersiz format! (2-4 seçenek gerekli)`,
+    correctAnswerRange: (n, max) => `Soru ${n}: correctAnswer 0-${max} arası olmalı!`,
+    questionsLoaded: (n) => `${n} soru başarıyla yüklendi!`,
+    invalidJson: "Geçersiz JSON formatı!",
+    jsonExportDone: "JSON export tamamlandı!",
+    titleRequired: "Quiz başlığı gerekli!",
+    questionTextRequired: (n) => `Soru ${n}: Soru metni gerekli!`,
+    optionCountRange: (n) => `Soru ${n}: 2-4 arası seçenek olmalı!`,
+    allOptionsRequired: (n) => `Soru ${n}: Tüm seçenekler doldurulmalı!`,
+    invalidCorrectAnswer: (n) => `Soru ${n}: Geçersiz doğru cevap indeksi!`,
+    timeRange: (n) => `Soru ${n}: Süre 5-120 saniye arasında olmalı!`,
+    questionImageUploaded: (n) => `Soru ${n} resmi yüklendi!`,
+    quizUpdated: "Quiz başarıyla güncellendi!",
+    updateError: "Quiz güncellenirken hata oluştu!",
+    pageTitle: "Quiz Düzenle",
+    pageSubtitle: "Quiz'i düzenleyin ve güncelleyin",
+    jsonImport: "JSON Import",
+    jsonExport: "JSON Export",
+    quizInfo: "Quiz Bilgileri",
+    titleLabel: "Başlık *",
+    titlePlaceholder: "Quiz başlığını girin",
+    descriptionLabel: "Açıklama",
+    descriptionPlaceholder: "Quiz açıklaması (opsiyonel)",
+    categoryLabel: "Kategori",
+    catGeneral: "Genel",
+    catTechnology: "Teknoloji",
+    catProgramming: "Programlama",
+    catMath: "Matematik",
+    catScience: "Bilim",
+    catHistory: "Tarih",
+    catEntertainment: "Eğlence",
+    gameModeLabel: "Oyun Modu",
+    gameModeClassic: "Klasik (Final Sıralaması ile)",
+    gameModeKahoot: "Kahoot Modu (Her soruda kazanan gösterilir)",
+    gameModeKahootDesc: "Her soru sonunda en hızlı doğru cevap veren kazanan olarak gösterilir. Final sıralaması yoktur.",
+    gameModeClassicDesc: "Oyun sonunda tüm oyuncuların sıralaması gösterilir.",
+    questionLabel: (n) => `Soru ${n}`,
+    questionImageLabel: "Soru Görseli (Opsiyonel)",
+    imageHelp: "JPG, PNG veya WebP • Max 10MB • Otomatik <100KB sıkıştırma",
+    compressing: "Sıkıştırılıyor...",
+    questionTextLabel: "Soru Metni *",
+    questionTextPlaceholder: "Soruyu girin",
+    optionsLabel: "Seçenekler * (2-4 seçenek)",
+    optionPlaceholder: (n) => `Seçenek ${n}`,
+    markCorrect: "Doğru cevap olarak işaretle",
+    removeOption: "Seçeneği kaldır",
+    addOption: "+ Seçenek Ekle",
+    optionsHelp: "Doğru cevabı seçmek için sağdaki butona tıklayın. En az 2, en fazla 4 seçenek ekleyebilirsiniz.",
+    durationLabel: "Süre (saniye) *",
+    pointsLabel: "Puan",
+    addQuestion: "+ Soru Ekle",
+    updating: "Güncelleniyor...",
+    submitUpdate: "Quiz Güncelle",
+    correct: "Doğru",
+    imageAlt: "Soru görseli",
+  },
+  en: {
+    quizNotFound: "Quiz not found!",
+    loadError: "An error occurred while loading the quiz!",
+    minOneQuestion: "There must be at least 1 question!",
+    maxFourOptions: "You can add a maximum of 4 options!",
+    minTwoOptions: "There must be at least 2 options!",
+    correctAnswerReset: "The correct answer has been set to the first option!",
+    imageCompressed: (kb) => `Image compressed: ${kb} KB`,
+    imageCompressError: "Image compression error!",
+    jsonTitleMissing: "The 'title' field is missing in the JSON!",
+    jsonQuestionsMissing: "The 'questions' array is missing in the JSON!",
+    questionInvalidFormat: (n) => `Question ${n} has an invalid format! (2-4 options required)`,
+    correctAnswerRange: (n, max) => `Question ${n}: correctAnswer must be between 0-${max}!`,
+    questionsLoaded: (n) => `${n} questions loaded successfully!`,
+    invalidJson: "Invalid JSON format!",
+    jsonExportDone: "JSON export complete!",
+    titleRequired: "Quiz title is required!",
+    questionTextRequired: (n) => `Question ${n}: Question text is required!`,
+    optionCountRange: (n) => `Question ${n}: There must be 2-4 options!`,
+    allOptionsRequired: (n) => `Question ${n}: All options must be filled in!`,
+    invalidCorrectAnswer: (n) => `Question ${n}: Invalid correct answer index!`,
+    timeRange: (n) => `Question ${n}: Duration must be between 5-120 seconds!`,
+    questionImageUploaded: (n) => `Question ${n} image uploaded!`,
+    quizUpdated: "Quiz updated successfully!",
+    updateError: "An error occurred while updating the quiz!",
+    pageTitle: "Edit Quiz",
+    pageSubtitle: "Edit and update the quiz",
+    jsonImport: "JSON Import",
+    jsonExport: "JSON Export",
+    quizInfo: "Quiz Information",
+    titleLabel: "Title *",
+    titlePlaceholder: "Enter the quiz title",
+    descriptionLabel: "Description",
+    descriptionPlaceholder: "Quiz description (optional)",
+    categoryLabel: "Category",
+    catGeneral: "General",
+    catTechnology: "Technology",
+    catProgramming: "Programming",
+    catMath: "Mathematics",
+    catScience: "Science",
+    catHistory: "History",
+    catEntertainment: "Entertainment",
+    gameModeLabel: "Game Mode",
+    gameModeClassic: "Classic (with Final Ranking)",
+    gameModeKahoot: "Kahoot Mode (winner shown for each question)",
+    gameModeKahootDesc: "After each question, the fastest correct answer is shown as the winner. There is no final ranking.",
+    gameModeClassicDesc: "The ranking of all players is shown at the end of the game.",
+    questionLabel: (n) => `Question ${n}`,
+    questionImageLabel: "Question Image (Optional)",
+    imageHelp: "JPG, PNG or WebP • Max 10MB • Automatic <100KB compression",
+    compressing: "Compressing...",
+    questionTextLabel: "Question Text *",
+    questionTextPlaceholder: "Enter the question",
+    optionsLabel: "Options * (2-4 options)",
+    optionPlaceholder: (n) => `Option ${n}`,
+    markCorrect: "Mark as correct answer",
+    removeOption: "Remove option",
+    addOption: "+ Add Option",
+    optionsHelp: "Click the button on the right to select the correct answer. You can add at least 2 and at most 4 options.",
+    durationLabel: "Duration (seconds) *",
+    pointsLabel: "Points",
+    addQuestion: "+ Add Question",
+    updating: "Updating...",
+    submitUpdate: "Update Quiz",
+    correct: "Correct",
+    imageAlt: "Question image",
+  },
+};
 
 // Answer colours are data: red, blue, yellow, green in option order
 const OPTION_MARKS = ["bg-mark-red", "bg-mark-blue", "bg-mark-yellow", "bg-mark-green"];
 
 export default function EditQuizPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [userRole, setUserRole] = useState(null);
   const router = useRouter();
@@ -63,7 +205,7 @@ export default function EditQuizPage() {
 
       const role = await checkUserRole(user.email);
       if (role !== ROLES.ADMIN) {
-        toast.error("Bu sayfaya erişim yetkiniz yok!");
+        toast.error(a.accessDeniedToast);
         router.push("/admin");
         return;
       }
@@ -89,7 +231,7 @@ export default function EditQuizPage() {
       const quizDoc = await getDoc(quizRef);
 
       if (!quizDoc.exists()) {
-        toast.error("Quiz bulunamadı!");
+        toast.error(copy.quizNotFound);
         router.push("/admin/quiz/manage");
         return;
       }
@@ -115,7 +257,7 @@ export default function EditQuizPage() {
       }
     } catch (error) {
       logger.error("Error loading quiz:", error);
-      toast.error("Quiz yüklenirken hata oluştu!");
+      toast.error(copy.loadError);
     } finally {
       setLoadingQuiz(false);
     }
@@ -138,7 +280,7 @@ export default function EditQuizPage() {
 
   const removeQuestion = (index) => {
     if (questions.length === 1) {
-      toast.error("En az 1 soru olmalı!");
+      toast.error(copy.minOneQuestion);
       return;
     }
     setQuestions(questions.filter((_, i) => i !== index));
@@ -159,7 +301,7 @@ export default function EditQuizPage() {
   const addOption = (qIndex) => {
     const newQuestions = [...questions];
     if (newQuestions[qIndex].options.length >= 4) {
-      toast.error("Maksimum 4 seçenek ekleyebilirsiniz!");
+      toast.error(copy.maxFourOptions);
       return;
     }
     newQuestions[qIndex].options.push("");
@@ -169,7 +311,7 @@ export default function EditQuizPage() {
   const removeOption = (qIndex, oIndex) => {
     const newQuestions = [...questions];
     if (newQuestions[qIndex].options.length <= 2) {
-      toast.error("En az 2 seçenek olmalı!");
+      toast.error(copy.minTwoOptions);
       return;
     }
 
@@ -177,7 +319,7 @@ export default function EditQuizPage() {
     if (newQuestions[qIndex].correctAnswer === oIndex) {
       // Removing the correct answer - reset to first option
       newQuestions[qIndex].correctAnswer = 0;
-      toast.warning("Doğru cevap ilk seçenek olarak ayarlandı!");
+      toast.warning(copy.correctAnswerReset);
     } else if (newQuestions[qIndex].correctAnswer > oIndex) {
       // Removing option before correct answer - decrement index
       newQuestions[qIndex].correctAnswer--;
@@ -204,7 +346,7 @@ export default function EditQuizPage() {
       const compressedBlob = await compressImage(file, 100);
       const compressedSizeKB = (compressedBlob.size / 1024).toFixed(2);
 
-      toast.success(`Resim sıkıştırıldı: ${compressedSizeKB} KB`);
+      toast.success(copy.imageCompressed(compressedSizeKB));
 
       // Create preview URL
       const previewUrl = URL.createObjectURL(compressedBlob);
@@ -216,7 +358,7 @@ export default function EditQuizPage() {
       setQuestions(newQuestions);
     } catch (error) {
       logger.error("Image compression error:", error);
-      toast.error("Resim sıkıştırma hatası!");
+      toast.error(copy.imageCompressError);
     } finally {
       setCurrentImageUpload(null);
     }
@@ -243,12 +385,12 @@ export default function EditQuizPage() {
 
         // Validate JSON structure
         if (!json.title) {
-          toast.error("JSON'da 'title' alanı eksik!");
+          toast.error(copy.jsonTitleMissing);
           return;
         }
 
         if (!json.questions || !Array.isArray(json.questions)) {
-          toast.error("JSON'da 'questions' dizisi eksik!");
+          toast.error(copy.jsonQuestionsMissing);
           return;
         }
 
@@ -256,11 +398,11 @@ export default function EditQuizPage() {
         for (let i = 0; i < json.questions.length; i++) {
           const q = json.questions[i];
           if (!q.question || !q.options || q.options.length < 2 || q.options.length > 4) {
-            toast.error(`Soru ${i + 1} geçersiz format! (2-4 seçenek gerekli)`);
+            toast.error(copy.questionInvalidFormat(i + 1));
             return;
           }
           if (q.correctAnswer === undefined || q.correctAnswer < 0 || q.correctAnswer >= q.options.length) {
-            toast.error(`Soru ${i + 1}: correctAnswer 0-${q.options.length - 1} arası olmalı!`);
+            toast.error(copy.correctAnswerRange(i + 1, q.options.length - 1));
             return;
           }
         }
@@ -283,10 +425,10 @@ export default function EditQuizPage() {
           }))
         );
 
-        toast.success(`${json.questions.length} soru başarıyla yüklendi!`);
+        toast.success(copy.questionsLoaded(json.questions.length));
       } catch (error) {
         logger.error("JSON parse error:", error);
-        toast.error("Geçersiz JSON formatı!");
+        toast.error(copy.invalidJson);
       }
     };
 
@@ -318,42 +460,42 @@ export default function EditQuizPage() {
     a.download = `${quizTitle || "quiz"}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("JSON export tamamlandı!");
+    toast.success(copy.jsonExportDone);
   };
 
   const validateQuiz = () => {
     if (!quizTitle.trim()) {
-      toast.error("Quiz başlığı gerekli!");
+      toast.error(copy.titleRequired);
       return false;
     }
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (!q.question.trim()) {
-        toast.error(`Soru ${i + 1}: Soru metni gerekli!`);
+        toast.error(copy.questionTextRequired(i + 1));
         return false;
       }
 
       // Validate option count range
       if (q.options.length < 2 || q.options.length > 4) {
-        toast.error(`Soru ${i + 1}: 2-4 arası seçenek olmalı!`);
+        toast.error(copy.optionCountRange(i + 1));
         return false;
       }
 
       const emptyOptions = q.options.filter((opt) => !opt.trim());
       if (emptyOptions.length > 0) {
-        toast.error(`Soru ${i + 1}: Tüm seçenekler doldurulmalı!`);
+        toast.error(copy.allOptionsRequired(i + 1));
         return false;
       }
 
       // Validate correctAnswer is within bounds
       if (q.correctAnswer < 0 || q.correctAnswer >= q.options.length) {
-        toast.error(`Soru ${i + 1}: Geçersiz doğru cevap indeksi!`);
+        toast.error(copy.invalidCorrectAnswer(i + 1));
         return false;
       }
 
       if (q.timeLimit < 5 || q.timeLimit > 120) {
-        toast.error(`Soru ${i + 1}: Süre 5-120 saniye arasında olmalı!`);
+        toast.error(copy.timeRange(i + 1));
         return false;
       }
     }
@@ -378,7 +520,7 @@ export default function EditQuizPage() {
           if (q.imageFile) {
             const imagePath = `quiz-images/${Date.now()}_q${index}.jpg`;
             imageUrl = await uploadCompressedImage(q.imageFile, imagePath);
-            toast.success(`Soru ${index + 1} resmi yüklendi!`);
+            toast.success(copy.questionImageUploaded(index + 1));
           }
 
           return {
@@ -407,27 +549,27 @@ export default function EditQuizPage() {
 
       const quizRef = doc(db, "quizzes", quizId);
       await updateDoc(quizRef, quizData);
-      toast.success("Quiz başarıyla güncellendi!");
+      toast.success(copy.quizUpdated);
 
       setTimeout(() => {
         router.push("/admin/quiz/manage");
       }, 1500);
     } catch (error) {
       logger.error("Error updating quiz:", error);
-      toast.error("Quiz güncellenirken hata oluştu!");
+      toast.error(copy.updateError);
     } finally {
       setUploading(false);
     }
   };
 
   if (loading || loadingQuiz) {
-    return <p className="py-12 text-ink-2">Yükleniyor...</p>;
+    return <p className="py-12 text-ink-2">{a.loading}</p>;
   }
 
   if (!userRole) {
     return (
       <p role="alert" className="py-12 font-medium text-error">
-        Erişim Reddedildi
+        {a.accessDenied}
       </p>
     );
   }
@@ -435,8 +577,8 @@ export default function EditQuizPage() {
   return (
     <div>
       <PageHeader
-        title="Quiz Düzenle"
-        description="Quiz'i düzenleyin ve güncelleyin"
+        title={copy.pageTitle}
+        description={copy.pageSubtitle}
         actions={
           <>
             <input
@@ -448,7 +590,7 @@ export default function EditQuizPage() {
             />
             <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
               <Upload aria-hidden="true" />
-              JSON Import
+              {copy.jsonImport}
             </Button>
             <Button
               type="button"
@@ -457,7 +599,7 @@ export default function EditQuizPage() {
               disabled={!quizTitle || questions.length === 0}
             >
               <Download aria-hidden="true" />
-              JSON Export
+              {copy.jsonExport}
             </Button>
           </>
         }
@@ -465,51 +607,51 @@ export default function EditQuizPage() {
 
       <form onSubmit={handleSubmit} className="max-w-3xl">
         {/* Quiz Info */}
-        <Section title="Quiz Bilgileri">
+        <Section title={copy.quizInfo}>
           <div className="space-y-2">
-            <Field id="quiz-title" label="Başlık *">
+            <Field id="quiz-title" label={copy.titleLabel}>
               <Input
                 type="text"
                 value={quizTitle}
                 onChange={(e) => setQuizTitle(e.target.value)}
-                placeholder="Quiz başlığını girin"
+                placeholder={copy.titlePlaceholder}
                 required
               />
             </Field>
 
-            <Field id="quiz-description" label="Açıklama">
+            <Field id="quiz-description" label={copy.descriptionLabel}>
               <Textarea
                 value={quizDescription}
                 onChange={(e) => setQuizDescription(e.target.value)}
-                placeholder="Quiz açıklaması (opsiyonel)"
+                placeholder={copy.descriptionPlaceholder}
                 rows="3"
               />
             </Field>
 
             <div className="grid gap-x-6 md:grid-cols-2">
-              <Field id="quiz-category" label="Kategori">
+              <Field id="quiz-category" label={copy.categoryLabel}>
                 <select
                   value={quizCategory}
                   onChange={(e) => setQuizCategory(e.target.value)}
                   className={cn(fieldClasses, "h-control")}
                 >
-                  <option value="Genel">Genel</option>
-                  <option value="Teknoloji">Teknoloji</option>
-                  <option value="Programlama">Programlama</option>
-                  <option value="Matematik">Matematik</option>
-                  <option value="Bilim">Bilim</option>
-                  <option value="Tarih">Tarih</option>
-                  <option value="Eğlence">Eğlence</option>
+                  <option value="Genel">{copy.catGeneral}</option>
+                  <option value="Teknoloji">{copy.catTechnology}</option>
+                  <option value="Programlama">{copy.catProgramming}</option>
+                  <option value="Matematik">{copy.catMath}</option>
+                  <option value="Bilim">{copy.catScience}</option>
+                  <option value="Tarih">{copy.catHistory}</option>
+                  <option value="Eğlence">{copy.catEntertainment}</option>
                 </select>
               </Field>
 
               <Field
                 id="quiz-game-mode"
-                label="Oyun Modu"
+                label={copy.gameModeLabel}
                 help={
                   gameMode === "kahoot"
-                    ? "Her soru sonunda en hızlı doğru cevap veren kazanan olarak gösterilir. Final sıralaması yoktur."
-                    : "Oyun sonunda tüm oyuncuların sıralaması gösterilir."
+                    ? copy.gameModeKahootDesc
+                    : copy.gameModeClassicDesc
                 }
               >
                 <select
@@ -517,8 +659,8 @@ export default function EditQuizPage() {
                   onChange={(e) => setGameMode(e.target.value)}
                   className={cn(fieldClasses, "h-control")}
                 >
-                  <option value="classic">Klasik (Final Sıralaması ile)</option>
-                  <option value="kahoot">Kahoot Modu (Her soruda kazanan gösterilir)</option>
+                  <option value="classic">{copy.gameModeClassic}</option>
+                  <option value="kahoot">{copy.gameModeKahoot}</option>
                 </select>
               </Field>
             </div>
@@ -529,7 +671,7 @@ export default function EditQuizPage() {
         {questions.map((q, qIndex) => (
           <Section
             key={qIndex}
-            title={`Soru ${qIndex + 1}`}
+            title={copy.questionLabel(qIndex + 1)}
             action={
               questions.length > 1 && (
                 <Button
@@ -538,7 +680,7 @@ export default function EditQuizPage() {
                   size="sm"
                   onClick={() => removeQuestion(qIndex)}
                 >
-                  Sil
+                  {a.delete}
                 </Button>
               )
             }
@@ -546,12 +688,12 @@ export default function EditQuizPage() {
             <div className="space-y-2">
               {/* Image Upload */}
               <div className="flex flex-col gap-1.5 pb-2">
-                <Label htmlFor={`q${qIndex}-image`}>Soru Görseli (Opsiyonel)</Label>
+                <Label htmlFor={`q${qIndex}-image`}>{copy.questionImageLabel}</Label>
                 {q.imageUrl ? (
                   <div className="relative max-w-md">
                     <img
                       src={q.imageUrl}
-                      alt="Question"
+                      alt={copy.imageAlt}
                       className="aspect-[16/9] w-full rounded border border-rule object-cover"
                     />
                     <Button
@@ -561,7 +703,7 @@ export default function EditQuizPage() {
                       onClick={() => removeImage(qIndex)}
                       className="absolute right-2 top-2"
                     >
-                      Kaldır
+                      {a.remove}
                     </Button>
                   </div>
                 ) : (
@@ -575,28 +717,28 @@ export default function EditQuizPage() {
                       className="block w-full text-sm text-muted-foreground file:mr-4 file:h-9 file:cursor-pointer file:rounded file:border-0 file:bg-primary file:px-4 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-brand-hover"
                     />
                     <p className="text-sm text-muted-foreground">
-                      JPG, PNG veya WebP • Max 10MB • Otomatik &lt;100KB sıkıştırma
+                      {copy.imageHelp}
                     </p>
                   </>
                 )}
                 {currentImageUpload === qIndex && (
-                  <p className="text-sm text-ink-2">Sıkıştırılıyor...</p>
+                  <p className="text-sm text-ink-2">{copy.compressing}</p>
                 )}
               </div>
 
-              <Field id={`q${qIndex}-question`} label="Soru Metni *">
+              <Field id={`q${qIndex}-question`} label={copy.questionTextLabel}>
                 <Input
                   type="text"
                   value={q.question}
                   onChange={(e) => updateQuestion(qIndex, "question", e.target.value)}
-                  placeholder="Soruyu girin"
+                  placeholder={copy.questionTextPlaceholder}
                   required
                 />
               </Field>
 
               <fieldset className="min-w-0">
                 <legend className="mb-1.5 text-sm font-medium leading-none">
-                  Seçenekler * (2-4 seçenek)
+                  {copy.optionsLabel}
                 </legend>
                 <ul className="grid gap-x-6 gap-y-3 md:grid-cols-2">
                   {q.options.map((opt, oIndex) => {
@@ -613,8 +755,8 @@ export default function EditQuizPage() {
                             value={opt}
                             onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
                             className={cn(isCorrect && "border-success pr-20")}
-                            placeholder={`Seçenek ${oIndex + 1}`}
-                            aria-label={`Seçenek ${oIndex + 1}`}
+                            placeholder={copy.optionPlaceholder(oIndex + 1)}
+                            aria-label={copy.optionPlaceholder(oIndex + 1)}
                             required
                           />
                           {isCorrect && (
@@ -622,7 +764,7 @@ export default function EditQuizPage() {
                               variant="success"
                               className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 bg-background"
                             >
-                              Doğru
+                              {copy.correct}
                             </Badge>
                           )}
                         </div>
@@ -640,8 +782,8 @@ export default function EditQuizPage() {
                               ? "border-success text-success"
                               : "border-input text-muted-foreground"
                           )}
-                          title="Doğru cevap olarak işaretle"
-                          aria-label="Doğru cevap olarak işaretle"
+                          title={copy.markCorrect}
+                          aria-label={copy.markCorrect}
                         >
                           <Check aria-hidden="true" />
                         </Button>
@@ -654,8 +796,8 @@ export default function EditQuizPage() {
                             size="icon"
                             onClick={() => removeOption(qIndex, oIndex)}
                             className="shrink-0 text-error"
-                            title="Seçeneği kaldır"
-                            aria-label="Seçeneği kaldır"
+                            title={copy.removeOption}
+                            aria-label={copy.removeOption}
                           >
                             <X aria-hidden="true" />
                           </Button>
@@ -674,17 +816,17 @@ export default function EditQuizPage() {
                     onClick={() => addOption(qIndex)}
                     className="mt-3"
                   >
-                    + Seçenek Ekle
+                    {copy.addOption}
                   </Button>
                 )}
 
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Doğru cevabı seçmek için sağdaki butona tıklayın. En az 2, en fazla 4 seçenek ekleyebilirsiniz.
+                  {copy.optionsHelp}
                 </p>
               </fieldset>
 
               <div className="grid grid-cols-2 gap-x-4 pt-2 sm:gap-x-6">
-                <Field id={`q${qIndex}-time`} label="Süre (saniye) *">
+                <Field id={`q${qIndex}-time`} label={copy.durationLabel}>
                   <Input
                     type="number"
                     value={q.timeLimit}
@@ -695,7 +837,7 @@ export default function EditQuizPage() {
                     required
                   />
                 </Field>
-                <Field id={`q${qIndex}-points`} label="Puan">
+                <Field id={`q${qIndex}-points`} label={copy.pointsLabel}>
                   <Input
                     type="number"
                     value={q.points}
@@ -719,7 +861,7 @@ export default function EditQuizPage() {
           onClick={addQuestion}
           className="mt-10 w-full border-dashed"
         >
-          + Soru Ekle
+          {copy.addQuestion}
         </Button>
 
         {/* Submit Buttons */}
@@ -730,10 +872,10 @@ export default function EditQuizPage() {
             onClick={() => router.push("/admin/quiz/manage")}
             disabled={uploading}
           >
-            İptal
+            {a.cancel}
           </Button>
           <Button type="submit" disabled={uploading}>
-            {uploading ? "Güncelleniyor..." : "Quiz Güncelle"}
+            {uploading ? copy.updating : copy.submitUpdate}
           </Button>
         </div>
       </form>

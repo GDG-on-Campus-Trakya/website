@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import PostUpload from "@/components/PostUpload";
@@ -6,7 +7,20 @@ import { useRouter } from "@/i18n/navigation";
 import { useEffect } from "react";
 import { PageContainer } from "@/components/ui/page";
 
+const COPY = {
+  tr: {
+    loading: "Yükleniyor...",
+    loginRequired: "Giriş yapmanız gerekiyor...",
+  },
+  en: {
+    loading: "Loading...",
+    loginRequired: "You need to sign in...",
+  },
+};
+
 export default function UploadPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
 
@@ -27,7 +41,7 @@ export default function UploadPage() {
   if (loading) {
     return (
       <PageContainer>
-        <p role="status" className="text-ink-2">Yükleniyor...</p>
+        <p role="status" className="text-ink-2">{copy.loading}</p>
       </PageContainer>
     );
   }
@@ -35,7 +49,7 @@ export default function UploadPage() {
   if (!user) {
     return (
       <PageContainer>
-        <p role="status" className="text-ink-2">Giriş yapmanız gerekiyor...</p>
+        <p role="status" className="text-ink-2">{copy.loginRequired}</p>
       </PageContainer>
     );
   }

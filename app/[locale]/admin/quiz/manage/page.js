@@ -24,8 +24,74 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Stat } from "@/components/ui/stat";
 import { PageHeader, EmptyState } from "@/components/ui/page";
+import { useLocale } from "next-intl";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    fetchError: "Quiz'ler yüklenirken hata oluştu!",
+    gameStarted: "Oyun başlatıldı!",
+    gameStartError: "Oyun başlatılırken hata oluştu!",
+    quizActivated: "Quiz aktif edildi!",
+    quizDeactivated: "Quiz pasif edildi!",
+    statusChangeError: "Durum değiştirilirken hata oluştu!",
+    confirmDeleteQuiz: "Bu quiz'i silmek istediğinize emin misiniz?",
+    quizDeleted: "Quiz silindi!",
+    deleteError: "Quiz silinirken hata oluştu!",
+    title: "Quiz Yönetimi",
+    subtitle: "canlı quiz'lerinizi yönetin ve oyun başlatın",
+    gameHistory: "Oyun Geçmişi",
+    newQuiz: "+ Yeni Quiz",
+    totalQuiz: "Toplam Quiz",
+    activeQuiz: "Aktif Quiz",
+    totalPlays: "Toplam Oynama",
+    noQuizzes: "Henüz quiz oluşturulmamış",
+    createFirstQuiz: "İlk Quiz'i Oluştur",
+    kahoot: "Kahoot",
+    classic: "Klasik",
+    questionsWord: "Soru",
+    timesWord: "Kez",
+    startGame: "Oyun Başlat",
+    editLabel: "Düzenle",
+    deactivate: "Pasifleştir",
+    activate: "Aktifleştir",
+    dateLocale: "tr-TR",
+  },
+  en: {
+    fetchError: "An error occurred while loading quizzes!",
+    gameStarted: "Game started!",
+    gameStartError: "An error occurred while starting the game!",
+    quizActivated: "Quiz activated!",
+    quizDeactivated: "Quiz deactivated!",
+    statusChangeError: "An error occurred while changing the status!",
+    confirmDeleteQuiz: "Are you sure you want to delete this quiz?",
+    quizDeleted: "Quiz deleted!",
+    deleteError: "An error occurred while deleting the quiz!",
+    title: "Quiz Management",
+    subtitle: "manage your live quizzes and start games",
+    gameHistory: "Game History",
+    newQuiz: "+ New Quiz",
+    totalQuiz: "Total Quizzes",
+    activeQuiz: "Active Quizzes",
+    totalPlays: "Total Plays",
+    noQuizzes: "No quizzes created yet",
+    createFirstQuiz: "Create First Quiz",
+    kahoot: "Kahoot",
+    classic: "Classic",
+    questionsWord: "Questions",
+    timesWord: "times",
+    startGame: "Start Game",
+    editLabel: "Edit",
+    deactivate: "Deactivate",
+    activate: "Activate",
+    dateLocale: "en-US",
+  },
+};
 
 export default function ManageQuizzesPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [userRole, setUserRole] = useState(null);
   const [quizzes, setQuizzes] = useState([]);
@@ -41,7 +107,7 @@ export default function ManageQuizzesPage() {
 
       const role = await checkUserRole(user.email);
       if (role !== ROLES.ADMIN) {
-        toast.error("Bu sayfaya erişim yetkiniz yok!");
+        toast.error(a.accessDeniedToast);
         router.push("/admin");
         return;
       }
@@ -70,7 +136,7 @@ export default function ManageQuizzesPage() {
       setQuizzes(quizzesData);
     } catch (error) {
       logger.error("Error fetching quizzes:", error);
-      toast.error("Quiz'ler yüklenirken hata oluştu!");
+      toast.error(copy.fetchError);
     } finally {
       setLoadingQuizzes(false);
     }
@@ -97,11 +163,11 @@ export default function ManageQuizzesPage() {
         lastPlayedAt: new Date()
       });
 
-      toast.success("Oyun başlatıldı!");
+      toast.success(copy.gameStarted);
       router.push(`/admin/quiz/host/${gameId}`);
     } catch (error) {
       logger.error("Error starting game:", error);
-      toast.error("Oyun başlatılırken hata oluştu!");
+      toast.error(copy.gameStartError);
     }
   };
 
@@ -119,35 +185,35 @@ export default function ManageQuizzesPage() {
       );
 
       toast.success(
-        !currentStatus ? "Quiz aktif edildi!" : "Quiz pasif edildi!"
+        !currentStatus ? copy.quizActivated : copy.quizDeactivated
       );
     } catch (error) {
       logger.error("Error toggling quiz status:", error);
-      toast.error("Durum değiştirilirken hata oluştu!");
+      toast.error(copy.statusChangeError);
     }
   };
 
   const handleDeleteQuiz = async (quizId) => {
-    if (!confirm("Bu quiz'i silmek istediğinize emin misiniz?")) return;
+    if (!confirm(copy.confirmDeleteQuiz)) return;
 
     try {
       await deleteDoc(doc(db, "quizzes", quizId));
       setQuizzes(quizzes.filter((q) => q.id !== quizId));
-      toast.success("Quiz silindi!");
+      toast.success(copy.quizDeleted);
     } catch (error) {
       logger.error("Error deleting quiz:", error);
-      toast.error("Quiz silinirken hata oluştu!");
+      toast.error(copy.deleteError);
     }
   };
 
   if (loading || loadingQuizzes) {
-    return <p className="py-12 text-ink-2">Yükleniyor...</p>;
+    return <p className="py-12 text-ink-2">{a.loading}</p>;
   }
 
   if (!userRole) {
     return (
       <p role="alert" className="py-12 font-medium text-error">
-        Erişim Reddedildi
+        {a.accessDenied}
       </p>
     );
   }
@@ -155,15 +221,15 @@ export default function ManageQuizzesPage() {
   return (
     <div>
       <PageHeader
-        title="Quiz Yönetimi"
-        description="canlı quiz'lerinizi yönetin ve oyun başlatın"
+        title={copy.title}
+        description={copy.subtitle}
         actions={
           <>
             <Button asChild variant="outline">
-              <Link href="/admin/quiz/history">Oyun Geçmişi</Link>
+              <Link href="/admin/quiz/history">{copy.gameHistory}</Link>
             </Button>
             <Button asChild>
-              <Link href="/admin/quiz/create">+ Yeni Quiz</Link>
+              <Link href="/admin/quiz/create">{copy.newQuiz}</Link>
             </Button>
           </>
         }
@@ -171,10 +237,10 @@ export default function ManageQuizzesPage() {
 
       {/* Statistics */}
       <dl className="grid grid-cols-3 gap-4 sm:gap-8">
-        <Stat label="Toplam Quiz" value={quizzes.length} />
-        <Stat label="Aktif Quiz" value={quizzes.filter((q) => q.isActive).length} />
+        <Stat label={copy.totalQuiz} value={quizzes.length} />
+        <Stat label={copy.activeQuiz} value={quizzes.filter((q) => q.isActive).length} />
         <Stat
-          label="Toplam Oynama"
+          label={copy.totalPlays}
           value={quizzes.reduce((sum, q) => sum + (q.playCount || 0), 0)}
         />
       </dl>
@@ -183,10 +249,10 @@ export default function ManageQuizzesPage() {
       {quizzes.length === 0 ? (
         <EmptyState
           className="mt-10"
-          title="Henüz quiz oluşturulmamış"
+          title={copy.noQuizzes}
           action={
             <Button asChild>
-              <Link href="/admin/quiz/create">İlk Quiz'i Oluştur</Link>
+              <Link href="/admin/quiz/create">{copy.createFirstQuiz}</Link>
             </Button>
           }
         />
@@ -201,10 +267,10 @@ export default function ManageQuizzesPage() {
                       {quiz.title}
                     </h2>
                     <Badge variant={quiz.isActive ? "success" : "neutral"}>
-                      {quiz.isActive ? "Aktif" : "Pasif"}
+                      {quiz.isActive ? a.active : a.passive}
                     </Badge>
                     <Badge>{quiz.category}</Badge>
-                    <Badge>{quiz.gameMode === "kahoot" ? "Kahoot" : "Klasik"}</Badge>
+                    <Badge>{quiz.gameMode === "kahoot" ? copy.kahoot : copy.classic}</Badge>
                   </div>
 
                   {quiz.description && (
@@ -215,10 +281,10 @@ export default function ManageQuizzesPage() {
 
                   <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
                     <span>
-                      <span className="font-outlier tabular-nums">{quiz.questionCount}</span> Soru
+                      <span className="font-outlier tabular-nums">{quiz.questionCount}</span> {copy.questionsWord}
                     </span>
                     <span>
-                      <span className="font-outlier tabular-nums">{quiz.playCount || 0}</span> Kez
+                      <span className="font-outlier tabular-nums">{quiz.playCount || 0}</span> {copy.timesWord}
                     </span>
                     <span className="hidden items-center gap-1.5 sm:inline-flex">
                       <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -228,7 +294,7 @@ export default function ManageQuizzesPage() {
                       <span className="hidden items-center gap-1.5 sm:inline-flex">
                         <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                         <span className="font-outlier tabular-nums">
-                          {new Date(quiz.lastPlayedAt.seconds * 1000).toLocaleDateString("tr-TR")}
+                          {new Date(quiz.lastPlayedAt.seconds * 1000).toLocaleDateString(copy.dateLocale)}
                         </span>
                       </span>
                     )}
@@ -238,13 +304,13 @@ export default function ManageQuizzesPage() {
                 <div className="flex flex-wrap gap-2">
                   <Button onClick={() => handleStartGame(quiz)} disabled={!quiz.isActive}>
                     <Play aria-hidden="true" />
-                    Oyun Başlat
+                    {copy.startGame}
                   </Button>
 
                   <Button asChild variant="outline">
                     <Link href={`/admin/quiz/edit/${quiz.id}`}>
                       <Pencil aria-hidden="true" />
-                      Düzenle
+                      {copy.editLabel}
                     </Link>
                   </Button>
 
@@ -257,12 +323,12 @@ export default function ManageQuizzesPage() {
                     ) : (
                       <Play aria-hidden="true" />
                     )}
-                    {quiz.isActive ? "Pasifleştir" : "Aktifleştir"}
+                    {quiz.isActive ? copy.deactivate : copy.activate}
                   </Button>
 
                   <Button variant="destructive" onClick={() => handleDeleteQuiz(quiz.id)}>
                     <Trash2 aria-hidden="true" />
-                    Sil
+                    {a.delete}
                   </Button>
                 </div>
               </div>
@@ -276,7 +342,7 @@ export default function ManageQuizzesPage() {
         <Button asChild variant="link">
           <Link href="/admin">
             <ArrowLeft aria-hidden="true" />
-            Admin Paneline Dön
+            {a.backToAdmin}
           </Link>
         </Button>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -16,8 +17,65 @@ import { Stat } from "@/components/ui/stat";
 import { cn } from "@/lib/utils";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    title: "Sosyal Platform Yönetimi",
+    subtitle: "Kullanıcı postlarını yönetin ve moderasyon yapın",
+    adminPanel: "Admin Panel",
+    totalPosts: "Toplam Post",
+    eventPosts: "Etkinlik Postları",
+    generalPosts: "Genel Postlar",
+    activeUsers: "Aktif Kullanıcı",
+    searchPlaceholder: "Post, kullanıcı veya etkinlik ara...",
+    filterAll: (n) => `Tüm Postlar (${n})`,
+    filterVisible: (n) => `Görünür Postlar (${n})`,
+    filterHidden: (n) => `Gizli Postlar (${n})`,
+    filterEvents: (n) => `Etkinlik Postları (${n})`,
+    filterGeneral: (n) => `Genel Postlar (${n})`,
+    hideAll: "Tümünü Gizle",
+    showAll: "Tümünü Göster",
+    refresh: "Yenile",
+    noPostsFound: "Post bulunamadı",
+    noPostsHint: "Arama kriterlerinizi değiştirmeyi deneyin.",
+    loadPostsError: "Postlar yüklenirken hata oluştu!",
+    confirmHideAll: "Tüm görünür postları gizlemek istediğinizden emin misiniz?",
+    confirmShowAll: "Tüm gizli postları göstermek istediğinizden emin misiniz?",
+    postsHidden: (n) => `${n} post gizlendi!`,
+    postsShown: (n) => `${n} post gösterildi!`,
+  },
+  en: {
+    title: "Social Platform Management",
+    subtitle: "Manage and moderate user posts",
+    adminPanel: "Admin Panel",
+    totalPosts: "Total Posts",
+    eventPosts: "Event Posts",
+    generalPosts: "General Posts",
+    activeUsers: "Active Users",
+    searchPlaceholder: "Search posts, users or events...",
+    filterAll: (n) => `All Posts (${n})`,
+    filterVisible: (n) => `Visible Posts (${n})`,
+    filterHidden: (n) => `Hidden Posts (${n})`,
+    filterEvents: (n) => `Event Posts (${n})`,
+    filterGeneral: (n) => `General Posts (${n})`,
+    hideAll: "Hide All",
+    showAll: "Show All",
+    refresh: "Refresh",
+    noPostsFound: "No posts found",
+    noPostsHint: "Try changing your search criteria.",
+    loadPostsError: "An error occurred while loading posts!",
+    confirmHideAll: "Are you sure you want to hide all visible posts?",
+    confirmShowAll: "Are you sure you want to show all hidden posts?",
+    postsHidden: (n) => `${n} posts hidden!`,
+    postsShown: (n) => `${n} posts shown!`,
+  },
+};
 
 export default function AdminSocialPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
   const [posts, setPosts] = useState([]);
@@ -68,16 +126,16 @@ export default function AdminSocialPage() {
 
   const loadAllPosts = async () => {
     setIsLoading(true);
-    
+
     // Load all posts including hidden ones
     const result = await socialUtils.getPosts({}, { limit: 100 });
-    
+
     if (result.success) {
       setPosts(result.posts);
     } else {
-      toast.error("Postlar yüklenirken hata oluştu!");
+      toast.error(copy.loadPostsError);
     }
-    
+
     setIsLoading(false);
   };
 
@@ -113,7 +171,7 @@ export default function AdminSocialPage() {
     // Apply search
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(post => 
+      filtered = filtered.filter(post =>
         post.description?.toLowerCase().includes(search) ||
         post.userName?.toLowerCase().includes(search) ||
         post.userEmail?.toLowerCase().includes(search) ||
@@ -134,7 +192,7 @@ export default function AdminSocialPage() {
   };
 
   const bulkHideVisible = async () => {
-    if (!confirm("Tüm görünür postları gizlemek istediğinizden emin misiniz?")) return;
+    if (!confirm(copy.confirmHideAll)) return;
 
     const visiblePosts = posts.filter(post => !post.isHidden);
     let successCount = 0;
@@ -144,12 +202,12 @@ export default function AdminSocialPage() {
       if (result.success) successCount++;
     }
 
-    toast.success(`${successCount} post gizlendi!`);
+    toast.success(copy.postsHidden(successCount));
     loadAllPosts();
   };
 
   const bulkShowHidden = async () => {
-    if (!confirm("Tüm gizli postları göstermek istediğinizden emin misiniz?")) return;
+    if (!confirm(copy.confirmShowAll)) return;
 
     const hiddenPosts = posts.filter(post => post.isHidden);
     let successCount = 0;
@@ -159,18 +217,18 @@ export default function AdminSocialPage() {
       if (result.success) successCount++;
     }
 
-    toast.success(`${successCount} post gösterildi!`);
+    toast.success(copy.postsShown(successCount));
     loadAllPosts();
   };
 
   if (loading) {
-    return <p className="py-12 text-ink-2">Loading...</p>;
+    return <p className="py-12 text-ink-2">{a.loading}</p>;
   }
 
   if (!isAdmin) {
     return (
       <p role="alert" className="py-12 font-medium text-error">
-        Access Denied
+        {a.accessDenied}
       </p>
     );
   }
@@ -178,17 +236,17 @@ export default function AdminSocialPage() {
   return (
     <div>
       <PageHeader
-        title="Sosyal Platform Yönetimi"
-        description="Kullanıcı postlarını yönetin ve moderasyon yapın"
+        title={copy.title}
+        description={copy.subtitle}
       />
 
       {/* Stats */}
       {stats && (
         <dl className="mb-10 grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-4">
-          <Stat label="Toplam Post" value={stats.totalPosts} />
-          <Stat label="Etkinlik Postları" value={stats.eventPosts} />
-          <Stat label="Genel Postlar" value={stats.generalPosts} />
-          <Stat label="Aktif Kullanıcı" value={stats.uniqueUsers} />
+          <Stat label={copy.totalPosts} value={stats.totalPosts} />
+          <Stat label={copy.eventPosts} value={stats.eventPosts} />
+          <Stat label={copy.generalPosts} value={stats.generalPosts} />
+          <Stat label={copy.activeUsers} value={stats.uniqueUsers} />
         </dl>
       )}
 
@@ -203,7 +261,7 @@ export default function AdminSocialPage() {
             />
             <Input
               type="text"
-              placeholder="Post, kullanıcı veya etkinlik ara..."
+              placeholder={copy.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -216,11 +274,11 @@ export default function AdminSocialPage() {
             onChange={(e) => setFilter(e.target.value)}
             className={cn(fieldClasses, "h-control sm:w-auto")}
           >
-            <option value="all">Tüm Postlar ({posts.length})</option>
-            <option value="visible">Görünür Postlar ({posts.filter(p => !p.isHidden).length})</option>
-            <option value="hidden">Gizli Postlar ({posts.filter(p => p.isHidden).length})</option>
-            <option value="events">Etkinlik Postları ({posts.filter(p => p.isEventPost).length})</option>
-            <option value="general">Genel Postlar ({posts.filter(p => !p.isEventPost).length})</option>
+            <option value="all">{copy.filterAll(posts.length)}</option>
+            <option value="visible">{copy.filterVisible(posts.filter(p => !p.isHidden).length)}</option>
+            <option value="hidden">{copy.filterHidden(posts.filter(p => p.isHidden).length)}</option>
+            <option value="events">{copy.filterEvents(posts.filter(p => p.isEventPost).length)}</option>
+            <option value="general">{copy.filterGeneral(posts.filter(p => !p.isEventPost).length)}</option>
           </select>
         </div>
 
@@ -228,16 +286,16 @@ export default function AdminSocialPage() {
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="outline" onClick={bulkHideVisible}>
             <EyeOff aria-hidden="true" />
-            <span>Tümünü Gizle</span>
+            <span>{copy.hideAll}</span>
           </Button>
 
           <Button variant="outline" onClick={bulkShowHidden}>
             <Eye aria-hidden="true" />
-            <span>Tümünü Göster</span>
+            <span>{copy.showAll}</span>
           </Button>
 
           <Button variant="secondary" onClick={loadAllPosts}>
-            Yenile
+            {copy.refresh}
           </Button>
         </div>
       </div>
@@ -262,8 +320,8 @@ export default function AdminSocialPage() {
           ) : (
             <EmptyState
               className="col-span-full"
-              title="Post bulunamadı"
-              description="Arama kriterlerinizi değiştirmeyi deneyin."
+              title={copy.noPostsFound}
+              description={copy.noPostsHint}
             />
           )}
         </div>

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { useParams } from "next/navigation";
@@ -17,7 +18,44 @@ import {
   getMatchesForRound
 } from "@/utils/pollUtils";
 
+const COPY = {
+  tr: {
+    pollNotFound: "Poll bulunamadı!",
+    voteSaved: "Oyunuz kaydedildi!",
+    voteError: "Oy gönderilirken hata oluştu!",
+    loading: "Yükleniyor...",
+    loginRequired: "Giriş yapmalısınız!",
+    playersSuffix: "oyuncu",
+    waitingTitle: "Oylama Başlamayı Bekliyor...",
+    waitingSubtitle: "Host oylamayı başlattığında eşleşmeler görünecek",
+    votesSuffix: "oy",
+    voteSavedTitle: "Oyunuz Kaydedildi!",
+    voteSavedSubtitle: "Diğer oyuncuları bekleyin",
+    winner: "Kazanan",
+    winnerExclaim: "Kazanan!",
+    waitNextMatch: "Sonraki eşleşmeyi bekleyin...",
+  },
+  en: {
+    pollNotFound: "Poll not found!",
+    voteSaved: "Your vote has been saved!",
+    voteError: "An error occurred while submitting your vote!",
+    loading: "Loading...",
+    loginRequired: "You need to sign in!",
+    playersSuffix: "players",
+    waitingTitle: "Waiting for the voting to start...",
+    waitingSubtitle: "Matchups will appear once the host starts the voting",
+    votesSuffix: "votes",
+    voteSavedTitle: "Your Vote Has Been Saved!",
+    voteSavedSubtitle: "Wait for the other players",
+    winner: "Winner",
+    winnerExclaim: "Winner!",
+    waitNextMatch: "Wait for the next matchup...",
+  },
+};
+
 export default function PollRoomPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
   const params = useParams();
@@ -37,7 +75,7 @@ export default function PollRoomPage() {
 
     const unsubscribePoll = subscribeToPoll(pollId, (pollData) => {
       if (!pollData) {
-        toast.error("Poll bulunamadı!");
+        toast.error(copy.pollNotFound);
         router.push("/game");
         return;
       }
@@ -95,10 +133,10 @@ export default function PollRoomPage() {
 
     try {
       await submitVote(pollId, playerId, poll.currentMatchIndex, choice);
-      toast.success("Oyunuz kaydedildi!");
+      toast.success(copy.voteSaved);
     } catch (error) {
       logger.error("Error submitting vote:", error);
-      toast.error("Oy gönderilirken hata oluştu!");
+      toast.error(copy.voteError);
       setHasVoted(false);
       setSelectedChoice(null);
     }
@@ -107,7 +145,7 @@ export default function PollRoomPage() {
   if (loading || !poll) {
     return (
       <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
-        <p className="text-lg">Yükleniyor...</p>
+        <p className="text-lg">{copy.loading}</p>
       </div>
     );
   }
@@ -115,7 +153,7 @@ export default function PollRoomPage() {
   if (!user) {
     return (
       <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
-        <p className="text-lg font-semibold">Giriş yapmalısınız!</p>
+        <p className="text-lg font-semibold">{copy.loginRequired}</p>
       </div>
     );
   }
@@ -170,7 +208,7 @@ export default function PollRoomPage() {
           </div>
           {hasVoted && (
             <div className="mt-3 font-outlier text-2xl font-bold tabular-nums sm:text-3xl">
-              {currentMatch.votes[choice]} oy
+              {currentMatch.votes[choice]} {copy.votesSuffix}
             </div>
           )}
         </div>
@@ -192,7 +230,7 @@ export default function PollRoomPage() {
           <div className="flex items-center gap-2 text-sm text-stage-muted sm:text-base">
             <Users className="h-4 w-4" aria-hidden="true" />
             <span>
-              <span className="font-outlier tabular-nums">{connectedPlayerCount}</span> oyuncu
+              <span className="font-outlier tabular-nums">{connectedPlayerCount}</span> {copy.playersSuffix}
             </span>
           </div>
         </div>
@@ -204,10 +242,10 @@ export default function PollRoomPage() {
           {poll.status === "waiting" && (
             <div className="max-w-2xl border-t-2 border-stage-ink pt-6">
               <h2 className="mb-4 font-display text-3xl font-bold sm:text-5xl">
-                Oylama Başlamayı Bekliyor...
+                {copy.waitingTitle}
               </h2>
               <p className="text-lg text-stage-muted sm:text-xl">
-                Host oylamayı başlattığında eşleşmeler görünecek
+                {copy.waitingSubtitle}
               </p>
             </div>
           )}
@@ -254,10 +292,10 @@ export default function PollRoomPage() {
                   <Check className="mt-1 h-8 w-8 shrink-0" aria-hidden="true" />
                   <div>
                     <h3 className="font-display text-xl font-bold sm:text-2xl">
-                      Oyunuz Kaydedildi!
+                      {copy.voteSavedTitle}
                     </h3>
                     <p className="text-sm text-stage-muted sm:text-base">
-                      Diğer oyuncuları bekleyin
+                      {copy.voteSavedSubtitle}
                     </p>
                   </div>
                 </div>
@@ -279,21 +317,21 @@ export default function PollRoomPage() {
                   <Trophy className="h-8 w-8" aria-hidden="true" />
                 </div>
                 <h2 className="mb-4 break-words font-display text-3xl font-bold md:text-5xl">
-                  Kazanan: {currentMatch.winner?.name}
+                  {copy.winner}: {currentMatch.winner?.name}
                 </h2>
                 <div className="flex flex-col gap-2 text-lg sm:flex-row sm:items-center sm:gap-8 sm:text-2xl">
                   <div>
-                    {currentMatch.item1.name}: <span className="font-outlier font-bold tabular-nums">{currentMatch.votes.item1}</span> oy
+                    {currentMatch.item1.name}: <span className="font-outlier font-bold tabular-nums">{currentMatch.votes.item1}</span> {copy.votesSuffix}
                   </div>
                   <div className="text-base">vs</div>
                   <div>
-                    {currentMatch.item2.name}: <span className="font-outlier font-bold tabular-nums">{currentMatch.votes.item2}</span> oy
+                    {currentMatch.item2.name}: <span className="font-outlier font-bold tabular-nums">{currentMatch.votes.item2}</span> {copy.votesSuffix}
                   </div>
                 </div>
               </div>
 
               <div className="text-sm text-stage-muted sm:text-base">
-                Sonraki eşleşmeyi bekleyin...
+                {copy.waitNextMatch}
               </div>
             </div>
           )}
@@ -305,7 +343,7 @@ export default function PollRoomPage() {
                 <div className="mb-4 flex items-center gap-3">
                   <Trophy className="h-10 w-10 sm:h-14 sm:w-14" aria-hidden="true" />
                   <h2 className="font-display text-4xl font-bold sm:text-5xl">
-                    Kazanan!
+                    {copy.winnerExclaim}
                   </h2>
                 </div>
                 <div className="max-w-md">

@@ -16,8 +16,74 @@ import { Button } from "@/components/ui/button";
 import { Input, fieldClasses } from "@/components/ui/input";
 import { PageHeader, EmptyState, Skeleton } from "@/components/ui/page";
 import { Stat } from "@/components/ui/stat";
+import { useLocale } from "next-intl";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    backToAdmin: "Admin Panel",
+    pageTitle: "Duyurular Yönetimi",
+    pageSubtitle: "Duyuruları oluşturun, düzenleyin ve yönetin",
+    totalAnnouncements: "Toplam Duyuru",
+    published: "Yayında",
+    draft: "Taslak",
+    searchPlaceholder: "Duyuru ara...",
+    filterAll: (n) => `Tümü (${n})`,
+    filterPublished: (n) => `Yayında (${n})`,
+    filterDraft: (n) => `Taslak (${n})`,
+    newAnnouncement: "Yeni Duyuru",
+    publishDrafts: "Taslakları Yayınla",
+    unpublishPublished: "Yayındakileri Taslağa Al",
+    refresh: "Yenile",
+    notFound: "Duyuru bulunamadı",
+    notFoundHelp:
+      "Arama kriterlerinizi değiştirmeyi deneyin veya yeni bir duyuru oluşturun.",
+    loadError: "Duyurular yüklenirken hata oluştu!",
+    confirmDelete: "Bu duyuruyu silmek istediğinizden emin misiniz?",
+    deleteOk: "Duyuru başarıyla silindi!",
+    deleteError: "Duyuru silinirken hata oluştu!",
+    noTargets: "İşlem yapılacak duyuru yok!",
+    confirmBulkToggle: (count, publish) =>
+      `${count} duyuruyu ${
+        publish ? "yayınlamak" : "taslağa almak"
+      } istediğinizden emin misiniz?`,
+    bulkToggleOk: (count) => `${count} duyuru güncellendi!`,
+  },
+  en: {
+    backToAdmin: "Admin Panel",
+    pageTitle: "Announcements Management",
+    pageSubtitle: "Create, edit and manage announcements",
+    totalAnnouncements: "Total Announcements",
+    published: "Published",
+    draft: "Draft",
+    searchPlaceholder: "Search announcements...",
+    filterAll: (n) => `All (${n})`,
+    filterPublished: (n) => `Published (${n})`,
+    filterDraft: (n) => `Draft (${n})`,
+    newAnnouncement: "New Announcement",
+    publishDrafts: "Publish Drafts",
+    unpublishPublished: "Move Published to Draft",
+    refresh: "Refresh",
+    notFound: "No announcements found",
+    notFoundHelp:
+      "Try changing your search criteria or create a new announcement.",
+    loadError: "An error occurred while loading announcements!",
+    confirmDelete: "Are you sure you want to delete this announcement?",
+    deleteOk: "Announcement deleted successfully!",
+    deleteError: "An error occurred while deleting the announcement!",
+    noTargets: "No announcements to process!",
+    confirmBulkToggle: (count, publish) =>
+      `Are you sure you want to ${
+        publish ? "publish" : "move to draft"
+      } ${count} announcement(s)?`,
+    bulkToggleOk: (count) => `${count} announcement(s) updated!`,
+  },
+};
 
 export default function AdminDuyurularPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
@@ -79,7 +145,7 @@ export default function AdminDuyurularPage() {
     if (result.success) {
       setAnnouncements(result.announcements);
     } else {
-      toast.error("Duyurular yüklenirken hata oluştu!");
+      toast.error(copy.loadError);
     }
 
     setIsLoading(false);
@@ -129,21 +195,18 @@ export default function AdminDuyurularPage() {
   };
 
   const handleDelete = async (announcementId) => {
-    if (
-      !confirm("Bu duyuruyu silmek istediğinizden emin misiniz?")
-    )
-      return;
+    if (!confirm(copy.confirmDelete)) return;
 
     const result = await announcementsUtils.deleteAnnouncement(announcementId);
 
     if (result.success) {
-      toast.success(result.message);
+      toast.success(copy.deleteOk);
       setAnnouncements((prev) =>
         prev.filter((a) => a.id !== announcementId)
       );
       loadStats(); // Refresh stats
     } else {
-      toast.error(result.message);
+      toast.error(copy.deleteError);
     }
   };
 
@@ -165,16 +228,12 @@ export default function AdminDuyurularPage() {
     );
 
     if (targetAnnouncements.length === 0) {
-      toast.info("İşlem yapılacak duyuru yok!");
+      toast.info(copy.noTargets);
       return;
     }
 
     if (
-      !confirm(
-        `${targetAnnouncements.length} duyuruyu ${
-          publish ? "yayınlamak" : "taslağa almak"
-        } istediğinizden emin misiniz?`
-      )
+      !confirm(copy.confirmBulkToggle(targetAnnouncements.length, publish))
     )
       return;
 
@@ -188,19 +247,19 @@ export default function AdminDuyurularPage() {
       if (result.success) successCount++;
     }
 
-    toast.success(`${successCount} duyuru güncellendi!`);
+    toast.success(copy.bulkToggleOk(successCount));
     loadAllAnnouncements();
     loadStats();
   };
 
   if (loading) {
-    return <p className="py-12 text-ink-2">Loading...</p>;
+    return <p className="py-12 text-ink-2">{a.loading}</p>;
   }
 
   if (!isAdmin) {
     return (
       <p role="alert" className="py-12 font-medium text-error">
-        Access Denied
+        {a.accessDenied}
       </p>
     );
   }
@@ -208,8 +267,8 @@ export default function AdminDuyurularPage() {
   return (
     <div>
       <PageHeader
-        title="Duyurular Yönetimi"
-        description="Duyuruları oluşturun, düzenleyin ve yönetin"
+        title={copy.pageTitle}
+        description={copy.pageSubtitle}
         actions={
           <Button
             onClick={() => {
@@ -218,7 +277,7 @@ export default function AdminDuyurularPage() {
             }}
           >
             <Plus aria-hidden="true" />
-            <span>Yeni Duyuru</span>
+            <span>{copy.newAnnouncement}</span>
           </Button>
         }
       />
@@ -226,9 +285,9 @@ export default function AdminDuyurularPage() {
       {/* Stats */}
       {stats && (
         <dl className="mb-10 grid grid-cols-3 gap-x-6 gap-y-4 border-b border-rule pb-8 md:max-w-xl">
-          <Stat label="Toplam Duyuru" value={stats.totalAnnouncements} />
-          <Stat label="Yayında" value={stats.publishedAnnouncements} />
-          <Stat label="Taslak" value={stats.draftAnnouncements} />
+          <Stat label={copy.totalAnnouncements} value={stats.totalAnnouncements} />
+          <Stat label={copy.published} value={stats.publishedAnnouncements} />
+          <Stat label={copy.draft} value={stats.draftAnnouncements} />
         </dl>
       )}
 
@@ -241,8 +300,8 @@ export default function AdminDuyurularPage() {
           />
           <Input
             type="text"
-            placeholder="Duyuru ara..."
-            aria-label="Duyuru ara..."
+            placeholder={copy.searchPlaceholder}
+            aria-label={copy.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -255,13 +314,13 @@ export default function AdminDuyurularPage() {
           className={cn(fieldClasses, "h-control sm:w-auto")}
         >
           <option value="all">
-            Tümü ({announcements.length})
+            {copy.filterAll(announcements.length)}
           </option>
           <option value="published">
-            Yayında ({announcements.filter((a) => a.isPublished).length})
+            {copy.filterPublished(announcements.filter((a) => a.isPublished).length)}
           </option>
           <option value="draft">
-            Taslak ({announcements.filter((a) => !a.isPublished).length})
+            {copy.filterDraft(announcements.filter((a) => !a.isPublished).length)}
           </option>
         </select>
       </div>
@@ -270,16 +329,16 @@ export default function AdminDuyurularPage() {
       <div className="mb-10 flex flex-wrap items-center gap-3">
         <Button variant="outline" size="sm" onClick={() => bulkTogglePublish(true)}>
           <Eye aria-hidden="true" />
-          <span>Taslakları Yayınla</span>
+          <span>{copy.publishDrafts}</span>
         </Button>
 
         <Button variant="outline" size="sm" onClick={() => bulkTogglePublish(false)}>
           <EyeOff aria-hidden="true" />
-          <span>Yayındakileri Taslağa Al</span>
+          <span>{copy.unpublishPublished}</span>
         </Button>
 
         <Button variant="ghost" size="sm" onClick={loadAllAnnouncements}>
-          Yenile
+          {copy.refresh}
         </Button>
       </div>
 
@@ -304,8 +363,8 @@ export default function AdminDuyurularPage() {
         </div>
       ) : (
         <EmptyState
-          title="Duyuru bulunamadı"
-          description="Arama kriterlerinizi değiştirmeyi deneyin veya yeni bir duyuru oluşturun."
+          title={copy.notFound}
+          description={copy.notFoundHelp}
         />
       )}
 

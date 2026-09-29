@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { useRouter } from "@/i18n/navigation";
@@ -15,8 +16,99 @@ import { Field } from "@/components/ui/field";
 import { fieldClasses } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader, Section, EmptyState } from "@/components/ui/page";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    datasetsLoadError: "Veri setleri yüklenirken hata oluştu!",
+    historyLoadError: "Geçmiş yüklenirken hata oluştu!",
+    onlyJson: "Sadece JSON dosyaları yüklenebilir!",
+    invalidFormat: "Geçersiz veri formatı!",
+    minItemsRequired: "En az 8 öğe gerekli!",
+    datasetLoaded: "Veri seti yüklendi!",
+    jsonReadError: "JSON dosyası okunamadı!",
+    uploadDatasetFirst: "Önce bir veri seti yükleyin!",
+    minItemsForBracket: (n) => `Veri setinde en az ${n} öğe olmalı!`,
+    pollCreated: "Poll oluşturuldu!",
+    pollCreateError: "Poll oluşturulurken hata oluştu!",
+    adminPanel: "Admin Panel",
+    pageTitle: "Poll Yönetim Paneli",
+    pageSubtitle: "Poll oluşturun ve geçmişi görüntüleyin",
+    createPollTab: "Poll Oluştur",
+    historyTab: "Geçmiş",
+    selectDatasetHeading: "1. Veri Seti Seç",
+    datasetsButton: "Veri Setleri",
+    selectSavedDataset: "Kayıtlı Veri Seti Seç",
+    selectDatasetPlaceholder: "-- Veri Seti Seçin --",
+    itemsSuffix: "öğe",
+    itemsCount: (n) => `${n} öğe`,
+    or: "VEYA",
+    uploadJsonFile: "JSON Dosyası Yükle",
+    uploadJsonHint: "En az 8 öğe içeren JSON dosyası yükleyin",
+    configureHeading: "2. Ayarları Yapılandır",
+    bracketSize: "Turnuva Boyutu",
+    bracketOption: (n) => `${n} öğe`,
+    totalRoundsHint: (n) => `Toplam ${n} raund olacak`,
+    creating: "Oluşturuluyor...",
+    createPollButton: "Poll Oluştur",
+    pollCreatedHeading: "Poll Oluşturuldu!",
+    playersCanJoin: "Oyuncular bu kodu kullanarak poll'a katılabilir",
+    managePoll: "Poll'u Yönet",
+    historyLoading: "Geçmiş yükleniyor...",
+    noCompletedPolls: "Henüz tamamlanmış poll yok",
+    code: "Kod",
+    winner: "Kazanan",
+    playerCount: "Oyuncu Sayısı",
+    totalMatches: "Toplam Eşleşme",
+  },
+  en: {
+    datasetsLoadError: "An error occurred while loading datasets!",
+    historyLoadError: "An error occurred while loading history!",
+    onlyJson: "Only JSON files can be uploaded!",
+    invalidFormat: "Invalid data format!",
+    minItemsRequired: "At least 8 items are required!",
+    datasetLoaded: "Dataset loaded!",
+    jsonReadError: "Could not read JSON file!",
+    uploadDatasetFirst: "Upload a dataset first!",
+    minItemsForBracket: (n) => `The dataset must have at least ${n} items!`,
+    pollCreated: "Poll created!",
+    pollCreateError: "An error occurred while creating the poll!",
+    adminPanel: "Admin Panel",
+    pageTitle: "Poll Management Panel",
+    pageSubtitle: "Create polls and view history",
+    createPollTab: "Create Poll",
+    historyTab: "History",
+    selectDatasetHeading: "1. Select Dataset",
+    datasetsButton: "Datasets",
+    selectSavedDataset: "Select Saved Dataset",
+    selectDatasetPlaceholder: "-- Select Dataset --",
+    itemsSuffix: "items",
+    itemsCount: (n) => `${n} items`,
+    or: "OR",
+    uploadJsonFile: "Upload JSON File",
+    uploadJsonHint: "Upload a JSON file with at least 8 items",
+    configureHeading: "2. Configure Settings",
+    bracketSize: "Bracket Size",
+    bracketOption: (n) => `${n} items`,
+    totalRoundsHint: (n) => `There will be ${n} rounds in total`,
+    creating: "Creating...",
+    createPollButton: "Create Poll",
+    pollCreatedHeading: "Poll Created!",
+    playersCanJoin: "Players can join the poll using this code",
+    managePoll: "Manage Poll",
+    historyLoading: "Loading history...",
+    noCompletedPolls: "No completed polls yet",
+    code: "Code",
+    winner: "Winner",
+    playerCount: "Player Count",
+    totalMatches: "Total Matches",
+  },
+};
 
 export default function PollAdminPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
 
@@ -56,7 +148,7 @@ export default function PollAdminPage() {
       setSavedDatasets(datasets);
     } catch (error) {
       logger.error("Error loading datasets:", error);
-      toast.error("Veri setleri yüklenirken hata oluştu!");
+      toast.error(copy.datasetsLoadError);
     }
   };
 
@@ -80,7 +172,7 @@ export default function PollAdminPage() {
       setPollHistory(results);
     } catch (error) {
       logger.error("Error loading poll history:", error);
-      toast.error("Geçmiş yüklenirken hata oluştu!");
+      toast.error(copy.historyLoadError);
     }
     setLoadingHistory(false);
   };
@@ -90,7 +182,7 @@ export default function PollAdminPage() {
     if (!file) return;
 
     if (!file.name.endsWith(".json")) {
-      toast.error("Sadece JSON dosyaları yüklenebilir!");
+      toast.error(copy.onlyJson);
       return;
     }
 
@@ -100,20 +192,20 @@ export default function PollAdminPage() {
         const data = JSON.parse(event.target.result);
 
         if (!data.name || !data.items || !Array.isArray(data.items)) {
-          toast.error("Geçersiz veri formatı!");
+          toast.error(copy.invalidFormat);
           return;
         }
 
         if (data.items.length < 8) {
-          toast.error("En az 8 öğe gerekli!");
+          toast.error(copy.minItemsRequired);
           return;
         }
 
         setDatasetData(data);
         setDatasetFile(file);
-        toast.success("Veri seti yüklendi!");
+        toast.success(copy.datasetLoaded);
       } catch (error) {
-        toast.error("JSON dosyası okunamadı!");
+        toast.error(copy.jsonReadError);
       }
     };
 
@@ -122,12 +214,12 @@ export default function PollAdminPage() {
 
   const handleCreatePoll = async () => {
     if (!datasetData) {
-      toast.error("Önce bir veri seti yükleyin!");
+      toast.error(copy.uploadDatasetFirst);
       return;
     }
 
     if (datasetData.items.length < bracketSize) {
-      toast.error(`Veri setinde en az ${bracketSize} öğe olmalı!`);
+      toast.error(copy.minItemsForBracket(bracketSize));
       return;
     }
 
@@ -149,10 +241,10 @@ export default function PollAdminPage() {
       const code = pollId.split("_").pop();
       setPollCode(code);
 
-      toast.success("Poll oluşturuldu!");
+      toast.success(copy.pollCreated);
     } catch (error) {
       logger.error("Error creating poll:", error);
-      toast.error("Poll oluşturulurken hata oluştu!");
+      toast.error(copy.pollCreateError);
     }
 
     setCreating(false);
@@ -164,7 +256,7 @@ export default function PollAdminPage() {
   };
 
   if (loading) {
-    return <p className="py-12 text-ink-2">Yükleniyor...</p>;
+    return <p className="py-12 text-ink-2">{a.loading}</p>;
   }
 
   if (!user) {
@@ -174,12 +266,12 @@ export default function PollAdminPage() {
   return (
     <div>
       <PageHeader
-        title="Poll Yönetim Paneli"
-        description="Poll oluşturun ve geçmişi görüntüleyin"
+        title={copy.pageTitle}
+        description={copy.pageSubtitle}
         actions={
           <Button variant="outline" onClick={() => router.push("/admin")}>
             <ArrowLeft aria-hidden="true" />
-            Admin Panel
+            {copy.adminPanel}
           </Button>
         }
       />
@@ -191,14 +283,14 @@ export default function PollAdminPage() {
           aria-pressed={activeTab === "create"}
           onClick={() => setActiveTab("create")}
         >
-          Poll Oluştur
+          {copy.createPollTab}
         </Button>
         <Button
           variant={activeTab === "history" ? "default" : "outline"}
           aria-pressed={activeTab === "history"}
           onClick={() => setActiveTab("history")}
         >
-          Geçmiş
+          {copy.historyTab}
         </Button>
       </div>
 
@@ -207,27 +299,27 @@ export default function PollAdminPage() {
         <div className="grid gap-x-10 gap-y-10 lg:grid-cols-2">
           {/* Upload Dataset */}
           <Section
-            title="1. Veri Seti Seç"
+            title={copy.selectDatasetHeading}
             className="mt-0 md:mt-0"
             action={
               <Button variant="outline" size="sm" onClick={() => router.push("/admin/poll/datasets")}>
                 <Folder aria-hidden="true" />
-                Veri Setleri
+                {copy.datasetsButton}
               </Button>
             }
           >
             <div className="space-y-4">
               {/* Saved Datasets Selection */}
-              <Field id="poll-saved-dataset" label="Kayıtlı Veri Seti Seç">
+              <Field id="poll-saved-dataset" label={copy.selectSavedDataset}>
                 <select
                   value={selectedDatasetId}
                   onChange={(e) => handleDatasetSelect(e.target.value)}
                   className={cn(fieldClasses, "h-control")}
                 >
-                  <option value="">-- Veri Seti Seçin --</option>
+                  <option value="">{copy.selectDatasetPlaceholder}</option>
                   {savedDatasets.map((dataset) => (
                     <option key={dataset.id} value={dataset.id}>
-                      {dataset.name} ({dataset.items?.length || 0} öğe)
+                      {dataset.name} ({dataset.items?.length || 0} {copy.itemsSuffix})
                     </option>
                   ))}
                 </select>
@@ -235,13 +327,13 @@ export default function PollAdminPage() {
 
               <div className="flex items-center gap-4">
                 <div className="flex-1 border-t border-rule"></div>
-                <span className="text-sm text-muted-foreground">VEYA</span>
+                <span className="text-sm text-muted-foreground">{copy.or}</span>
                 <div className="flex-1 border-t border-rule"></div>
               </div>
 
               {/* JSON File Upload */}
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="poll-json-file">JSON Dosyası Yükle</Label>
+                <Label htmlFor="poll-json-file">{copy.uploadJsonFile}</Label>
                 <input
                   id="poll-json-file"
                   type="file"
@@ -250,7 +342,7 @@ export default function PollAdminPage() {
                   className="block w-full text-sm text-muted-foreground file:mr-4 file:h-9 file:cursor-pointer file:rounded file:border-0 file:bg-primary file:px-4 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-brand-hover"
                 />
                 <p className="text-sm text-muted-foreground">
-                  En az 8 öğe içeren JSON dosyası yükleyin
+                  {copy.uploadJsonHint}
                 </p>
               </div>
 
@@ -259,7 +351,7 @@ export default function PollAdminPage() {
                   <div className="min-w-0">
                     <div className="break-words font-semibold">{datasetData.name}</div>
                     <div className="text-sm text-muted-foreground">
-                      <span className="font-outlier tabular-nums">{datasetData.items.length}</span> öğe
+                      <span className="font-outlier tabular-nums">{datasetData.items.length}</span> {copy.itemsSuffix}
                     </div>
                   </div>
                   <Check className="h-5 w-5 shrink-0 text-success" aria-hidden="true" />
@@ -269,23 +361,23 @@ export default function PollAdminPage() {
           </Section>
 
           {/* Configure Poll */}
-          <Section title="2. Ayarları Yapılandır" className="mt-0 md:mt-0">
+          <Section title={copy.configureHeading} className="mt-0 md:mt-0">
             <div className="space-y-4">
               <Field
                 id="poll-bracket-size"
-                label="Turnuva Boyutu"
-                help={`Toplam ${Math.log2(bracketSize)} raund olacak`}
+                label={copy.bracketSize}
+                help={copy.totalRoundsHint(Math.log2(bracketSize))}
               >
                 <select
                   value={bracketSize}
                   onChange={(e) => setBracketSize(Number(e.target.value))}
                   className={cn(fieldClasses, "h-control")}
                 >
-                  <option value={8}>8 öğe</option>
-                  <option value={16}>16 öğe</option>
-                  <option value={32}>32 öğe</option>
-                  <option value={64}>64 öğe</option>
-                  <option value={128}>128 öğe</option>
+                  <option value={8}>{copy.bracketOption(8)}</option>
+                  <option value={16}>{copy.bracketOption(16)}</option>
+                  <option value={32}>{copy.bracketOption(32)}</option>
+                  <option value={64}>{copy.bracketOption(64)}</option>
+                  <option value={128}>{copy.bracketOption(128)}</option>
                 </select>
               </Field>
 
@@ -295,7 +387,7 @@ export default function PollAdminPage() {
                 onClick={handleCreatePoll}
                 disabled={!datasetData || creating}
               >
-                {creating ? "Oluşturuluyor..." : "Poll Oluştur"}
+                {creating ? copy.creating : copy.createPollButton}
               </Button>
             </div>
           </Section>
@@ -303,15 +395,15 @@ export default function PollAdminPage() {
           {/* Poll Created Success */}
           {pollCode && (
             <div className="border-t-2 border-success pt-6 lg:col-span-2">
-              <h2 className="font-display text-xl font-bold">Poll Oluşturuldu!</h2>
+              <h2 className="font-display text-xl font-bold">{copy.pollCreatedHeading}</h2>
               <div className="mt-4 font-outlier text-5xl font-semibold tracking-widest sm:text-6xl">
                 {pollCode}
               </div>
               <p className="mt-4 text-sm text-muted-foreground">
-                Oyuncular bu kodu kullanarak poll'a katılabilir
+                {copy.playersCanJoin}
               </p>
               <Button size="lg" className="mt-6" onClick={handleManagePoll}>
-                Poll'u Yönet
+                {copy.managePoll}
               </Button>
             </div>
           )}
@@ -322,9 +414,9 @@ export default function PollAdminPage() {
       {activeTab === "history" && (
         <div>
           {loadingHistory ? (
-            <p className="py-12 text-ink-2">Geçmiş yükleniyor...</p>
+            <p className="py-12 text-ink-2">{copy.historyLoading}</p>
           ) : pollHistory.length === 0 ? (
-            <EmptyState title="Henüz tamamlanmış poll yok" />
+            <EmptyState title={copy.noCompletedPolls} />
           ) : (
             <ul className="max-w-3xl border-t-2 border-ink">
               {pollHistory.map((poll) => (
@@ -339,7 +431,7 @@ export default function PollAdminPage() {
                         {poll.datasetName}
                       </h2>
                       <p className="text-sm text-muted-foreground">
-                        Kod: <span className="font-outlier">{poll.pollCode}</span>
+                        {copy.code}: <span className="font-outlier">{poll.pollCode}</span>
                       </p>
                     </div>
                     <div className="shrink-0 font-outlier text-sm text-muted-foreground">
@@ -349,17 +441,17 @@ export default function PollAdminPage() {
 
                   <dl className="space-y-2 text-sm">
                     <div className="flex justify-between gap-4">
-                      <dt className="text-muted-foreground">Kazanan:</dt>
+                      <dt className="text-muted-foreground">{copy.winner}:</dt>
                       <dd className="min-w-0 break-words text-right font-semibold">
                         {poll.winner?.name || "N/A"}
                       </dd>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <dt className="text-muted-foreground">Oyuncu Sayısı:</dt>
+                      <dt className="text-muted-foreground">{copy.playerCount}:</dt>
                       <dd className="tabular-nums">{poll.totalPlayers}</dd>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <dt className="text-muted-foreground">Toplam Eşleşme:</dt>
+                      <dt className="text-muted-foreground">{copy.totalMatches}:</dt>
                       <dd className="tabular-nums">{poll.stats.totalMatches}</dd>
                     </div>
                   </dl>

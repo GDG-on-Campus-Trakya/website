@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { useParams } from "next/navigation";
@@ -17,7 +18,82 @@ import {
   updatePlayerConnection
 } from "@/utils/quizUtils";
 
+const COPY = {
+  tr: {
+    gameNotFound: "Oyun bulunamadı!",
+    correctToast: (pts) => `Doğru! +${pts} puan`,
+    wrongToast: "Yanlış cevap!",
+    submitError: "Cevap gönderilirken hata oluştu!",
+    loading: "Yükleniyor...",
+    loginRequired: "Giriş yapmalısınız!",
+    resultCorrect: "Doğru Cevap!",
+    resultWrong: "Yanlış Cevap",
+    resultReceived: "Cevabınız alındı",
+    pointsShort: "puan",
+    pointsShortMobile: "p",
+    waitingTitle: "Oyun Başlamayı Bekliyor...",
+    waitingSubtitle: "Host oyunu başlattığında sorular görünecek",
+    syncing: "Sunucu ile senkronize ediliyor...",
+    timeLeft: "Kalan Süre",
+    questionAlt: "Soru",
+    answerReceivedTitle: "Cevabınız Alındı!",
+    answerReceivedSubtitle: "Sonuçları görmek için diğer oyuncuları bekleyin",
+    youWon: "Kazandınız!",
+    winner: "Kazanan",
+    fastestLabel: "En hızlı doğru cevap:",
+    secondsUnit: "saniye",
+    correctAnswerIs: (ans) => `Doğru cevap: ${ans}`,
+    correctAnswerHidden: "Doğru cevap oyun sırasında gizli tutuluyor.",
+    top5: "İlk 5",
+    waitNextQuestion: "Sonraki soruyu bekleyin...",
+    gameOver: "Oyun Bitti!",
+    pointsLabel: "Puan",
+    yourRank: (rank) => `Sıralamanız: #${rank}`,
+    kahootThanks: "Teşekkürler! Her soru için kazananlar gösterildi.",
+    finalRanking: "Final Sıralaması",
+    correctSuffix: "doğru",
+    joinNewGame: "Yeni Oyuna Katıl",
+  },
+  en: {
+    gameNotFound: "Game not found!",
+    correctToast: (pts) => `Correct! +${pts} points`,
+    wrongToast: "Wrong answer!",
+    submitError: "An error occurred while submitting your answer!",
+    loading: "Loading...",
+    loginRequired: "You need to sign in!",
+    resultCorrect: "Correct Answer!",
+    resultWrong: "Wrong Answer",
+    resultReceived: "Answer received",
+    pointsShort: "points",
+    pointsShortMobile: "p",
+    waitingTitle: "Waiting for the game to start...",
+    waitingSubtitle: "Questions will appear once the host starts the game",
+    syncing: "Syncing with the server...",
+    timeLeft: "Time Left",
+    questionAlt: "Question",
+    answerReceivedTitle: "Answer Received!",
+    answerReceivedSubtitle: "Wait for the other players to see the results",
+    youWon: "You Won!",
+    winner: "Winner",
+    fastestLabel: "Fastest correct answer:",
+    secondsUnit: "seconds",
+    correctAnswerIs: (ans) => `Correct answer: ${ans}`,
+    correctAnswerHidden: "The correct answer is kept hidden during the game.",
+    top5: "Top 5",
+    waitNextQuestion: "Wait for the next question...",
+    gameOver: "Game Over!",
+    pointsLabel: "Points",
+    yourRank: (rank) => `Your rank: #${rank}`,
+    kahootThanks: "Thanks! Winners were shown for each question.",
+    finalRanking: "Final Ranking",
+    correctSuffix: "correct",
+    joinNewGame: "Join a New Game",
+  },
+};
+
 export default function PlayGamePage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
   const params = useParams();
@@ -46,7 +122,7 @@ export default function PlayGamePage() {
 
     const unsubscribeGame = subscribeToGame(gameId, (gameData) => {
       if (!gameData) {
-        toast.error("Oyun bulunamadı!");
+        toast.error(copy.gameNotFound);
         router.push("/game");
         return;
       }
@@ -253,13 +329,13 @@ export default function PlayGamePage() {
       });
 
       if (result.isCorrect) {
-        toast.success(`Doğru! +${result.pointsEarned} puan`);
+        toast.success(copy.correctToast(result.pointsEarned));
       } else {
-        toast.error("Yanlış cevap!");
+        toast.error(copy.wrongToast);
       }
     } catch (error) {
       logger.error("Error submitting answer:", error);
-      toast.error("Cevap gönderilirken hata oluştu!");
+      toast.error(copy.submitError);
       setHasAnswered(false);
       setSelectedAnswer(null);
       setAnswerResult(null);
@@ -271,7 +347,7 @@ export default function PlayGamePage() {
   if (loading || !game) {
     return (
       <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
-        <p className="text-lg">Yükleniyor...</p>
+        <p className="text-lg">{copy.loading}</p>
       </div>
     );
   }
@@ -279,7 +355,7 @@ export default function PlayGamePage() {
   if (!user) {
     return (
       <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
-        <p className="text-lg font-semibold">Giriş yapmalısınız!</p>
+        <p className="text-lg font-semibold">{copy.loginRequired}</p>
       </div>
     );
   }
@@ -317,10 +393,10 @@ export default function PlayGamePage() {
       ? "text-error"
       : "text-stage-muted";
   const resultTitle = isAnswerCorrect === true
-    ? "Doğru Cevap!"
+    ? copy.resultCorrect
     : isAnswerCorrect === false
-      ? "Yanlış Cevap"
-      : "Cevabınız alındı";
+      ? copy.resultWrong
+      : copy.resultReceived;
 
   return (
     <div className="min-h-[calc(100dvh-4rem)] bg-stage text-stage-ink">
@@ -342,7 +418,7 @@ export default function PlayGamePage() {
                 </div>
               )}
               <div className="text-sm font-bold sm:text-xl">
-                <span className="font-outlier tabular-nums">{playerScore}</span> <span className="hidden sm:inline">puan</span><span className="sm:hidden">p</span>
+                <span className="font-outlier tabular-nums">{playerScore}</span> <span className="hidden sm:inline">{copy.pointsShort}</span><span className="sm:hidden">{copy.pointsShortMobile}</span>
               </div>
             </div>
           )}
@@ -355,10 +431,10 @@ export default function PlayGamePage() {
           {game.status === "waiting" && (
             <div className="border-y border-stage-rule py-10 sm:py-16">
               <h2 className="font-display text-3xl font-bold sm:text-5xl">
-                Oyun Başlamayı Bekliyor...
+                {copy.waitingTitle}
               </h2>
               <p className="mt-3 text-base text-stage-muted sm:mt-4 sm:text-xl">
-                Host oyunu başlattığında sorular görünecek
+                {copy.waitingSubtitle}
               </p>
             </div>
           )}
@@ -371,7 +447,7 @@ export default function PlayGamePage() {
                 <div className="rounded bg-warning p-3 text-center text-ink">
                   <div className="flex items-center justify-center gap-2">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-ink border-t-transparent"></div>
-                    <span className="text-sm font-medium">Sunucu ile senkronize ediliyor...</span>
+                    <span className="text-sm font-medium">{copy.syncing}</span>
                   </div>
                 </div>
               )}
@@ -379,7 +455,7 @@ export default function PlayGamePage() {
               {/* Timer & Question */}
               <div className="border-b border-stage-rule pb-4 sm:pb-6">
                 <div className="mb-4 flex items-baseline justify-between sm:mb-6">
-                  <div className="text-sm text-stage-muted sm:text-base">Kalan Süre</div>
+                  <div className="text-sm text-stage-muted sm:text-base">{copy.timeLeft}</div>
                   <div className={`font-outlier text-5xl font-bold tabular-nums ${
                     timeLeft <= 5 ? "text-error" : "text-stage-ink"
                   }`}>
@@ -392,7 +468,7 @@ export default function PlayGamePage() {
                   <div className="mb-4 sm:mb-6">
                     <Image
                       src={currentQuestion.imageUrl}
-                      alt="Question"
+                      alt={copy.questionAlt}
                       width={800}
                       height={600}
                       priority
@@ -411,10 +487,10 @@ export default function PlayGamePage() {
                 <div className={`${panelClass} p-6 sm:p-8`}>
                   <Check className="mb-3 h-10 w-10 text-success sm:mb-4 sm:h-12 sm:w-12" aria-hidden="true" />
                   <h3 className="mb-2 font-display text-xl font-bold sm:text-2xl">
-                    Cevabınız Alındı!
+                    {copy.answerReceivedTitle}
                   </h3>
                   <p className="text-sm text-stage-muted sm:text-base">
-                    Sonuçları görmek için diğer oyuncuları bekleyin
+                    {copy.answerReceivedSubtitle}
                   </p>
                 </div>
               ) : (
@@ -455,13 +531,13 @@ export default function PlayGamePage() {
                 <div className="rounded-lg bg-warning p-6 text-ink sm:p-10">
                   <Trophy className="mb-3 h-10 w-10 sm:mb-4 sm:h-14 sm:w-14" aria-hidden="true" />
                   <h2 className="mb-2 font-display text-3xl font-bold sm:text-5xl">
-                    {questionWinners[game.currentQuestion].userId === user.uid ? "Kazandınız!" : "Kazanan"}
+                    {questionWinners[game.currentQuestion].userId === user.uid ? copy.youWon : copy.winner}
                   </h2>
                   <div className="mb-2 break-words font-display text-xl font-bold sm:text-3xl">
                     {questionWinners[game.currentQuestion].name}
                   </div>
                   <div className="text-base sm:text-xl">
-                    En hızlı doğru cevap: <span className="font-outlier tabular-nums">{questionWinners[game.currentQuestion].timeSpent.toFixed(2)}</span> saniye
+                    {copy.fastestLabel} <span className="font-outlier tabular-nums">{questionWinners[game.currentQuestion].timeSpent.toFixed(2)}</span> {copy.secondsUnit}
                   </div>
                 </div>
               )}
@@ -474,8 +550,8 @@ export default function PlayGamePage() {
                 </h2>
                 <p className="break-words text-base text-stage-muted sm:text-xl">
                   {correctAnswerText
-                    ? `Doğru cevap: ${correctAnswerText}`
-                    : "Doğru cevap oyun sırasında gizli tutuluyor."}
+                    ? copy.correctAnswerIs(correctAnswerText)
+                    : copy.correctAnswerHidden}
                 </p>
               </div>
 
@@ -483,7 +559,7 @@ export default function PlayGamePage() {
               {game.gameMode !== "kahoot" && leaderboard.length > 0 && (
                 <div className="border-t-2 border-stage-ink pt-3">
                   <h3 className="mb-3 font-display text-xl font-bold sm:mb-4 sm:text-2xl">
-                    İlk 5
+                    {copy.top5}
                   </h3>
                   <ol>
                     {leaderboard.slice(0, 5).map((player, index) => {
@@ -514,7 +590,7 @@ export default function PlayGamePage() {
               )}
 
               <div className="text-sm text-stage-muted sm:text-base">
-                Sonraki soruyu bekleyin...
+                {copy.waitNextQuestion}
               </div>
             </div>
           )}
@@ -524,17 +600,17 @@ export default function PlayGamePage() {
             <div className="space-y-6 sm:space-y-8">
               <div className="border-y border-stage-rule py-8 sm:py-12">
                 <h2 className="mb-3 font-display text-3xl font-bold sm:mb-4 sm:text-5xl">
-                  Oyun Bitti!
+                  {copy.gameOver}
                 </h2>
                 {/* Only show score in classic mode */}
                 {game.gameMode !== "kahoot" && (
                   <>
                     <div className="mb-2 font-display text-2xl font-bold sm:text-3xl">
-                      <span className="font-outlier tabular-nums">{playerScore}</span> Puan
+                      <span className="font-outlier tabular-nums">{playerScore}</span> {copy.pointsLabel}
                     </div>
                     {playerRank && (
                       <div className="text-lg text-stage-muted sm:text-xl">
-                        Sıralamanız: #{playerRank}
+                        {copy.yourRank(playerRank)}
                       </div>
                     )}
                   </>
@@ -542,7 +618,7 @@ export default function PlayGamePage() {
                 {/* Kahoot mode - different message */}
                 {game.gameMode === "kahoot" && (
                   <div className="mt-4 text-base text-stage-muted sm:text-lg">
-                    Teşekkürler! Her soru için kazananlar gösterildi.
+                    {copy.kahootThanks}
                   </div>
                 )}
               </div>
@@ -551,7 +627,7 @@ export default function PlayGamePage() {
               {game.gameMode !== "kahoot" && leaderboard.length > 0 && (
                 <div className="border-t-2 border-stage-ink pt-3">
                   <h3 className="mb-4 font-display text-2xl font-bold sm:mb-6 sm:text-3xl">
-                    Final Sıralaması
+                    {copy.finalRanking}
                   </h3>
                   <ol>
                     {leaderboard.map((player, index) => {
@@ -577,7 +653,7 @@ export default function PlayGamePage() {
                                 {player.name}
                               </div>
                               <div className={`text-xs sm:text-sm ${index === 0 ? "text-ink-2" : "text-stage-muted"}`}>
-                                <span className="font-outlier tabular-nums">{player.correctAnswers}/{game.totalQuestions}</span> doğru
+                                <span className="font-outlier tabular-nums">{player.correctAnswers}/{game.totalQuestions}</span> {copy.correctSuffix}
                               </div>
                             </div>
                           </div>
@@ -596,7 +672,7 @@ export default function PlayGamePage() {
                 size="lg"
                 className="w-full"
               >
-                Yeni Oyuna Katıl
+                {copy.joinNewGame}
               </Button>
             </div>
           )}

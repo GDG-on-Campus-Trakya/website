@@ -1,21 +1,37 @@
 'use client';
 import { useState } from 'react';
+import { useLocale } from 'next-intl';
 import Image from 'next/image';
 import { useRouter } from "@/i18n/navigation";
 import { Calendar, User, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 
+const COPY = {
+  tr: {
+    noDate: copy.noDate,
+    featured: 'Öne Çıkan Duyuru',
+    readMore: 'Devamını Oku',
+  },
+  en: {
+    noDate: 'No date',
+    featured: 'Featured Announcement',
+    readMore: 'Read More',
+  },
+};
+
 export default function FeaturedAnnouncementCard({ announcement }) {
+  const locale = useLocale() === 'en' ? 'en' : 'tr';
+  const copy = COPY[locale];
   const [imageError, setImageError] = useState(false);
   const router = useRouter();
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Tarih yok';
+    if (!dateString) return copy.noDate;
     try {
       const date = new Date(dateString);
       return format(date, 'dd MMMM yyyy, HH:mm');
     } catch (error) {
-      return 'Tarih yok';
+      return copy.noDate;
     }
   };
 
@@ -43,7 +59,7 @@ export default function FeaturedAnnouncementCard({ announcement }) {
 
       {/* Content Section */}
       <div className="flex min-w-0 flex-col">
-        <span className="text-sm font-semibold text-ink-2">Öne Çıkan Duyuru</span>
+        <span className="text-sm font-semibold text-ink-2">{copy.featured}</span>
         {/* Title */}
         <h2 className="mt-2 line-clamp-3 break-words font-display text-2xl font-bold lg:text-3xl group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
           {announcement.title}
@@ -70,7 +86,7 @@ export default function FeaturedAnnouncementCard({ announcement }) {
 
         {/* Footer */}
         <div className="mt-5 inline-flex min-h-11 items-center gap-1 whitespace-nowrap font-medium text-brand underline decoration-1 underline-offset-4 group-hover:decoration-2">
-          Devamını Oku
+          {copy.readMore}
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </div>
       </div>

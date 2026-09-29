@@ -1,6 +1,7 @@
 "use client";
 // admin/sponsors/page.js
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { auth, db } from "@/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { logger } from "@/utils/logger";
@@ -24,8 +25,79 @@ import { Input } from "@/components/ui/input";
 import { PageHeader, Section, EmptyState } from "@/components/ui/page";
 import { Stat } from "@/components/ui/stat";
 import { cn } from "@/lib/utils";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    backToAdmin: "Admin Paneline Geri Dön",
+    pageTitle: "Sponsor Yönetimi",
+    pageSubtitle: "Tüm sponsorları görüntüleyin ve yönetin",
+    totalSponsors: "Toplam Sponsor",
+    activeSponsors: "Aktif Sponsorlar",
+    addedThisMonth: "Bu Ay Eklenen",
+    editSponsor: "Sponsor Düzenle",
+    addNewSponsor: "Yeni Sponsor Ekle",
+    sponsorName: "Sponsor Adı *",
+    sponsorNamePlaceholder: "Sponsor adını girin...",
+    logoUrl: "Logo URL *",
+    websiteUrl: "Website URL *",
+    logoPreview: "Logo Önizlemesi:",
+    logoPreviewAlt: "Sponsor logo önizlemesi",
+    sponsorNameFallback: "Sponsor Adı",
+    websiteUrlFallback: "Website URL",
+    updateSponsor: "Sponsor Güncelle",
+    addSponsorBtn: "Sponsor Ekle",
+    cancelBtn: "İptal Et",
+    allSponsors: (n) => `Tüm Sponsorlar (${n})`,
+    noSponsors: "Henüz sponsor bulunmuyor",
+    noSponsorsHint: "İlk sponsoru eklemek için yukarıdaki formu kullanın",
+    addSuccess: "Sponsor başarıyla eklendi!",
+    addError: "Sponsor eklenirken bir hata oluştu!",
+    updateSuccess: "Sponsor başarıyla güncellendi!",
+    updateError: "Sponsor güncellenirken bir hata oluştu!",
+    confirmDelete:
+      "Bu sponsoru silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    deleteSuccess: "Sponsor başarıyla silindi!",
+    deleteError: "Sponsor silinirken bir hata oluştu!",
+  },
+  en: {
+    backToAdmin: "Back to Admin Panel",
+    pageTitle: "Sponsor Management",
+    pageSubtitle: "View and manage all sponsors",
+    totalSponsors: "Total Sponsors",
+    activeSponsors: "Active Sponsors",
+    addedThisMonth: "Added This Month",
+    editSponsor: "Edit Sponsor",
+    addNewSponsor: "Add New Sponsor",
+    sponsorName: "Sponsor Name *",
+    sponsorNamePlaceholder: "Enter sponsor name...",
+    logoUrl: "Logo URL *",
+    websiteUrl: "Website URL *",
+    logoPreview: "Logo Preview:",
+    logoPreviewAlt: "Sponsor logo preview",
+    sponsorNameFallback: "Sponsor Name",
+    websiteUrlFallback: "Website URL",
+    updateSponsor: "Update Sponsor",
+    addSponsorBtn: "Add Sponsor",
+    cancelBtn: "Cancel",
+    allSponsors: (n) => `All Sponsors (${n})`,
+    noSponsors: "No sponsors yet",
+    noSponsorsHint: "Use the form above to add the first sponsor",
+    addSuccess: "Sponsor added successfully!",
+    addError: "An error occurred while adding the sponsor!",
+    updateSuccess: "Sponsor updated successfully!",
+    updateError: "An error occurred while updating the sponsor!",
+    confirmDelete:
+      "Are you sure you want to delete this sponsor? This action cannot be undone.",
+    deleteSuccess: "Sponsor deleted successfully!",
+    deleteError: "An error occurred while deleting the sponsor!",
+  },
+};
 
 export default function AdminSponsorsPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -132,10 +204,10 @@ export default function AdminSponsorsPage() {
         { firestoreId: docRef.id, ...newSponsor },
       ]);
       resetSponsorForm();
-      toast.success("Sponsor başarıyla eklendi!");
+      toast.success(copy.addSuccess);
     } catch (error) {
       logger.error("Error adding sponsor:", error);
-      toast.error("Sponsor eklenirken bir hata oluştu!");
+      toast.error(copy.addError);
     }
   };
 
@@ -166,42 +238,37 @@ export default function AdminSponsorsPage() {
         )
       );
       resetSponsorForm();
-      toast.success("Sponsor başarıyla güncellendi!");
+      toast.success(copy.updateSuccess);
     } catch (error) {
       logger.error("Error updating sponsor:", error);
-      toast.error("Sponsor güncellenirken bir hata oluştu!");
+      toast.error(copy.updateError);
     }
   };
 
   // Delete sponsor
   const handleDeleteSponsor = async (firestoreId) => {
-    if (
-      !confirm(
-        "Bu sponsoru silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
-      )
-    )
-      return;
+    if (!confirm(copy.confirmDelete)) return;
 
     try {
       await deleteDoc(doc(db, "sponsors", firestoreId));
       setSponsors((prev) =>
         prev.filter((sponsor) => sponsor.firestoreId !== firestoreId)
       );
-      toast.success("Sponsor başarıyla silindi!");
+      toast.success(copy.deleteSuccess);
     } catch (error) {
       logger.error("Error deleting sponsor:", error);
-      toast.error("Sponsor silinirken bir hata oluştu!");
+      toast.error(copy.deleteError);
     }
   };
 
   if (loading) {
-    return <p className="py-12 text-ink-2">Loading...</p>;
+    return <p className="py-12 text-ink-2">{a.loading}</p>;
   }
 
   if (!isAdmin) {
     return (
       <p role="alert" className="py-12 font-medium text-error">
-        Access Denied
+        {a.accessDenied}
       </p>
     );
   }
@@ -211,13 +278,13 @@ export default function AdminSponsorsPage() {
   return (
     <div>
       <PageHeader
-        title="Sponsor Yönetimi"
-        description="Tüm sponsorları görüntüleyin ve yönetin"
+        title={copy.pageTitle}
+        description={copy.pageSubtitle}
         actions={
           <Button asChild variant="outline">
             <Link href="/admin">
               <ArrowLeft aria-hidden="true" />
-              Admin Paneline Geri Dön
+              {copy.backToAdmin}
             </Link>
           </Button>
         }
@@ -225,25 +292,25 @@ export default function AdminSponsorsPage() {
 
       {/* Stats */}
       <dl className="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <Stat label="Toplam Sponsor" value={sponsors.length} />
+        <Stat label={copy.totalSponsors} value={sponsors.length} />
         <Stat
-          label="Aktif Sponsorlar"
+          label={copy.activeSponsors}
           value={sponsors.filter((s) => s.website_url && s.img_url).length}
         />
-        <Stat label="Bu Ay Eklenen" value={0} />
+        <Stat label={copy.addedThisMonth} value={0} />
       </dl>
 
       {/* Sponsor Form */}
-      <Section title={isEditing ? "Sponsor Düzenle" : "Yeni Sponsor Ekle"}>
+      <Section title={isEditing ? copy.editSponsor : copy.addNewSponsor}>
         <form
           onSubmit={isEditing ? handleUpdateSponsor : handleAddSponsor}
           className="grid max-w-2xl gap-2"
         >
-          <Field id="sponsor-name" label="Sponsor Adı *">
+          <Field id="sponsor-name" label={copy.sponsorName}>
             <Input
               type="text"
               name="name"
-              placeholder="Sponsor adını girin..."
+              placeholder={copy.sponsorNamePlaceholder}
               value={sponsorFormData.name}
               onChange={handleSponsorChange}
               required
@@ -251,7 +318,7 @@ export default function AdminSponsorsPage() {
           </Field>
 
           <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-            <Field id="sponsor-img-url" label="Logo URL *">
+            <Field id="sponsor-img-url" label={copy.logoUrl}>
               <Input
                 type="url"
                 name="img_url"
@@ -261,7 +328,7 @@ export default function AdminSponsorsPage() {
                 required
               />
             </Field>
-            <Field id="sponsor-website-url" label="Website URL *">
+            <Field id="sponsor-website-url" label={copy.websiteUrl}>
               <Input
                 type="url"
                 name="website_url"
@@ -276,11 +343,11 @@ export default function AdminSponsorsPage() {
           {/* Preview */}
           {sponsorFormData.img_url && (
             <div className="mb-4 border-t border-rule pt-4">
-              <p className="mb-3 text-sm font-medium text-ink">Logo Önizlemesi:</p>
+              <p className="mb-3 text-sm font-medium text-ink">{copy.logoPreview}</p>
               <div className="flex items-center gap-4">
                 <img
                   src={sponsorFormData.img_url}
-                  alt="Sponsor Logo Preview"
+                  alt={copy.logoPreviewAlt}
                   className="h-16 w-16 shrink-0 rounded border border-rule bg-paper-2 object-contain"
                   onError={(e) => {
                     e.target.style.display = "none";
@@ -288,10 +355,10 @@ export default function AdminSponsorsPage() {
                 />
                 <div className="min-w-0">
                   <p className="font-medium text-ink">
-                    {sponsorFormData.name || "Sponsor Adı"}
+                    {sponsorFormData.name || copy.sponsorNameFallback}
                   </p>
                   <p className="break-all text-sm text-muted-foreground">
-                    {sponsorFormData.website_url || "Website URL"}
+                    {sponsorFormData.website_url || copy.websiteUrlFallback}
                   </p>
                 </div>
               </div>
@@ -300,11 +367,11 @@ export default function AdminSponsorsPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit">
-              {isEditing ? "Sponsor Güncelle" : "Sponsor Ekle"}
+              {isEditing ? copy.updateSponsor : copy.addSponsorBtn}
             </Button>
             {isEditing && (
               <Button type="button" variant="outline" onClick={resetSponsorForm}>
-                İptal Et
+                {copy.cancelBtn}
               </Button>
             )}
           </div>
@@ -312,11 +379,11 @@ export default function AdminSponsorsPage() {
       </Section>
 
       {/* Manage Sponsors */}
-      <Section title={`Tüm Sponsorlar (${sponsors.length})`}>
+      <Section title={copy.allSponsors(sponsors.length)}>
         {sponsors.length === 0 ? (
           <EmptyState
-            title="Henüz sponsor bulunmuyor"
-            description="İlk sponsoru eklemek için yukarıdaki formu kullanın"
+            title={copy.noSponsors}
+            description={copy.noSponsorsHint}
           />
         ) : (
           <ul>
@@ -364,13 +431,13 @@ export default function AdminSponsorsPage() {
 
                 <div className="flex shrink-0 gap-3">
                   <Button variant="outline" onClick={() => handleEditSponsor(sponsor)}>
-                    Düzenle
+                    {a.edit}
                   </Button>
                   <Button
                     variant="destructive"
                     onClick={() => handleDeleteSponsor(sponsor.firestoreId)}
                   >
-                    Sil
+                    {a.delete}
                   </Button>
                 </div>
               </li>

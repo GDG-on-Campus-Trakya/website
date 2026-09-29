@@ -323,7 +323,7 @@ export default function SocialPage() {
             {currentTab === "posts" && filteredPosts.length > 0 && (
               <div>
                 {filteredPosts.map((post) => (
-                  <ErrorBoundary key={post.id}>
+                  <ErrorBoundary key={post.id} locale={locale}>
                     <PostCard
                       post={post}
                       onPostClick={handlePostClick}
@@ -337,7 +337,7 @@ export default function SocialPage() {
             {currentTab === "results" && announcements.length > 0 && (
               <div>
                 {announcements.map((announcement) => (
-                  <ErrorBoundary key={announcement.id}>
+                  <ErrorBoundary key={announcement.id} locale={locale}>
                     <AnnouncementCard announcement={announcement} />
                   </ErrorBoundary>
                 ))}

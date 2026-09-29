@@ -1,6 +1,7 @@
 "use client";
 // admin/events/page.js
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { auth, db } from "@/firebase";
 import ImageUpload from "@/components/ImageUpload";
 import { StoragePaths } from "@/utils/storageUtils";
@@ -34,8 +35,209 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader, Section, EmptyState } from "@/components/ui/page";
 import { Stat } from "@/components/ui/stat";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    pageTitle: "Etkinlik Yönetimi",
+    pageSubtitle: "Tüm etkinlikleri görüntüleyin ve yönetin",
+    statActiveEvents: "Aktif Etkinlik",
+    statArchived: "Arşivlenen",
+    statSponsored: "Sponsorlu",
+    statCategories: "Kategoriler",
+    tabActiveEvents: (n) => `Aktif Etkinlikler (${n})`,
+    tabArchive: (n) => `Arşiv (${n})`,
+    editEventHeading: "Etkinlik Düzenle",
+    addEventHeading: "Yeni Etkinlik Ekle",
+    eventNameLabel: "Etkinlik Adı",
+    eventNamePlaceholder: "Etkinlik adını girin...",
+    englishEventName: "English Event Name",
+    englishEventNamePlaceholder: "Enter the event name in English...",
+    categoryLabel: "Kategori",
+    catConference: "Konferans",
+    catTrip: "Gezi",
+    catTraining: "Eğitim",
+    descriptionLabel: "Açıklama *",
+    edit: "Düzenle",
+    preview: "Önizleme",
+    descriptionPlaceholder: "Etkinlik açıklamasını girin... (Markdown destekli)",
+    englishDescription: "English Description",
+    englishDescriptionPlaceholder: "Enter the event description in English...",
+    markdownHelpToggle: "Markdown Formatını Nasıl Kullanacağım?",
+    markdownBasicFormats: "Temel Formatlar",
+    markdownBoldText: "kalın metin",
+    markdownItalicText: "italik metin",
+    markdownStrikeText: "çizili metin",
+    markdownHeadings: "Başlıklar",
+    markdownBigHeading: "# Büyük Başlık",
+    markdownMediumHeading: "## Orta Başlık",
+    markdownSmallHeading: "### Küçük Başlık",
+    markdownLinks: "Linkler",
+    markdownLinkText: "[Metin](https://example.com)",
+    markdownLinkHint:
+      "Kare parantez içine gösterilecek metni, normal parantez içine de URL'yi yazın.",
+    markdownCode: "Kod",
+    markdownInlineCode: "`inline kod`",
+    markdownInlineCodeResult: "inline kod",
+    markdownCodeBlockHint: "Kod bloğu için üç backtick (`) kullanın:",
+    markdownCodeHere: "kodunuz burada",
+    markdownLists: "Listeler",
+    markdownBulletList: "Maddeli Liste:",
+    markdownItem: "Madde",
+    markdownNumberedList: "Numaralı Liste:",
+    markdownCalloutBox: "Dikkat Kutusu (Bloktur)",
+    markdownCalloutText: "> Önemli bilgi",
+    markdownCalloutHint:
+      "Başına > koyduğunuz satırlar dikkat kutusu olarak gösterilir.",
+    markdownTipLabel: "İpucu:",
+    markdownTipText:
+      'Sağ üstteki "Önizleme" butonunu kullanarak yazarken nasıl görüneceğini görebilirsiniz!',
+    dateLabel: "Tarih",
+    timeLabel: "Saat",
+    locationLabel: "Konum",
+    locationPlaceholder: "Etkinlik konumunu girin...",
+    englishLocation: "English Location",
+    englishLocationPlaceholder: "Enter the event location in English...",
+    eventImageLabel: "Etkinlik Resmi",
+    eventImagePlaceholder: "Etkinlik Resmi Yükle",
+    documentUrlLabel: "Doküman URL'si",
+    sponsorsLabel: "Sponsorlar",
+    sponsorsSelected: (n) => `${n} sponsor seçildi`,
+    selectSponsor: "Sponsor seçin",
+    unknownSponsor: "Bilinmeyen Sponsor",
+    updateEventButton: "Etkinlik Güncelle",
+    addEventButton: "Etkinlik Ekle",
+    allEventsHeading: (n) => `Tüm Etkinlikler (${n})`,
+    emptyCurrentTitle: "Henüz aktif etkinlik bulunmuyor",
+    emptyArchiveTitle: "Arşivlenmiş etkinlik bulunmuyor",
+    emptyCurrentHint: "İlk etkinliği eklemek için yukarıdaki formu kullanın",
+    emptyArchiveHint: "1 haftadan eski etkinlikler burada görünür",
+    sponsorCount: (n) => `${n} sponsor`,
+    deleteEvent: "Sil",
+    sendEmail: "Email Gönder",
+    cantEmailArchived: "Arşivlenen etkinlikler için email gönderilemez",
+    qrCode: "QR Kodu",
+    cantQrArchived: "Arşivlenen etkinlikler için QR kod oluşturulamaz",
+    qrCodeModalTitle: "QR Kodu",
+    qrCodeAlt: "QR Kodu",
+    qrCodeIdLabel: "QR Kodu ID:",
+    closeButton: "Kapat",
+    // Toasts / confirms / alerts
+    confirmDeleteEvent:
+      "Bu etkinliği silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    eventCreated: "Etkinlik başarıyla oluşturuldu!",
+    eventCreateError: "Etkinlik oluşturulurken bir hata oluştu!",
+    eventUpdated: "Etkinlik başarıyla güncellendi!",
+    eventUpdateError: "Etkinlik güncellenirken bir hata oluştu!",
+    eventDeleted: "Etkinlik başarıyla silindi!",
+    eventDeleteError: "Etkinlik silinirken bir hata oluştu!",
+    emailRateLimit: (n) =>
+      `Bu etkinlik için son email gönderiminden ${n} dakika sonra tekrar email gönderebilirsiniz.`,
+    emailsSent: "Email'ler başarıyla gönderildi!",
+  },
+  en: {
+    pageTitle: "Event Management",
+    pageSubtitle: "View and manage all events",
+    statActiveEvents: "Active Events",
+    statArchived: "Archived",
+    statSponsored: "Sponsored",
+    statCategories: "Categories",
+    tabActiveEvents: (n) => `Active Events (${n})`,
+    tabArchive: (n) => `Archive (${n})`,
+    editEventHeading: "Edit Event",
+    addEventHeading: "Add New Event",
+    eventNameLabel: "Event Name",
+    eventNamePlaceholder: "Enter the event name...",
+    englishEventName: "English Event Name",
+    englishEventNamePlaceholder: "Enter the event name in English...",
+    categoryLabel: "Category",
+    catConference: "Conference",
+    catTrip: "Trip",
+    catTraining: "Training",
+    descriptionLabel: "Description *",
+    edit: "Edit",
+    preview: "Preview",
+    descriptionPlaceholder: "Enter the event description... (Markdown supported)",
+    englishDescription: "English Description",
+    englishDescriptionPlaceholder: "Enter the event description in English...",
+    markdownHelpToggle: "How Do I Use Markdown Formatting?",
+    markdownBasicFormats: "Basic Formats",
+    markdownBoldText: "bold text",
+    markdownItalicText: "italic text",
+    markdownStrikeText: "strikethrough text",
+    markdownHeadings: "Headings",
+    markdownBigHeading: "# Large Heading",
+    markdownMediumHeading: "## Medium Heading",
+    markdownSmallHeading: "### Small Heading",
+    markdownLinks: "Links",
+    markdownLinkText: "[Text](https://example.com)",
+    markdownLinkHint:
+      "Put the text to display inside square brackets and the URL inside parentheses.",
+    markdownCode: "Code",
+    markdownInlineCode: "`inline code`",
+    markdownInlineCodeResult: "inline code",
+    markdownCodeBlockHint: "Use three backticks (`) for a code block:",
+    markdownCodeHere: "your code here",
+    markdownLists: "Lists",
+    markdownBulletList: "Bulleted List:",
+    markdownItem: "Item",
+    markdownNumberedList: "Numbered List:",
+    markdownCalloutBox: "Callout Box (Block)",
+    markdownCalloutText: "> Important info",
+    markdownCalloutHint:
+      "Lines that start with > are displayed as a callout box.",
+    markdownTipLabel: "Tip:",
+    markdownTipText:
+      'Use the "Preview" button in the top right to see how it will look as you type!',
+    dateLabel: "Date",
+    timeLabel: "Time",
+    locationLabel: "Location",
+    locationPlaceholder: "Enter the event location...",
+    englishLocation: "English Location",
+    englishLocationPlaceholder: "Enter the event location in English...",
+    eventImageLabel: "Event Image",
+    eventImagePlaceholder: "Upload Event Image",
+    documentUrlLabel: "Document URL",
+    sponsorsLabel: "Sponsors",
+    sponsorsSelected: (n) => `${n} sponsor(s) selected`,
+    selectSponsor: "Select a sponsor",
+    unknownSponsor: "Unknown Sponsor",
+    updateEventButton: "Update Event",
+    addEventButton: "Add Event",
+    allEventsHeading: (n) => `All Events (${n})`,
+    emptyCurrentTitle: "No active events yet",
+    emptyArchiveTitle: "No archived events",
+    emptyCurrentHint: "Use the form above to add your first event",
+    emptyArchiveHint: "Events older than 1 week appear here",
+    sponsorCount: (n) => `${n} sponsor(s)`,
+    deleteEvent: "Delete",
+    sendEmail: "Send Email",
+    cantEmailArchived: "Emails cannot be sent for archived events",
+    qrCode: "QR Code",
+    cantQrArchived: "QR codes cannot be generated for archived events",
+    qrCodeModalTitle: "QR Code",
+    qrCodeAlt: "QR Code",
+    qrCodeIdLabel: "QR Code ID:",
+    closeButton: "Close",
+    // Toasts / confirms / alerts
+    confirmDeleteEvent:
+      "Are you sure you want to delete this event? This action cannot be undone.",
+    eventCreated: "Event created successfully!",
+    eventCreateError: "An error occurred while creating the event!",
+    eventUpdated: "Event updated successfully!",
+    eventUpdateError: "An error occurred while updating the event!",
+    eventDeleted: "Event deleted successfully!",
+    eventDeleteError: "An error occurred while deleting the event!",
+    emailRateLimit: (n) =>
+      `You can send another email for this event ${n} minutes after the last one.`,
+    emailsSent: "Emails sent successfully!",
+  },
+};
 
 export default function AdminEventsPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -174,11 +376,11 @@ export default function AdminEventsPage() {
         id: uuidv4(),
       };
       await addDoc(collection(db, "events"), newEvent);
-      toast.success("Etkinlik başarıyla oluşturuldu!");
+      toast.success(copy.eventCreated);
       resetForm();
     } catch (error) {
       logger.error("Error adding event:", error);
-      toast.error("Etkinlik oluşturulurken bir hata oluştu!");
+      toast.error(copy.eventCreateError);
     }
   };
 
@@ -194,7 +396,7 @@ export default function AdminEventsPage() {
     try {
       const eventRef = doc(db, "events", String(formData.firestoreId));
       await setDoc(eventRef, { ...formData }, { merge: true });
-      toast.success("Etkinlik başarıyla güncellendi!");
+      toast.success(copy.eventUpdated);
       setEvents((prev) =>
         prev.map((event) =>
           event.firestoreId === formData.firestoreId ? formData : event
@@ -203,28 +405,23 @@ export default function AdminEventsPage() {
       resetForm();
     } catch (error) {
       logger.error("Error updating event:", error);
-      toast.error("Etkinlik güncellenirken bir hata oluştu!");
+      toast.error(copy.eventUpdateError);
     }
   };
 
   // Delete event
   const handleDeleteEvent = async (firestoreId) => {
-    if (
-      !confirm(
-        "Bu etkinliği silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
-      )
-    )
-      return;
+    if (!confirm(copy.confirmDeleteEvent)) return;
 
     try {
       await deleteDoc(doc(db, "events", firestoreId));
-      toast.success("Etkinlik başarıyla silindi!");
+      toast.success(copy.eventDeleted);
       setEvents((prev) =>
         prev.filter((event) => event.firestoreId !== firestoreId)
       );
     } catch (error) {
       logger.error("Error deleting event:", error);
-      toast.error("Etkinlik silinirken bir hata oluştu!");
+      toast.error(copy.eventDeleteError);
     }
   };
 
@@ -264,7 +461,7 @@ export default function AdminEventsPage() {
         // Minimum 1 hour between email sends for same event
         if (hoursSinceLastSent < 1) {
           const remainingMinutes = Math.ceil((60 - (hoursSinceLastSent * 60)));
-          toast.error(`Bu etkinlik için son email gönderiminden ${remainingMinutes} dakika sonra tekrar email gönderebilirsiniz.`);
+          toast.error(copy.emailRateLimit(remainingMinutes));
           return;
         }
       }
@@ -352,7 +549,7 @@ export default function AdminEventsPage() {
         recipientCount: userEmails.length,
       });
 
-      toast.success("Email'ler başarıyla gönderildi!");
+      toast.success(copy.emailsSent);
     } catch (error) {
       logger.error("Error sending emails:", error);
       alert(error.message || "Error sending emails. Please try again later.");
@@ -435,13 +632,13 @@ export default function AdminEventsPage() {
   }, [qrCodeModalOpen]);
 
   if (loading) {
-    return <p className="py-12 text-ink-2">Loading...</p>;
+    return <p className="py-12 text-ink-2">{a.loading}</p>;
   }
 
   if (!isAdmin) {
     return (
       <p role="alert" className="py-12 font-medium text-error">
-        Access Denied
+        {a.accessDenied}
       </p>
     );
   }
@@ -453,30 +650,30 @@ export default function AdminEventsPage() {
   return (
     <div>
       <PageHeader
-        title="Etkinlik Yönetimi"
-        description="Tüm etkinlikleri görüntüleyin ve yönetin"
+        title={copy.pageTitle}
+        description={copy.pageSubtitle}
       />
 
       {/* Stats */}
       <dl className="grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4 md:max-w-2xl">
-        <Stat label="Aktif Etkinlik" value={getCurrentEvents().length} />
-        <Stat label="Arşivlenen" value={getArchivedEvents().length} />
+        <Stat label={copy.statActiveEvents} value={getCurrentEvents().length} />
+        <Stat label={copy.statArchived} value={getArchivedEvents().length} />
         <Stat
-          label="Sponsorlu"
+          label={copy.statSponsored}
           value={
             getCurrentEvents().filter((e) => e.sponsors && e.sponsors.length > 0)
               .length
           }
         />
         <Stat
-          label="Kategoriler"
+          label={copy.statCategories}
           value={new Set(getCurrentEvents().map((e) => e.category)).size}
         />
       </dl>
 
       {/* Add / Edit Event Form */}
       <Section
-        title={isEditing ? "Etkinlik Düzenle" : "Yeni Etkinlik Ekle"}
+        title={isEditing ? copy.editEventHeading : copy.addEventHeading}
         className="md:mt-16"
       >
         <form
@@ -484,26 +681,26 @@ export default function AdminEventsPage() {
           className="max-w-3xl space-y-4"
         >
           <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
-            <Field id="event-name" label="Etkinlik Adı" required>
+            <Field id="event-name" label={copy.eventNameLabel} required>
               <Input
                 type="text"
                 name="name"
-                placeholder="Etkinlik adını girin..."
+                placeholder={copy.eventNamePlaceholder}
                 value={formData.name}
                 onChange={handleChange}
                 required
               />
             </Field>
-            <Field id="event-name-en" label="English Event Name">
+            <Field id="event-name-en" label={copy.englishEventName}>
               <Input
                 type="text"
                 name="nameEn"
-                placeholder="Enter the event name in English..."
+                placeholder={copy.englishEventNamePlaceholder}
                 value={formData.nameEn}
                 onChange={handleChange}
               />
             </Field>
-            <Field id="event-category" label="Kategori" required>
+            <Field id="event-category" label={copy.categoryLabel} required>
               <select
                 name="category"
                 value={formData.category}
@@ -511,23 +708,23 @@ export default function AdminEventsPage() {
                 required
                 className={cn(fieldClasses, "h-control")}
               >
-                <option value="Konferans">Konferans</option>
+                <option value="Konferans">{copy.catConference}</option>
                 <option value="DevFest">DevFest</option>
-                <option value="Gezi">Gezi</option>
-                <option value="Eğitim">Eğitim</option>
+                <option value="Gezi">{copy.catTrip}</option>
+                <option value="Eğitim">{copy.catTraining}</option>
               </select>
             </Field>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="event-description">Açıklama *</Label>
+              <Label htmlFor="event-description">{copy.descriptionLabel}</Label>
               <Button
                 type="button"
                 variant="link"
                 onClick={() => setShowPreview(!showPreview)}
               >
-                {showPreview ? "Düzenle" : "Önizleme"}
+                {showPreview ? copy.edit : copy.preview}
               </Button>
             </div>
             {showPreview ? (
@@ -541,7 +738,7 @@ export default function AdminEventsPage() {
               <Textarea
                 id="event-description"
                 name="description"
-                placeholder="Etkinlik açıklamasını girin... (Markdown destekli)"
+                placeholder={copy.descriptionPlaceholder}
                 value={formData.description}
                 onChange={handleChange}
                 required
@@ -550,10 +747,10 @@ export default function AdminEventsPage() {
             )}
           </div>
 
-          <Field id="event-description-en" label="English Description">
+          <Field id="event-description-en" label={copy.englishDescription}>
             <Textarea
               name="descriptionEn"
-              placeholder="Enter the event description in English..."
+              placeholder={copy.englishDescriptionPlaceholder}
               value={formData.descriptionEn}
               onChange={handleChange}
               rows={4}
@@ -567,88 +764,88 @@ export default function AdminEventsPage() {
                 className="h-4 w-4 shrink-0 transition-transform duration-short ease-out group-open:rotate-90"
                 aria-hidden="true"
               />
-              <span className="font-medium">Markdown Formatını Nasıl Kullanacağım?</span>
+              <span className="font-medium">{copy.markdownHelpToggle}</span>
             </summary>
             <div className="space-y-5 pb-5 pt-2">
               <div>
-                <h4 className="mb-2 text-sm font-semibold text-ink">Temel Formatlar</h4>
+                <h4 className="mb-2 text-sm font-semibold text-ink">{copy.markdownBasicFormats}</h4>
                 <div className="space-y-2 text-sm text-ink-2">
-                  <p><code className={codeChip}>**kalın metin**</code> → <strong>kalın metin</strong></p>
-                  <p><code className={codeChip}>*italik metin*</code> → <em>italik metin</em></p>
-                  <p><code className={codeChip}>~~çizili metin~~</code> → <s>çizili metin</s></p>
+                  <p><code className={codeChip}>**{copy.markdownBoldText}**</code> → <strong>{copy.markdownBoldText}</strong></p>
+                  <p><code className={codeChip}>*{copy.markdownItalicText}*</code> → <em>{copy.markdownItalicText}</em></p>
+                  <p><code className={codeChip}>~~{copy.markdownStrikeText}~~</code> → <s>{copy.markdownStrikeText}</s></p>
                 </div>
               </div>
 
               <div>
-                <h4 className="mb-2 text-sm font-semibold text-ink">Başlıklar</h4>
+                <h4 className="mb-2 text-sm font-semibold text-ink">{copy.markdownHeadings}</h4>
                 <div className="space-y-2 text-sm text-ink-2">
-                  <p><code className={codeChip}># Büyük Başlık</code></p>
-                  <p><code className={codeChip}>## Orta Başlık</code></p>
-                  <p><code className={codeChip}>### Küçük Başlık</code></p>
+                  <p><code className={codeChip}>{copy.markdownBigHeading}</code></p>
+                  <p><code className={codeChip}>{copy.markdownMediumHeading}</code></p>
+                  <p><code className={codeChip}>{copy.markdownSmallHeading}</code></p>
                 </div>
               </div>
 
               <div>
-                <h4 className="mb-2 text-sm font-semibold text-ink">Linkler</h4>
+                <h4 className="mb-2 text-sm font-semibold text-ink">{copy.markdownLinks}</h4>
                 <div className="space-y-2 text-sm text-ink-2">
-                  <p><code className={codeChip}>[Metin](https://example.com)</code></p>
-                  <p className="text-xs text-muted-foreground">Kare parantez içine gösterilecek metni, normal parantez içine de URL'yi yazın.</p>
+                  <p><code className={codeChip}>{copy.markdownLinkText}</code></p>
+                  <p className="text-xs text-muted-foreground">{copy.markdownLinkHint}</p>
                 </div>
               </div>
 
               <div>
-                <h4 className="mb-2 text-sm font-semibold text-ink">Kod</h4>
+                <h4 className="mb-2 text-sm font-semibold text-ink">{copy.markdownCode}</h4>
                 <div className="space-y-2 text-sm text-ink-2">
-                  <p><code className={codeChip}>`inline kod`</code> → inline kod</p>
-                  <p className="text-xs text-muted-foreground">Kod bloğu için üç backtick (`) kullanın:</p>
+                  <p><code className={codeChip}>{copy.markdownInlineCode}</code> → {copy.markdownInlineCodeResult}</p>
+                  <p className="text-xs text-muted-foreground">{copy.markdownCodeBlockHint}</p>
                   <div className={codeBlock}>
                     ```<br/>
-                    kodunuz burada<br/>
+                    {copy.markdownCodeHere}<br/>
                     ```
                   </div>
                 </div>
               </div>
 
               <div>
-                <h4 className="mb-2 text-sm font-semibold text-ink">Listeler</h4>
+                <h4 className="mb-2 text-sm font-semibold text-ink">{copy.markdownLists}</h4>
                 <div className="space-y-3 text-sm text-ink-2">
                   <div>
-                    <p className="mb-1">Maddeli Liste:</p>
+                    <p className="mb-1">{copy.markdownBulletList}</p>
                     <div className={codeBlock}>
-                      - Madde 1<br/>
-                      - Madde 2<br/>
-                      - Madde 3
+                      - {copy.markdownItem} 1<br/>
+                      - {copy.markdownItem} 2<br/>
+                      - {copy.markdownItem} 3
                     </div>
                   </div>
                   <div>
-                    <p className="mb-1">Numaralı Liste:</p>
+                    <p className="mb-1">{copy.markdownNumberedList}</p>
                     <div className={codeBlock}>
-                      1. Madde 1<br/>
-                      2. Madde 2<br/>
-                      3. Madde 3
+                      1. {copy.markdownItem} 1<br/>
+                      2. {copy.markdownItem} 2<br/>
+                      3. {copy.markdownItem} 3
                     </div>
                   </div>
                 </div>
               </div>
 
               <div>
-                <h4 className="mb-2 text-sm font-semibold text-ink">Dikkat Kutusu (Bloktur)</h4>
+                <h4 className="mb-2 text-sm font-semibold text-ink">{copy.markdownCalloutBox}</h4>
                 <div className="space-y-2 text-sm text-ink-2">
-                  <p><code className={codeChip}>&gt; Önemli bilgi</code></p>
-                  <p className="text-xs text-muted-foreground">Başına &gt; koyduğunuz satırlar dikkat kutusu olarak gösterilir.</p>
+                  <p><code className={codeChip}>&gt; {copy.markdownCalloutText.replace("> ", "")}</code></p>
+                  <p className="text-xs text-muted-foreground">{copy.markdownCalloutHint}</p>
                 </div>
               </div>
 
               <div className="border-t border-rule pt-3">
                 <p className="text-xs text-muted-foreground">
-                  <strong>İpucu:</strong> Sağ üstteki "Önizleme" butonunu kullanarak yazarken nasıl görüneceğini görebilirsiniz!
+                  <strong>{copy.markdownTipLabel}</strong> {copy.markdownTipText}
                 </p>
               </div>
             </div>
           </details>
 
           <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
-            <Field id="event-date" label="Tarih" required>
+            <Field id="event-date" label={copy.dateLabel} required>
               <Input
                 type="date"
                 name="date"
@@ -658,7 +855,7 @@ export default function AdminEventsPage() {
                 className="font-outlier"
               />
             </Field>
-            <Field id="event-time" label="Saat" required>
+            <Field id="event-time" label={copy.timeLabel} required>
               <Input
                 type="time"
                 name="time"
@@ -668,21 +865,21 @@ export default function AdminEventsPage() {
                 className="font-outlier"
               />
             </Field>
-            <Field id="event-location" label="Konum" required>
+            <Field id="event-location" label={copy.locationLabel} required>
               <Input
                 type="text"
                 name="location"
-                placeholder="Etkinlik konumunu girin..."
+                placeholder={copy.locationPlaceholder}
                 value={formData.location}
                 onChange={handleChange}
                 required
               />
             </Field>
-            <Field id="event-location-en" label="English Location">
+            <Field id="event-location-en" label={copy.englishLocation}>
               <Input
                 type="text"
                 name="locationEn"
-                placeholder="Enter the event location in English..."
+                placeholder={copy.englishLocationPlaceholder}
                 value={formData.locationEn}
                 onChange={handleChange}
               />
@@ -690,17 +887,17 @@ export default function AdminEventsPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium leading-none">Etkinlik Resmi</span>
+            <span className="text-sm font-medium leading-none">{copy.eventImageLabel}</span>
             <ImageUpload
               onImageUpload={handleImageUpload}
               currentImageUrl={formData.imageUrl}
               folder={StoragePaths.EVENTS}
               prefix="event_"
-              placeholder="Etkinlik Resmi Yükle"
+              placeholder={copy.eventImagePlaceholder}
             />
           </div>
 
-          <Field id="event-file-url" label="Doküman URL'si">
+          <Field id="event-file-url" label={copy.documentUrlLabel}>
             <Input
               type="url"
               name="file_url"
@@ -712,7 +909,7 @@ export default function AdminEventsPage() {
 
           {/* Sponsors Selection */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium leading-none">Sponsorlar</span>
+            <span className="text-sm font-medium leading-none">{copy.sponsorsLabel}</span>
             <div className="relative">
               <button
                 type="button"
@@ -725,8 +922,8 @@ export default function AdminEventsPage() {
               >
                 <span className="min-w-0 truncate">
                   {formData.sponsors.length > 0
-                    ? `${formData.sponsors.length} sponsor seçildi`
-                    : "Sponsor seçin"}
+                    ? copy.sponsorsSelected(formData.sponsors.length)
+                    : copy.selectSponsor}
                 </span>
                 <ChevronDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
               </button>
@@ -770,7 +967,7 @@ export default function AdminEventsPage() {
                   );
                   return (
                     <Badge key={index} className="gap-2 py-1 text-sm">
-                      {sponsor?.name || "Bilinmeyen Sponsor"}
+                      {sponsor?.name || copy.unknownSponsor}
                       <button
                         type="button"
                         className="-mr-1 inline-flex h-5 w-5 items-center justify-center rounded-sm text-muted-foreground transition-colors duration-micro hover:text-ink"
@@ -794,14 +991,14 @@ export default function AdminEventsPage() {
 
           <div className="pt-2">
             <Button type="submit" size="lg" className="w-full sm:w-auto">
-              {isEditing ? "Etkinlik Güncelle" : "Etkinlik Ekle"}
+              {isEditing ? copy.updateEventButton : copy.addEventButton}
             </Button>
           </div>
         </form>
       </Section>
 
       {/* Manage Events */}
-      <Section title={`Tüm Etkinlikler (${events.length})`} className="md:mt-16">
+      <Section title={copy.allEventsHeading(events.length)} className="md:mt-16">
         <div className="mb-2 flex gap-6 border-b border-rule">
           <button
             type="button"
@@ -809,7 +1006,7 @@ export default function AdminEventsPage() {
             aria-current={activeTab === "current" ? "true" : undefined}
             className="-mb-px min-h-11 whitespace-nowrap border-b-2 border-transparent text-sm font-medium text-muted-foreground transition-colors duration-micro hover:text-ink aria-[current=true]:border-brand aria-[current=true]:font-semibold aria-[current=true]:text-ink"
           >
-            Aktif Etkinlikler ({getCurrentEvents().length})
+            {copy.tabActiveEvents(getCurrentEvents().length)}
           </button>
           <button
             type="button"
@@ -817,7 +1014,7 @@ export default function AdminEventsPage() {
             aria-current={activeTab === "archive" ? "true" : undefined}
             className="-mb-px min-h-11 whitespace-nowrap border-b-2 border-transparent text-sm font-medium text-muted-foreground transition-colors duration-micro hover:text-ink aria-[current=true]:border-brand aria-[current=true]:font-semibold aria-[current=true]:text-ink"
           >
-            Arşiv ({getArchivedEvents().length})
+            {copy.tabArchive(getArchivedEvents().length)}
           </button>
         </div>
 
@@ -830,13 +1027,13 @@ export default function AdminEventsPage() {
               <EmptyState
                 title={
                   activeTab === "current"
-                    ? "Henüz aktif etkinlik bulunmuyor"
-                    : "Arşivlenmiş etkinlik bulunmuyor"
+                    ? copy.emptyCurrentTitle
+                    : copy.emptyArchiveTitle
                 }
                 description={
                   activeTab === "current"
-                    ? "İlk etkinliği eklemek için yukarıdaki formu kullanın"
-                    : "1 haftadan eski etkinlikler burada görünür"
+                    ? copy.emptyCurrentHint
+                    : copy.emptyArchiveHint
                 }
                 className="border-t-0"
               />
@@ -885,7 +1082,7 @@ export default function AdminEventsPage() {
                           </div>
                           {event.sponsors && event.sponsors.length > 0 && (
                             <div className="flex items-center gap-1.5">
-                              <span className="tabular-nums">{event.sponsors.length}</span> sponsor
+                              <span className="tabular-nums">{copy.sponsorCount(event.sponsors.length)}</span>
                             </div>
                           )}
                         </div>
@@ -901,7 +1098,7 @@ export default function AdminEventsPage() {
                         onClick={() => handleEditEvent(event)}
                         disabled={isArchived}
                       >
-                        Düzenle
+                        {a.edit}
                       </Button>
                       <Button
                         variant="destructive"
@@ -909,7 +1106,7 @@ export default function AdminEventsPage() {
                         className={rowAction}
                         onClick={() => handleDeleteEvent(event.firestoreId)}
                       >
-                        Sil
+                        {a.delete}
                       </Button>
                       <Button
                         variant="outline"
@@ -921,11 +1118,11 @@ export default function AdminEventsPage() {
                         disabled={isArchived}
                         title={
                           isArchived
-                            ? "Arşivlenen etkinlikler için email gönderilemez"
+                            ? copy.cantEmailArchived
                             : ""
                         }
                       >
-                        Email Gönder
+                        {copy.sendEmail}
                       </Button>
                       <Button
                         variant="outline"
@@ -935,11 +1132,11 @@ export default function AdminEventsPage() {
                         disabled={isArchived}
                         title={
                           isArchived
-                            ? "Arşivlenen etkinlikler için QR kod oluşturulamaz"
+                            ? copy.cantQrArchived
                             : ""
                         }
                       >
-                        QR Kodu
+                        {copy.qrCode}
                       </Button>
                     </div>
                   </li>
@@ -964,25 +1161,25 @@ export default function AdminEventsPage() {
             style={{ overscrollBehavior: 'contain' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="font-display text-2xl font-bold">QR Kodu</h2>
+            <h2 className="font-display text-2xl font-bold">{copy.qrCodeModalTitle}</h2>
 
             <div className="my-6 border-y border-rule py-6">
               <img
                 src={currentQRCodeDataURL}
-                alt="QR Kodu"
+                alt={copy.qrCodeAlt}
                 className="mx-auto w-full max-w-xs"
               />
             </div>
 
             <div className="mb-6">
-              <p className="text-sm text-muted-foreground">QR Kodu ID:</p>
+              <p className="text-sm text-muted-foreground">{copy.qrCodeIdLabel}</p>
               <p className="break-all font-outlier text-md font-semibold">
                 {currentQRCodeId}
               </p>
             </div>
 
             <Button onClick={() => setQRCodeModalOpen(false)} className="w-full">
-              Kapat
+              {copy.closeButton}
             </Button>
           </div>
         </div>

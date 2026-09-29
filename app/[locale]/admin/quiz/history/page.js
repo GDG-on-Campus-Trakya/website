@@ -40,8 +40,76 @@ import {
   TableHead,
   TableCell
 } from "@/components/ui/table";
+import { useLocale } from "next-intl";
+import { adminCopy } from "@/utils/adminCopy";
+
+const COPY = {
+  tr: {
+    fetchError: "Oyun geçmişi yüklenirken hata oluştu!",
+    durationFormat: (m, s) => `${m}dk ${s}sn`,
+    unknown: "Bilinmiyor",
+    dateLocale: "tr-TR",
+    pageTitle: "Oyun Geçmişi",
+    pageSubtitle: "Tamamlanan Quiz oyunlarının detaylı sonuçları",
+    backToManage: "Quiz Yönetimine Dön",
+    totalGames: "Toplam Oyun",
+    totalPlayers: "Toplam Oyuncu",
+    avgPlayers: "Ort. Oyuncu",
+    myGames: "Benim Oyunlarım",
+    allGames: "Tüm Oyunlar",
+    myGamesFilter: "Benim Oyunlarım",
+    noCompletedGames: "Henüz tamamlanmış oyun yok",
+    winnerPoints: "puan",
+    winnerCorrect: "doğru",
+    topThree: "İlk 3",
+    allPlayers: (n) => `Tüm Oyuncular (${n})`,
+    colRank: "Sıra",
+    colName: "İsim",
+    colDepartment: "Bölüm",
+    colCorrect: "Doğru",
+    colAvgTime: "Ort. Süre",
+    colScore: "Puan",
+    highest: "En Yüksek",
+    lowest: "En Düşük",
+    average: "Ortalama",
+    avgCorrect: "Ort. Doğru",
+  },
+  en: {
+    fetchError: "An error occurred while loading the game history!",
+    durationFormat: (m, s) => `${m}m ${s}s`,
+    unknown: "Unknown",
+    dateLocale: "en-US",
+    pageTitle: "Game History",
+    pageSubtitle: "Detailed results of completed quiz games",
+    backToManage: "Back to Quiz Management",
+    totalGames: "Total Games",
+    totalPlayers: "Total Players",
+    avgPlayers: "Avg. Players",
+    myGames: "My Games",
+    allGames: "All Games",
+    myGamesFilter: "My Games",
+    noCompletedGames: "No completed games yet",
+    winnerPoints: "points",
+    winnerCorrect: "correct",
+    topThree: "Top 3",
+    allPlayers: (n) => `All Players (${n})`,
+    colRank: "Rank",
+    colName: "Name",
+    colDepartment: "Department",
+    colCorrect: "Correct",
+    colAvgTime: "Avg. Time",
+    colScore: "Score",
+    highest: "Highest",
+    lowest: "Lowest",
+    average: "Average",
+    avgCorrect: "Avg. Correct",
+  },
+};
 
 export default function GameHistoryPage() {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const a = adminCopy(locale);
   const [user, loading] = useAuthState(auth);
   const [userRole, setUserRole] = useState(null);
   const [gameResults, setGameResults] = useState([]);
@@ -59,7 +127,7 @@ export default function GameHistoryPage() {
 
       const role = await checkUserRole(user.email);
       if (role !== ROLES.ADMIN) {
-        toast.error("Bu sayfaya erişim yetkiniz yok!");
+        toast.error(a.accessDeniedToast);
         router.push("/admin");
         return;
       }
@@ -88,7 +156,7 @@ export default function GameHistoryPage() {
       setGameResults(results);
     } catch (error) {
       logger.error("Error fetching game results:", error);
-      toast.error("Oyun geçmişi yüklenirken hata oluştu!");
+      toast.error(copy.fetchError);
     } finally {
       setLoadingResults(false);
     }
@@ -97,13 +165,13 @@ export default function GameHistoryPage() {
   const formatDuration = (milliseconds) => {
     const minutes = Math.floor(milliseconds / 60000);
     const seconds = Math.floor((milliseconds % 60000) / 1000);
-    return `${minutes}dk ${seconds}sn`;
+    return copy.durationFormat(minutes, seconds);
   };
 
   const formatDate = (timestamp) => {
-    if (!timestamp) return "Bilinmiyor";
+    if (!timestamp) return copy.unknown;
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleString("tr-TR", {
+    return date.toLocaleString(copy.dateLocale, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -125,13 +193,13 @@ export default function GameHistoryPage() {
   const myGames = gameResults.filter((g) => g.hostId === user?.email).length;
 
   if (loading || loadingResults) {
-    return <p className="py-12 text-ink-2">Yükleniyor...</p>;
+    return <p className="py-12 text-ink-2">{a.loading}</p>;
   }
 
   if (!userRole) {
     return (
       <p role="alert" className="py-12 font-medium text-error">
-        Erişim Reddedildi
+        {a.accessDenied}
       </p>
     );
   }
@@ -139,13 +207,13 @@ export default function GameHistoryPage() {
   return (
     <div>
       <PageHeader
-        title="Oyun Geçmişi"
-        description="Tamamlanan Quiz oyunlarının detaylı sonuçları"
+        title={copy.pageTitle}
+        description={copy.pageSubtitle}
         actions={
           <Button asChild variant="outline">
             <Link href="/admin/quiz/manage">
               <ArrowLeft aria-hidden="true" />
-              Quiz Yönetimine Dön
+              {copy.backToManage}
             </Link>
           </Button>
         }
@@ -153,10 +221,10 @@ export default function GameHistoryPage() {
 
       {/* Statistics */}
       <dl className="grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-4 md:gap-x-8">
-        <Stat label="Toplam Oyun" value={totalGames} />
-        <Stat label="Toplam Oyuncu" value={totalPlayers} />
-        <Stat label="Ort. Oyuncu" value={averagePlayersPerGame} />
-        <Stat label="Benim Oyunlarım" value={myGames} />
+        <Stat label={copy.totalGames} value={totalGames} />
+        <Stat label={copy.totalPlayers} value={totalPlayers} />
+        <Stat label={copy.avgPlayers} value={averagePlayersPerGame} />
+        <Stat label={copy.myGames} value={myGames} />
       </dl>
 
       {/* Filter */}
@@ -166,20 +234,20 @@ export default function GameHistoryPage() {
           aria-pressed={filterHost === "all"}
           onClick={() => setFilterHost("all")}
         >
-          Tüm Oyunlar
+          {copy.allGames}
         </Button>
         <Button
           variant={filterHost === "me" ? "default" : "outline"}
           aria-pressed={filterHost === "me"}
           onClick={() => setFilterHost("me")}
         >
-          Benim Oyunlarım
+          {copy.myGamesFilter}
         </Button>
       </div>
 
       {/* Results List */}
       {filteredResults.length === 0 ? (
-        <EmptyState className="mt-6" title="Henüz tamamlanmış oyun yok" />
+        <EmptyState className="mt-6" title={copy.noCompletedGames} />
       ) : (
         <ul className="mt-6 border-t-2 border-ink">
           {filteredResults.map((result) => (
@@ -227,8 +295,8 @@ export default function GameHistoryPage() {
                       <div className="min-w-0">
                         <div className="truncate text-sm font-semibold">{result.winner.name}</div>
                         <div className="text-sm">
-                          <span className="tabular-nums">{result.winner.score}</span> puan •{" "}
-                          <span className="tabular-nums">{result.winner.correctAnswers}</span> doğru
+                          <span className="tabular-nums">{result.winner.score}</span> {copy.winnerPoints} •{" "}
+                          <span className="tabular-nums">{result.winner.correctAnswers}</span> {copy.winnerCorrect}
                         </div>
                       </div>
                     </div>
@@ -259,7 +327,7 @@ export default function GameHistoryPage() {
                   {/* Top 3 */}
                   {result.topThree && result.topThree.length > 0 && (
                     <div className="mb-8">
-                      <h3 className="mb-3 font-display text-lg font-bold">İlk 3</h3>
+                      <h3 className="mb-3 font-display text-lg font-bold">{copy.topThree}</h3>
                       <ol className="border-t border-ink">
                         {result.topThree.map((player, index) => (
                           <li
@@ -287,17 +355,17 @@ export default function GameHistoryPage() {
                   {/* All Players */}
                   <div>
                     <h3 className="mb-3 font-display text-lg font-bold">
-                      Tüm Oyuncular ({result.players?.length || 0})
+                      {copy.allPlayers(result.players?.length || 0)}
                     </h3>
                     <Table>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent">
-                          <TableHead>Sıra</TableHead>
-                          <TableHead>İsim</TableHead>
-                          <TableHead className="hidden sm:table-cell">Bölüm</TableHead>
-                          <TableHead className="text-center">Doğru</TableHead>
-                          <TableHead className="hidden text-center sm:table-cell">Ort. Süre</TableHead>
-                          <TableHead className="text-right">Puan</TableHead>
+                          <TableHead>{copy.colRank}</TableHead>
+                          <TableHead>{copy.colName}</TableHead>
+                          <TableHead className="hidden sm:table-cell">{copy.colDepartment}</TableHead>
+                          <TableHead className="text-center">{copy.colCorrect}</TableHead>
+                          <TableHead className="hidden text-center sm:table-cell">{copy.colAvgTime}</TableHead>
+                          <TableHead className="text-right">{copy.colScore}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -325,10 +393,10 @@ export default function GameHistoryPage() {
 
                   {/* Stats Summary */}
                   <dl className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 border-t border-rule pt-6 md:grid-cols-4 md:gap-x-8">
-                    <Stat label="En Yüksek" value={result.stats?.highestScore || 0} />
-                    <Stat label="En Düşük" value={result.stats?.lowestScore || 0} />
-                    <Stat label="Ortalama" value={result.stats?.averageScore || 0} />
-                    <Stat label="Ort. Doğru" value={result.stats?.averageCorrectAnswers || 0} />
+                    <Stat label={copy.highest} value={result.stats?.highestScore || 0} />
+                    <Stat label={copy.lowest} value={result.stats?.lowestScore || 0} />
+                    <Stat label={copy.average} value={result.stats?.averageScore || 0} />
+                    <Stat label={copy.avgCorrect} value={result.stats?.averageCorrectAnswers || 0} />
                   </dl>
                 </div>
               )}
