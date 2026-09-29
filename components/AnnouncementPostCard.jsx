@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Calendar, User, Trash2, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { useLocale } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { getLocalizedField } from '@/utils/localeUtils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,11 +51,13 @@ export default function AnnouncementPostCard({
     }
   };
 
+  const href = `/announcements/${announcement.docId ?? announcement.id}`;
+
   const handleCardClick = (e) => {
     if (showAdminActions && e.target.closest('button')) {
       return;
     }
-    router.push(`/announcements/${announcement.id}`);
+    router.push(href);
   };
 
   return (
@@ -102,10 +104,15 @@ export default function AnnouncementPostCard({
 
         <div className="mt-auto border-t border-rule pt-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-1 whitespace-nowrap text-sm font-medium text-brand underline decoration-1 underline-offset-4 group-hover:decoration-2">
+            {/* A real link so crawlers can follow it; the card click above is for mouse users */}
+            <Link
+              href={href}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 whitespace-nowrap text-sm font-medium text-brand underline decoration-1 underline-offset-4 group-hover:decoration-2"
+            >
               {copy.readMore}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </div>
+            </Link>
 
             {showAdminActions && (
               <div className="flex gap-2">
