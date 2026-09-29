@@ -1,4 +1,6 @@
 import ConditionalAnalytics from '@/components/ConditionalAnalytics';
+import JsonLd from '@/components/JsonLd';
+import { absoluteUrl, baseUrl, getSiteMeta } from '@/lib/seo';
 import { getLocale } from 'next-intl/server';
 import './globals.css';
 import {
@@ -34,55 +36,12 @@ export const viewport = {
   viewportFit: 'cover'
 };
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL || 'https://gdgoncampustu.com';
-
-const localeMetadata = {
-  tr: {
-    siteName: 'GDG on Campus Trakya Üniversitesi',
-    title: 'GDG on Campus Trakya Üniversitesi | Google Developer Groups',
-    description:
-      "GDG on Campus Trakya Üniversitesi (gdgoncampustu) - Google Developer Groups on Campus TÜ. Trakya Üniversitesi'nde teknoloji, inovasyon ve yazılım geliştirme topluluğu. GDG, developer etkinlikleri, hackathonlar ve eğitim programları.",
-    locale: 'tr_TR',
-    pathPrefix: '',
-    keywords: [
-      'GDG',
-      'gdgoncampustu',
-      'GDG on Campus',
-      'GDG on Campus Trakya',
-      'GDG on Campus Trakya Üniversitesi',
-      'Trakya Üniversitesi',
-      'Google Developer Groups',
-      'Edirne developer',
-      'yazılım geliştirme',
-      'hackathon'
-    ]
-  },
-  en: {
-    siteName: 'GDG on Campus Trakya University',
-    title: 'GDG on Campus Trakya University | Google Developer Groups',
-    description:
-      'GDG on Campus Trakya University is a student-led Google Developer Groups on Campus community focused on technology, innovation, workshops, hackathons and collaborative learning.',
-    locale: 'en_US',
-    pathPrefix: '/en',
-    keywords: [
-      'GDG',
-      'GDG on Campus',
-      'GDG on Campus Trakya',
-      'Trakya University',
-      'Google Developer Groups',
-      'student developer community',
-      'technology events',
-      'hackathon',
-      'workshops'
-    ]
-  }
-};
-
+// Canonical, hreflang and per-page OG/Twitter come from buildMetadata (lib/seo.js).
+// `alternates` set here would be replaced by any page that sets its own, and would
+// point every page without one at the home page.
 export async function generateMetadata() {
   const locale = await getLocale();
-  const meta = localeMetadata[locale] || localeMetadata.tr;
-  const canonical = `${baseUrl}${meta.pathPrefix || ''}/`;
+  const meta = getSiteMeta(locale);
 
   return {
     metadataBase: new URL(baseUrl),
@@ -91,7 +50,7 @@ export async function generateMetadata() {
       template: '%s | GDG on Campus Trakya'
     },
     description: meta.description,
-    keywords: meta.keywords,
+    applicationName: meta.siteName,
     authors: [{ name: meta.siteName }],
     creator: meta.siteName,
     publisher: meta.siteName,
@@ -106,35 +65,6 @@ export async function generateMetadata() {
         'max-snippet': -1
       }
     },
-    alternates: {
-      canonical,
-      languages: {
-        tr: `${baseUrl}/`,
-        en: `${baseUrl}/en/`
-      }
-    },
-    openGraph: {
-      type: 'website',
-      locale: meta.locale,
-      url: canonical,
-      siteName: meta.siteName,
-      title: meta.title,
-      description: meta.description,
-      images: [
-        {
-          url: '/og-image.jpg',
-          width: 1200,
-          height: 630,
-          alt: meta.siteName
-        }
-      ]
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: meta.title,
-      description: meta.description,
-      images: ['/og-image.jpg']
-    },
     verification: {
       google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
     }
@@ -143,23 +73,26 @@ export async function generateMetadata() {
 
 export default async function RootLayout({ children }) {
   const locale = await getLocale();
-  const meta = localeMetadata[locale] || localeMetadata.tr;
-  const jsonLd = {
+  const meta = getSiteMeta(locale);
+  const homeUrl = absoluteUrl(locale);
+
+  const organizationLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${baseUrl}/#organization`,
     name: meta.siteName,
     alternateName: [
       'gdgoncampustu',
       'GDG on Campus Trakya',
+      'GDG Trakya',
       'Google Developer Groups Trakya'
     ],
-    url: `${baseUrl}${meta.pathPrefix || ''}`,
-    logo: `${baseUrl}/logo.png`,
+    url: homeUrl,
+    logo: `${baseUrl}/logo.svg`,
     description: meta.description,
     foundingLocation: {
       '@type': 'Place',
-      name:
-        locale === 'en' ? 'Trakya University' : 'Trakya Üniversitesi',
+      name: locale === 'en' ? 'Trakya University' : 'Trakya Üniversitesi',
       address: {
         '@type': 'PostalAddress',
         addressLocality: 'Edirne',
@@ -168,7 +101,10 @@ export default async function RootLayout({ children }) {
     },
     areaServed: locale === 'en' ? 'Trakya University' : 'Trakya Üniversitesi',
     sameAs: [
-      'https://gdg.community.dev/gdg-on-campus-trakya-universitesi-edirne-turkey/'
+      'https://gdg.community.dev/gdg-on-campus-trakya-universitesi-edirne-turkey/',
+      'https://www.instagram.com/gdgoncampustu/',
+      'https://www.linkedin.com/company/gdscedirne/',
+      'https://github.com/GDG-on-Campus-Trakya'
     ],
     memberOf: {
       '@type': 'Organization',
@@ -177,16 +113,25 @@ export default async function RootLayout({ children }) {
     }
   };
 
+  const websiteLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${baseUrl}/#website`,
+    name: meta.siteName,
+    alternateName: ['GDG on Campus Trakya', 'gdgoncampustu'],
+    url: homeUrl,
+    inLanguage: locale,
+    publisher: { '@id': `${baseUrl}/#organization` }
+  };
+
   return (
     <html
       lang={locale}
       className={`h-full ${bricolage.variable} ${plex.variable} ${plexMono.variable}`}
     >
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <JsonLd data={organizationLd} />
+        <JsonLd data={websiteLd} />
       </head>
       <body
         className="font-sans flex flex-col min-h-screen"

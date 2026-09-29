@@ -3,10 +3,16 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { getHomeData } from "@/lib/home-data";
+import { pageMetadata } from "@/lib/page-meta";
 import { formatLocalizedDate, getLocalizedField } from "@/utils/localeUtils";
 
 // Events and announcements come from Firestore; refresh the static page every 10 minutes.
 export const revalidate = 600;
+
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  return pageMetadata("home", locale);
+}
 
 const textLink =
   "inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-sm font-medium text-brand underline underline-offset-4 decoration-1 transition-colors duration-micro ease-out hover:decoration-2";
@@ -199,7 +205,7 @@ export default async function LandingPage({ params }) {
       </section>
 
       {/* Things to try */}
-      <section className="pb-20 pt-10 lg:pt-16">
+      <section className="pb-14 pt-10 lg:pt-16">
         <RailHeader title={t("try")} />
         <ul>
           {tryItems.map((item) => (
@@ -222,10 +228,13 @@ export default async function LandingPage({ params }) {
         </ul>
       </section>
 
-      <section className="sr-only">
-        <h2>{t("seoTitle")}</h2>
-        <p>{t("seoP1")}</p>
-        <p>{t("seoP2")}</p>
+      {/* Plain description of the community for readers and search engines alike */}
+      <section className="border-t-2 border-ink pb-20 pt-3">
+        <h2 className="font-display text-xl font-bold">{t("seoTitle")}</h2>
+        <div className="mt-4 max-w-measure space-y-4 text-ink-2">
+          <p>{t("seoP1")}</p>
+          <p>{t("seoP2")}</p>
+        </div>
       </section>
     </div>
   );
