@@ -24,12 +24,6 @@ module.exports = {
         "2xs": "280px",
       },
       colors: {
-        // Legacy overrides. Remove once no page uses purple-500 / pink-500 / red-500 / yellow-500.
-        "purple-500": "#9b5de5",
-        "pink-500": "#f15bb5",
-        "red-500": "#ee6352",
-        "yellow-500": "#f9c74f",
-
         // Design tokens (see tokens.css)
         paper: { DEFAULT: token("paper"), 2: token("paper-2"), 3: token("paper-3") },
         ink: { DEFAULT: token("ink"), 2: token("ink-2") },
