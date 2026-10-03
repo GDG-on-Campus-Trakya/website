@@ -222,9 +222,10 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
+    let processingSignIn = false;
+
     try {
       setError("");
-      setLoading(true);
 
       googleProvider.setCustomParameters({
         prompt: "select_account"
@@ -233,6 +234,10 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, googleProvider);
 
       if (result?.user) {
+        // Closing a popup can take time to reach Firebase. Keep the form usable
+        // until sign-in succeeds and we actually start saving the user profile.
+        processingSignIn = true;
+        setLoading(true);
         const { uid, email, displayName } = result.user;
         const userRef = doc(db, "users", uid);
         const userSnap = await getDoc(userRef);
@@ -250,20 +255,24 @@ export default function LoginPage() {
 
       router.push("/");
     } catch (error) {
+      if (
+        error.code === "auth/popup-closed-by-user" ||
+        error.code === "auth/cancelled-popup-request"
+      ) {
+        return;
+      }
+
       if (process.env.NODE_ENV === "development") {
         logger.error("Google sign-in error:", error);
       }
 
       if (error.code === "auth/popup-blocked") {
         setError(copy.errors.popupBlocked);
-      } else if (
-        error.code !== "auth/popup-closed-by-user" &&
-        error.code !== "auth/cancelled-popup-request"
-      ) {
+      } else {
         setError(copy.errors.googleFailed);
       }
     } finally {
-      setLoading(false);
+      if (processingSignIn) setLoading(false);
     }
   };
 
