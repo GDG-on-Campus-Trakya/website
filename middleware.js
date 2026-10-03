@@ -120,8 +120,9 @@ export function middleware(request) {
 }
 
 export const config = {
+  // Firebase auth helpers must reach the proxy rewrite without a locale prefix.
   // Metadata image routes (opengraph-image, twitter-image, apple-icon) have no file extension
   matcher: [
-    '/((?!api|_next|favicon.ico|opengraph-image|twitter-image|apple-icon|.*\\..*).*)'
+    '/((?!__/auth(?:/|$)|api|_next|favicon.ico|opengraph-image|twitter-image|apple-icon|.*\\..*).*)'
   ]
 };
