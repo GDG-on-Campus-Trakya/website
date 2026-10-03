@@ -5,6 +5,8 @@ import { getLocalizedField } from "@/utils/localeUtils";
 import JsonLd from "@/components/JsonLd";
 import { absoluteUrl, buildMetadata } from "@/lib/seo";
 
+export const revalidate = 600;
+
 export async function generateMetadata({ params }) {
   const { locale } = await params;
   setRequestLocale(locale);

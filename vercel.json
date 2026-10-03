@@ -4,24 +4,6 @@
   "regions": ["fra1"],
   "headers": [
     {
-      "source": "/personality-test/:path*",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=300, s-maxage=600, stale-while-revalidate=3600"
-        }
-      ]
-    },
-    {
-      "source": "/typing-test",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=300, s-maxage=600, stale-while-revalidate=3600"
-        }
-      ]
-    },
-    {
       "source": "/_next/static/media/:path*.{woff,woff2,eot,ttf,otf}",
       "headers": [
         {
@@ -63,35 +45,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, s-maxage=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "header",
-          "key": "accept",
-          "value": "text/html.*"
-        }
-      ],
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "index, follow, max-image-preview:large"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
         }
       ]
     },

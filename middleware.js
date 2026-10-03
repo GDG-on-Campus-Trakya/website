@@ -112,6 +112,7 @@ export function middleware(request) {
   response.headers.set('X-DNS-Prefetch-Control', 'on');
   if (PRIVATE_PATHS.test(pathname)) {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    response.headers.set('Cache-Control', 'private, no-store, max-age=0');
   }
   response.headers.set('X-Content-Type-Options', 'nosniff');
 

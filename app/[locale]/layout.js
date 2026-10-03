@@ -6,9 +6,16 @@ import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 import CookieConsent from '@/components/CookieConsent';
 import AuthProvider from '../AuthProvider';
+import DocumentLayout, { getDocumentMetadata } from '@/components/DocumentLayout';
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  if (!isValidLocale(locale)) notFound();
+  return getDocumentMetadata(locale);
 }
 
 export default async function LocaleLayout({ children, params }) {
@@ -22,13 +29,15 @@ export default async function LocaleLayout({ children, params }) {
   const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      <AuthProvider>
-        <Navbar />
-        <main className="flex-1 w-full">{children}</main>
-        <Footer />
-        <CookieConsent />
-      </AuthProvider>
-    </NextIntlClientProvider>
+    <DocumentLayout locale={locale}>
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        <AuthProvider>
+          <Navbar />
+          <main className="flex-1 w-full">{children}</main>
+          <Footer />
+          <CookieConsent />
+        </AuthProvider>
+      </NextIntlClientProvider>
+    </DocumentLayout>
   );
 }

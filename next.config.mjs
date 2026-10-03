@@ -138,23 +138,6 @@ const nextConfig = {
           },
         ],
       },
-      // HTML sayfalar - kısa cache ama stale-while-revalidate ile hızlı
-      {
-        source: "/:path*",
-        has: [
-          {
-            type: "header",
-            key: "accept",
-            value: "text/html.*",
-          },
-        ],
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800",
-          },
-        ],
-      },
       // Genel güvenlik ve CSP
       {
         source: "/(.*)",
