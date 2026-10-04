@@ -13,79 +13,80 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const COPY = {
   tr: {
-    englishTitle: "İngilizce Başlık",
-    englishDescription: "İngilizce Kısa Açıklama",
-    englishContent: "İngilizce İçerik",
-    englishTitlePlaceholder: "Duyurunun İngilizce başlığı...",
+    englishTitle: "İngilizce başlık",
+    englishDescription: "İngilizce kısa açıklama",
+    englishContent: "İngilizce içerik",
+    englishTitlePlaceholder: "Duyurunun İngilizce başlığı…",
     englishDescriptionPlaceholder:
       "Duyurunun İngilizce kısa açıklaması...",
     englishContentPlaceholder:
       "Duyurunun İngilizce içeriğini buraya yazın...",
-    invalidImage: "Lütfen geçerli bir resim dosyası seçin!",
-    imageTooLarge: "Resim boyutu 10MB'dan küçük olmalıdır!",
-    loginRequired: "Giriş yapmanız gerekiyor!",
-    titleRequired: "Lütfen bir başlık girin!",
-    imageUploadError: "Resim yüklenirken hata oluştu!",
-    unexpectedError: "Beklenmeyen bir hata oluştu!",
-    editTitle: "Duyuruyu Düzenle",
-    createTitle: "Yeni Duyuru Oluştur",
+    invalidImage: "Lütfen geçerli bir resim dosyası seçin.",
+    imageTooLarge: "Resim boyutu 10MB'dan küçük olmalıdır.",
+    loginRequired: "Giriş yapmanız gerekiyor",
+    titleRequired: "Lütfen bir başlık girin.",
+    imageUploadError: "Resim yüklenirken hata oluştu.",
+    unexpectedError: "Beklenmeyen bir hata oluştu.",
+    editTitle: "Duyuruyu düzenle",
+    createTitle: "Yeni duyuru oluştur",
     titleLabel: "Başlık",
-    titlePlaceholder: "Duyuru başlığı...",
+    titlePlaceholder: "Duyuru başlığı…",
     characters: "karakter",
-    descriptionLabel: "Kısa Açıklama (İsteğe Bağlı)",
-    descriptionPlaceholder: "Duyuru hakkında kısa bir açıklama...",
+    descriptionLabel: "Kısa açıklama (isteğe bağlı)",
+    descriptionPlaceholder: "Duyuru hakkında kısa bir açıklama…",
     contentLabel: "İçerik",
-    contentPlaceholder: "Duyuru içeriğini buraya yazın...",
-    imageLabel: "Resim (İsteğe Bağlı)",
+    contentPlaceholder: "Duyuru içeriğini buraya yazın…",
+    imageLabel: "Resim (isteğe bağlı)",
     imageDropHint: "Resim seç veya sürükle",
     publishNow: "Duyuruyu hemen yayınla",
     cancel: "İptal",
-    saving: "Kaydediliyor...",
+    saving: "Kaydediliyor…",
     update: "Güncelle",
     create: "Oluştur",
-    createSuccess: "Duyuru başarıyla oluşturuldu!",
-    createError: "Duyuru oluşturulurken hata oluştu!",
-    updateSuccess: "Duyuru başarıyla güncellendi!",
-    updateError: "Duyuru güncellenirken hata oluştu!",
+    createSuccess: "Duyuru başarıyla oluşturuldu",
+    createError: "Duyuru oluşturulurken hata oluştu.",
+    updateSuccess: "Duyuru başarıyla güncellendi",
+    updateError: "Duyuru güncellenirken hata oluştu.",
   },
   en: {
-    englishTitle: "English Title",
-    englishDescription: "English Short Description",
-    englishContent: "English Content",
-    englishTitlePlaceholder: "Announcement title in English...",
+    englishTitle: "English title",
+    englishDescription: "English short description",
+    englishContent: "English content",
+    englishTitlePlaceholder: "Announcement title in English…",
     englishDescriptionPlaceholder:
       "A short English description for the announcement...",
     englishContentPlaceholder:
       "Write the English announcement content here...",
-    invalidImage: "Please select a valid image file!",
-    imageTooLarge: "Image size must be smaller than 10MB!",
-    loginRequired: "You need to sign in!",
-    titleRequired: "Please enter a title!",
-    imageUploadError: "An error occurred while uploading the image!",
-    unexpectedError: "An unexpected error occurred!",
-    editTitle: "Edit Announcement",
-    createTitle: "Create New Announcement",
+    invalidImage: "Please select a valid image file.",
+    imageTooLarge: "Image size must be smaller than 10MB.",
+    loginRequired: "You need to sign in.",
+    titleRequired: "Please enter a title.",
+    imageUploadError: "An error occurred while uploading the image.",
+    unexpectedError: "An unexpected error occurred.",
+    editTitle: "Edit announcement",
+    createTitle: "Create new announcement",
     titleLabel: "Title",
-    titlePlaceholder: "Announcement title...",
+    titlePlaceholder: "Announcement title…",
     characters: "characters",
-    descriptionLabel: "Short Description (Optional)",
-    descriptionPlaceholder: "A short description about the announcement...",
+    descriptionLabel: "Short description (optional)",
+    descriptionPlaceholder: "A short description about the announcement…",
     contentLabel: "Content",
-    contentPlaceholder: "Write the announcement content here...",
-    imageLabel: "Image (Optional)",
+    contentPlaceholder: "Write the announcement content here…",
+    imageLabel: "Image (optional)",
     imageDropHint: "Select or drag an image",
     publishNow: "Publish immediately",
     cancel: "Cancel",
-    saving: "Saving...",
+    saving: "Saving…",
     update: "Update",
     create: "Create",
-    createSuccess: "Announcement created successfully!",
-    createError: "An error occurred while creating the announcement!",
-    updateSuccess: "Announcement updated successfully!",
-    updateError: "An error occurred while updating the announcement!",
+    createSuccess: "Announcement created successfully",
+    createError: "An error occurred while creating the announcement.",
+    updateSuccess: "Announcement updated successfully",
+    updateError: "An error occurred while updating the announcement.",
   },
 };
 
@@ -260,18 +261,13 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="announcement-form-title"
-      className="fixed inset-0 z-modal flex items-start justify-center overflow-y-auto bg-ink/60 animate-in fade-in-0 duration-short sm:items-center"
-    >
-      <div className="relative min-h-dvh w-full max-w-2xl rounded-t-lg border border-rule bg-background p-4 text-foreground sm:my-8 sm:min-h-0 sm:rounded-lg sm:p-6">
+    <Dialog open onOpenChange={(open) => { if (!open) { onClose?.(); } }}>
+      <DialogContent hideClose aria-describedby={undefined} className="max-w-2xl border border-rule bg-background p-4 text-foreground sm:p-6 gap-0">
         {/* Header */}
         <div className="sticky top-0 z-raised -mx-4 mb-4 flex items-center justify-between gap-4 border-b border-rule bg-background px-4 pb-3 sm:static sm:mx-0 sm:mb-6 sm:px-0">
-          <h2 id="announcement-form-title" className="font-display text-xl font-bold sm:text-2xl">
+          <DialogTitle className="font-display text-xl font-bold sm:text-2xl">
             {announcement ? copy.editTitle : copy.createTitle}
-          </h2>
+          </DialogTitle>
           {onClose && (
             <Button type="button" variant="ghost" size="icon" onClick={onClose} className="-mr-2">
               <X className="h-5 w-5" aria-hidden="true" />
@@ -452,7 +448,7 @@ export default function AnnouncementForm({ announcement = null, onClose, onSucce
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

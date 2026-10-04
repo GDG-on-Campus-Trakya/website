@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader, EmptyState } from "@/components/ui/page";
 import { Stat } from "@/components/ui/stat";
 import { useConfirm } from "@/components/ConfirmProvider";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 export default function AdminTicketsPage() {
   const confirm = useConfirm();
@@ -36,12 +37,12 @@ export default function AdminTicketsPage() {
             assignFailed: "An error occurred while updating the admin assignment",
           },
           success: {
-            responseSent: "Reply sent successfully!",
+            responseSent: "Reply sent successfully",
             statusChanged: (action) =>
               `Ticket ${action === "close" ? "closed" : "reopened"} successfully!`,
-            deleted: "Ticket deleted successfully!",
-            assignAdmin: "Admin assigned successfully!",
-            unassignAdmin: "Admin assignment removed!",
+            deleted: "Ticket deleted successfully",
+            assignAdmin: "Admin assigned successfully",
+            unassignAdmin: "Admin assignment removed",
           },
           statuses: {
             open: "Open",
@@ -52,25 +53,25 @@ export default function AdminTicketsPage() {
           categories: {
             complaint: "Complaint",
             suggestion: "Suggestion",
-            technical: "Technical Support",
+            technical: "Technical support",
             other: "Other",
             unknown: "Unknown",
           },
-          loading: "Loading...",
+          loading: "Loading…",
           accessDenied: "Access denied",
-          title: "Ticket Management",
+          title: "Support requests",
           subtitle: "Manage user support requests",
           stats: {
-            total: "Total Tickets",
-            open: "Open Tickets",
-            closed: "Closed Tickets",
-            complaints: "Support Requests",
+            total: "Total",
+            open: "Open",
+            closed: "Closed",
+            complaints: "Complaints",
           },
           filters: {
-            status: "Status Filter",
-            category: "Category Filter",
-            allStatuses: "All Statuses",
-            allCategories: "All Categories",
+            status: "Status filter",
+            category: "Category filter",
+            allStatuses: "All statuses",
+            allCategories: "All categories",
           },
           emptyFiltered: "No tickets match your filters.",
           user: "User",
@@ -78,7 +79,7 @@ export default function AdminTicketsPage() {
           closedAt: "Closed",
           reopenedAt: "Reopened",
           reopenReason: "Reason",
-          assignedAdmin: "Assigned Admin",
+          assignedAdmin: "Assigned admin",
           reply: "Reply",
           close: "Close",
           reopen: "Reopen",
@@ -92,32 +93,32 @@ export default function AdminTicketsPage() {
           assigned: "Assigned",
           requester: "User",
           system: "System",
-          attachments: "Attached Files",
+          attachments: "Attached files",
           noAttachments: "No attached files",
-          replyPlaceholder: "Write a reply...",
-          sending: "Sending...",
+          replyPlaceholder: "Write a reply…",
+          sending: "Sending…",
           send: "Send",
-          infoTitle: "Ticket Details",
-          actionsTitle: "Admin Actions",
-          assignmentTitle: "Admin Assignment",
+          infoTitle: "Ticket details",
+          actionsTitle: "Admin actions",
+          assignmentTitle: "Admin assignment",
         }
       : {
           errors: {
-            fetchTickets: "Biletler yüklenirken bir hata oluştu",
+            fetchTickets: "Talepler yüklenemedi. Sayfayı yenileyip yeniden dene.",
             responseFailed: "Yanıt gönderilirken bir hata oluştu",
             statusFailed: "Durum güncellenirken bir hata oluştu",
             deleteConfirm:
-              "Bu bileti kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
-            deleteFailed: "Bilet silinirken bir hata oluştu",
+              "Bu talep kalıcı olarak silinsin mi? Bu geri alınamaz.",
+            deleteFailed: "Talep silinemedi. Yeniden dene.",
             assignFailed: "Admin ataması güncellenirken bir hata oluştu",
           },
           success: {
-            responseSent: "Yanıt başarıyla gönderildi!",
+            responseSent: "Yanıt başarıyla gönderildi",
             statusChanged: (action) =>
-              `Bilet başarıyla ${action === "close" ? "kapatıldı" : "açıldı"}!`,
-            deleted: "Bilet başarıyla silindi!",
-            assignAdmin: "Admin başarıyla atandı!",
-            unassignAdmin: "Admin ataması kaldırıldı!",
+              `Talep ${action === "close" ? "kapatıldı" : "yeniden açıldı"}.`,
+            deleted: "Talep silindi.",
+            assignAdmin: "Admin başarıyla atandı",
+            unassignAdmin: "Admin ataması kaldırıldı",
           },
           statuses: {
             open: "Açık",
@@ -128,54 +129,54 @@ export default function AdminTicketsPage() {
           categories: {
             complaint: "Şikayet",
             suggestion: "Öneri",
-            technical: "Teknik Destek",
+            technical: "Teknik destek",
             other: "Diğer",
             unknown: "Bilinmiyor",
           },
-          loading: "Yükleniyor...",
+          loading: "Yükleniyor…",
           accessDenied: "Erişim engellendi",
-          title: "Bilet Yönetimi",
+          title: "Destek talepleri",
           subtitle: "Kullanıcı destek taleplerini yönetin",
           stats: {
-            total: "Toplam Bilet",
-            open: "Açık Biletler",
-            closed: "Kapalı Biletler",
-            complaints: "Destek Talepleri",
+            total: "Toplam talep",
+            open: "Açık",
+            closed: "Kapanan",
+            complaints: "Şikâyet",
           },
           filters: {
-            status: "Durum Filtresi",
-            category: "Kategori Filtresi",
-            allStatuses: "Tüm Durumlar",
-            allCategories: "Tüm Kategoriler",
+            status: "Durum filtresi",
+            category: "Kategori filtresi",
+            allStatuses: "Tüm durumlar",
+            allCategories: "Tüm kategoriler",
           },
-          emptyFiltered: "Filtrelerinize uygun bilet bulunamadı.",
+          emptyFiltered: "Filtreye uyan talep yok.",
           user: "Kullanıcı",
           createdAt: "Oluşturulma",
           closedAt: "Kapatılma",
-          reopenedAt: "Yeniden Açıldı",
+          reopenedAt: "Yeniden açıldı",
           reopenReason: "Gerekçe",
-          assignedAdmin: "Atanan Admin",
+          assignedAdmin: "Atanan admin",
           reply: "Yanıtla",
           close: "Kapat",
-          reopen: "Tekrar Aç",
+          reopen: "Tekrar aç",
           delete: "Sil",
-          deleteTitle: "Bileti kalıcı olarak sil",
+          deleteTitle: "Talebi kalıcı olarak sil",
           adminLabel: "Admin",
           unassigned: "Atanmamış",
-          ticketPrefix: "Bilet",
+          ticketPrefix: "Talep",
           status: "Durum",
           category: "Kategori",
           assigned: "Atanan",
           requester: "Kullanıcı",
           system: "Sistem",
-          attachments: "Ekli Dosyalar",
+          attachments: "Ekli dosyalar",
           noAttachments: "Ekli dosya yok",
-          replyPlaceholder: "Yanıt yazın...",
-          sending: "Gönderiliyor...",
+          replyPlaceholder: "Yanıt yazın…",
+          sending: "Gönderiliyor…",
           send: "Gönder",
-          infoTitle: "Bilet Bilgileri",
-          actionsTitle: "Admin İşlemleri",
-          assignmentTitle: "Admin Atama",
+          infoTitle: "Talep bilgileri",
+          actionsTitle: "Admin işlemleri",
+          assignmentTitle: "Admin atama",
         };
   const [user, loading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -740,23 +741,15 @@ export default function AdminTicketsPage() {
 
       {/* Chat Modal */}
       {selectedTicket && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4 animate-in fade-in-0 duration-short"
-          style={{ overscrollBehavior: 'contain' }}
-        >
-          <div
-            className="flex h-[90dvh] w-full max-w-5xl flex-col overflow-hidden rounded-lg border border-rule bg-background text-foreground"
-            style={{ overscrollBehavior: 'contain' }}
-          >
+        <Dialog open onOpenChange={(open) => { if (!open) { setSelectedTicket(null); } }}>
+          <DialogContent hideClose aria-describedby={undefined} className="flex h-[90dvh] max-w-5xl flex-col overflow-hidden rounded-lg border border-rule bg-background text-foreground p-0 gap-0">
             {/* Header */}
             <div className="flex-shrink-0 border-b border-rule px-6 py-4">
               <div className="mb-3 flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h2 className="font-display text-lg font-bold">
+                  <DialogTitle className="font-display text-lg font-bold">
                     {copy.ticketPrefix} <span className="font-outlier">#{selectedTicket.ticketNumber || selectedTicket.id}</span>
-                  </h2>
+                  </DialogTitle>
                   <p className="break-words text-sm text-muted-foreground">
                     {selectedTicket.subject} - {selectedTicket.userName}
                   </p>
@@ -766,6 +759,7 @@ export default function AdminTicketsPage() {
                   variant="ghost"
                   size="icon"
                   className="-mr-2 -mt-2 shrink-0"
+                  aria-label={locale === "en" ? "Close" : "Kapat"}
                   onClick={() => setSelectedTicket(null)}
                 >
                   <X aria-hidden="true" />
@@ -1085,8 +1079,8 @@ export default function AdminTicketsPage() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       <ToastContainer

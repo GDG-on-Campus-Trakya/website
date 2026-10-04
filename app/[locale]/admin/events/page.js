@@ -37,23 +37,24 @@ import { PageHeader, Section, EmptyState } from "@/components/ui/page";
 import { Stat } from "@/components/ui/stat";
 import { adminCopy } from "@/utils/adminCopy";
 import { useConfirm } from "@/components/ConfirmProvider";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const COPY = {
   tr: {
-    pageTitle: "Etkinlik Yönetimi",
+    pageTitle: "Etkinlik yönetimi",
     pageSubtitle: "Tüm etkinlikleri görüntüleyin ve yönetin",
-    statActiveEvents: "Aktif Etkinlik",
+    statActiveEvents: "Aktif etkinlik",
     statArchived: "Arşivlenen",
     statSponsored: "Sponsorlu",
     statCategories: "Kategoriler",
     tabActiveEvents: (n) => `Aktif Etkinlikler (${n})`,
     tabArchive: (n) => `Arşiv (${n})`,
-    editEventHeading: "Etkinlik Düzenle",
-    addEventHeading: "Yeni Etkinlik Ekle",
-    eventNameLabel: "Etkinlik Adı",
-    eventNamePlaceholder: "Etkinlik adını girin...",
-    englishEventName: "English Event Name",
-    englishEventNamePlaceholder: "Enter the event name in English...",
+    editEventHeading: "Etkinlik düzenle",
+    addEventHeading: "Yeni etkinlik ekle",
+    eventNameLabel: "Etkinlik adı",
+    eventNamePlaceholder: "Etkinlik adını girin…",
+    englishEventName: "English event name",
+    englishEventNamePlaceholder: "Enter the event name in English…",
     categoryLabel: "Kategori",
     catConference: "Konferans",
     catTrip: "Gezi",
@@ -61,18 +62,18 @@ const COPY = {
     descriptionLabel: "Açıklama *",
     edit: "Düzenle",
     preview: "Önizleme",
-    descriptionPlaceholder: "Etkinlik açıklamasını girin... (Markdown destekli)",
-    englishDescription: "English Description",
-    englishDescriptionPlaceholder: "Enter the event description in English...",
-    markdownHelpToggle: "Markdown Formatını Nasıl Kullanacağım?",
-    markdownBasicFormats: "Temel Formatlar",
+    descriptionPlaceholder: "Etkinlik açıklamasını girin… (Markdown destekli)",
+    englishDescription: "English description",
+    englishDescriptionPlaceholder: "Enter the event description in English…",
+    markdownHelpToggle: "Markdown formatını nasıl kullanacağım?",
+    markdownBasicFormats: "Temel formatlar",
     markdownBoldText: "kalın metin",
     markdownItalicText: "italik metin",
     markdownStrikeText: "çizili metin",
     markdownHeadings: "Başlıklar",
-    markdownBigHeading: "# Büyük Başlık",
-    markdownMediumHeading: "## Orta Başlık",
-    markdownSmallHeading: "### Küçük Başlık",
+    markdownBigHeading: "# Büyük başlık",
+    markdownMediumHeading: "## Orta başlık",
+    markdownSmallHeading: "### Küçük başlık",
     markdownLinks: "Linkler",
     markdownLinkText: "[Metin](https://example.com)",
     markdownLinkHint:
@@ -83,10 +84,10 @@ const COPY = {
     markdownCodeBlockHint: "Kod bloğu için üç backtick (`) kullanın:",
     markdownCodeHere: "kodunuz burada",
     markdownLists: "Listeler",
-    markdownBulletList: "Maddeli Liste:",
+    markdownBulletList: "Maddeli liste:",
     markdownItem: "Madde",
-    markdownNumberedList: "Numaralı Liste:",
-    markdownCalloutBox: "Dikkat Kutusu (Bloktur)",
+    markdownNumberedList: "Numaralı liste:",
+    markdownCalloutBox: "Dikkat kutusu (bloktur)",
     markdownCalloutText: "> Önemli bilgi",
     markdownCalloutHint:
       "Başına > koyduğunuz satırlar dikkat kutusu olarak gösterilir.",
@@ -96,18 +97,18 @@ const COPY = {
     dateLabel: "Tarih",
     timeLabel: "Saat",
     locationLabel: "Konum",
-    locationPlaceholder: "Etkinlik konumunu girin...",
-    englishLocation: "English Location",
-    englishLocationPlaceholder: "Enter the event location in English...",
-    eventImageLabel: "Etkinlik Resmi",
-    eventImagePlaceholder: "Etkinlik Resmi Yükle",
+    locationPlaceholder: "Etkinlik konumunu girin…",
+    englishLocation: "English location",
+    englishLocationPlaceholder: "Enter the event location in English…",
+    eventImageLabel: "Etkinlik resmi",
+    eventImagePlaceholder: "Etkinlik resmi yükle",
     documentUrlLabel: "Doküman URL'si",
     sponsorsLabel: "Sponsorlar",
     sponsorsSelected: (n) => `${n} sponsor seçildi`,
     selectSponsor: "Sponsor seçin",
-    unknownSponsor: "Bilinmeyen Sponsor",
-    updateEventButton: "Etkinlik Güncelle",
-    addEventButton: "Etkinlik Ekle",
+    unknownSponsor: "Bilinmeyen sponsor",
+    updateEventButton: "Etkinlik güncelle",
+    addEventButton: "Etkinlik ekle",
     allEventsHeading: (n) => `Tüm Etkinlikler (${n})`,
     emptyCurrentTitle: "Henüz aktif etkinlik bulunmuyor",
     emptyArchiveTitle: "Arşivlenmiş etkinlik bulunmuyor",
@@ -115,23 +116,23 @@ const COPY = {
     emptyArchiveHint: "1 haftadan eski etkinlikler burada görünür",
     sponsorCount: (n) => `${n} sponsor`,
     deleteEvent: "Sil",
-    sendEmail: "Email Gönder",
+    sendEmail: "Email gönder",
     cantEmailArchived: "Arşivlenen etkinlikler için email gönderilemez",
-    qrCode: "QR Kodu",
+    qrCode: "QR kodu",
     cantQrArchived: "Arşivlenen etkinlikler için QR kod oluşturulamaz",
-    qrCodeModalTitle: "QR Kodu",
-    qrCodeAlt: "QR Kodu",
-    qrCodeIdLabel: "QR Kodu ID:",
+    qrCodeModalTitle: "QR kodu",
+    qrCodeAlt: "QR kodu",
+    qrCodeIdLabel: "QR kodu ID:",
     closeButton: "Kapat",
     // Toasts / confirms / alerts
     confirmDeleteEvent:
       "Bu etkinliği silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
-    eventCreated: "Etkinlik başarıyla oluşturuldu!",
-    eventCreateError: "Etkinlik oluşturulurken bir hata oluştu!",
-    eventUpdated: "Etkinlik başarıyla güncellendi!",
-    eventUpdateError: "Etkinlik güncellenirken bir hata oluştu!",
-    eventDeleted: "Etkinlik başarıyla silindi!",
-    eventDeleteError: "Etkinlik silinirken bir hata oluştu!",
+    eventCreated: "Etkinlik başarıyla oluşturuldu",
+    eventCreateError: "Etkinlik oluşturulurken bir hata oluştu.",
+    eventUpdated: "Etkinlik başarıyla güncellendi",
+    eventUpdateError: "Etkinlik güncellenirken bir hata oluştu.",
+    eventDeleted: "Etkinlik başarıyla silindi",
+    eventDeleteError: "Etkinlik silinirken bir hata oluştu.",
     emailRateLimit: (n) =>
       `Bu etkinlik için son email gönderiminden ${n} dakika sonra tekrar email gönderebilirsiniz.`,
     emailsSent: "E-postalar gönderildi.",
@@ -140,20 +141,20 @@ const COPY = {
     qrError: "QR kod oluşturulamadı. Yeniden dene.",
   },
   en: {
-    pageTitle: "Event Management",
+    pageTitle: "Event management",
     pageSubtitle: "View and manage all events",
-    statActiveEvents: "Active Events",
+    statActiveEvents: "Active events",
     statArchived: "Archived",
     statSponsored: "Sponsored",
     statCategories: "Categories",
     tabActiveEvents: (n) => `Active Events (${n})`,
     tabArchive: (n) => `Archive (${n})`,
-    editEventHeading: "Edit Event",
-    addEventHeading: "Add New Event",
-    eventNameLabel: "Event Name",
-    eventNamePlaceholder: "Enter the event name...",
-    englishEventName: "English Event Name",
-    englishEventNamePlaceholder: "Enter the event name in English...",
+    editEventHeading: "Edit event",
+    addEventHeading: "Add new event",
+    eventNameLabel: "Event name",
+    eventNamePlaceholder: "Enter the event name…",
+    englishEventName: "English event name",
+    englishEventNamePlaceholder: "Enter the event name in English…",
     categoryLabel: "Category",
     catConference: "Conference",
     catTrip: "Trip",
@@ -161,18 +162,18 @@ const COPY = {
     descriptionLabel: "Description *",
     edit: "Edit",
     preview: "Preview",
-    descriptionPlaceholder: "Enter the event description... (Markdown supported)",
-    englishDescription: "English Description",
-    englishDescriptionPlaceholder: "Enter the event description in English...",
-    markdownHelpToggle: "How Do I Use Markdown Formatting?",
-    markdownBasicFormats: "Basic Formats",
+    descriptionPlaceholder: "Enter the event description… (Markdown supported)",
+    englishDescription: "English description",
+    englishDescriptionPlaceholder: "Enter the event description in English…",
+    markdownHelpToggle: "How do I use Markdown formatting?",
+    markdownBasicFormats: "Basic formats",
     markdownBoldText: "bold text",
     markdownItalicText: "italic text",
     markdownStrikeText: "strikethrough text",
     markdownHeadings: "Headings",
-    markdownBigHeading: "# Large Heading",
-    markdownMediumHeading: "## Medium Heading",
-    markdownSmallHeading: "### Small Heading",
+    markdownBigHeading: "# Large heading",
+    markdownMediumHeading: "## Medium heading",
+    markdownSmallHeading: "### Small heading",
     markdownLinks: "Links",
     markdownLinkText: "[Text](https://example.com)",
     markdownLinkHint:
@@ -183,10 +184,10 @@ const COPY = {
     markdownCodeBlockHint: "Use three backticks (`) for a code block:",
     markdownCodeHere: "your code here",
     markdownLists: "Lists",
-    markdownBulletList: "Bulleted List:",
+    markdownBulletList: "Bulleted list:",
     markdownItem: "Item",
-    markdownNumberedList: "Numbered List:",
-    markdownCalloutBox: "Callout Box (Block)",
+    markdownNumberedList: "Numbered list:",
+    markdownCalloutBox: "Callout box (block)",
     markdownCalloutText: "> Important info",
     markdownCalloutHint:
       "Lines that start with > are displayed as a callout box.",
@@ -196,18 +197,18 @@ const COPY = {
     dateLabel: "Date",
     timeLabel: "Time",
     locationLabel: "Location",
-    locationPlaceholder: "Enter the event location...",
-    englishLocation: "English Location",
-    englishLocationPlaceholder: "Enter the event location in English...",
-    eventImageLabel: "Event Image",
-    eventImagePlaceholder: "Upload Event Image",
+    locationPlaceholder: "Enter the event location…",
+    englishLocation: "English location",
+    englishLocationPlaceholder: "Enter the event location in English…",
+    eventImageLabel: "Event image",
+    eventImagePlaceholder: "Upload event image",
     documentUrlLabel: "Document URL",
     sponsorsLabel: "Sponsors",
     sponsorsSelected: (n) => `${n} sponsor(s) selected`,
     selectSponsor: "Select a sponsor",
-    unknownSponsor: "Unknown Sponsor",
-    updateEventButton: "Update Event",
-    addEventButton: "Add Event",
+    unknownSponsor: "Unknown sponsor",
+    updateEventButton: "Update event",
+    addEventButton: "Add event",
     allEventsHeading: (n) => `All Events (${n})`,
     emptyCurrentTitle: "No active events yet",
     emptyArchiveTitle: "No archived events",
@@ -215,23 +216,23 @@ const COPY = {
     emptyArchiveHint: "Events older than 1 week appear here",
     sponsorCount: (n) => `${n} sponsor(s)`,
     deleteEvent: "Delete",
-    sendEmail: "Send Email",
+    sendEmail: "Send email",
     cantEmailArchived: "Emails cannot be sent for archived events",
-    qrCode: "QR Code",
+    qrCode: "QR code",
     cantQrArchived: "QR codes cannot be generated for archived events",
-    qrCodeModalTitle: "QR Code",
-    qrCodeAlt: "QR Code",
-    qrCodeIdLabel: "QR Code ID:",
+    qrCodeModalTitle: "QR code",
+    qrCodeAlt: "QR code",
+    qrCodeIdLabel: "QR code ID:",
     closeButton: "Close",
     // Toasts / confirms / alerts
     confirmDeleteEvent:
       "Are you sure you want to delete this event? This action cannot be undone.",
-    eventCreated: "Event created successfully!",
-    eventCreateError: "An error occurred while creating the event!",
-    eventUpdated: "Event updated successfully!",
-    eventUpdateError: "An error occurred while updating the event!",
-    eventDeleted: "Event deleted successfully!",
-    eventDeleteError: "An error occurred while deleting the event!",
+    eventCreated: "Event created successfully",
+    eventCreateError: "An error occurred while creating the event.",
+    eventUpdated: "Event updated successfully",
+    eventUpdateError: "An error occurred while updating the event.",
+    eventDeleted: "Event deleted successfully",
+    eventDeleteError: "An error occurred while deleting the event.",
     emailRateLimit: (n) =>
       `You can send another email for this event ${n} minutes after the last one.`,
     emailsSent: "E-mails sent.",
@@ -1155,19 +1156,9 @@ export default function AdminEventsPage() {
 
       {/* QR Code Modal */}
       {qrCodeModalOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4 animate-in fade-in-0 duration-short"
-          style={{ overscrollBehavior: 'contain' }}
-          onClick={() => setQRCodeModalOpen(false)}
-        >
-          <div
-            className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-lg border border-rule bg-background p-6 text-foreground"
-            style={{ overscrollBehavior: 'contain' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="font-display text-2xl font-bold">{copy.qrCodeModalTitle}</h2>
+        <Dialog open onOpenChange={(open) => { if (!open) { setQRCodeModalOpen(false); } }}>
+          <DialogContent aria-describedby={undefined} className="max-h-[90dvh] max-w-md overflow-y-auto rounded-lg border border-rule bg-background p-6 text-foreground">
+            <DialogTitle className="pr-10 font-display text-2xl font-bold">{copy.qrCodeModalTitle}</DialogTitle>
 
             <div className="my-6 border-y border-rule py-6">
               <img
@@ -1187,8 +1178,8 @@ export default function AdminEventsPage() {
             <Button onClick={() => setQRCodeModalOpen(false)} className="w-full">
               {copy.closeButton}
             </Button>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       <ToastContainer theme="light" />

@@ -21,15 +21,16 @@ import { checkUserRole, ROLES } from "@/utils/roleUtils";
 import { useLocale } from "next-intl";
 import { adminCopy } from "@/utils/adminCopy";
 import { useConfirm } from "@/components/ConfirmProvider";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const COPY = {
   tr: {
-    adminPanel: "Admin Panel",
-    pageTitle: "Kişilik Testleri Yönetimi",
+    adminPanel: "Admin panel",
+    pageTitle: "Kişilik testleri yönetimi",
     pageSubtitle: "Kişilik testlerini oluşturun, düzenleyin ve yönetin",
-    searchPlaceholder: "Test ara...",
+    searchPlaceholder: "Test ara…",
     jsonImport: "JSON Import",
-    newTest: "Yeni Test",
+    newTest: "Yeni test",
     soruSuffix: (n) => `${n} soru`,
     orderLabel: (n) => `Sıra: ${n}`,
     edit: "Düzenle",
@@ -62,65 +63,65 @@ const COPY = {
     }
   }
 }`,
-    jsonInputPlaceholder: "JSON verilerinizi buraya yapıştırın...",
-    importBtn: "İçe Aktar",
+    jsonInputPlaceholder: "JSON verilerinizi buraya yapıştırın…",
+    importBtn: "İçe aktar",
     cancel: "İptal",
-    editTestTitle: "Test Düzenle",
-    newTestTitle: "Yeni Test Oluştur",
-    basicInfo: "Temel Bilgiler",
-    testTitle: "Test Başlığı *",
+    editTestTitle: "Test düzenle",
+    newTestTitle: "Yeni test oluştur",
+    basicInfo: "Temel bilgiler",
+    testTitle: "Test başlığı *",
     description: "Açıklama *",
     order: "Sıra",
-    coverImage: "Kapak Resmi",
+    coverImage: "Kapak resmi",
     dragNewImage: "Yeni resim yüklemek için sürükle-bırak veya tıkla",
-    dropHere: "Bırakın...",
+    dropHere: "Bırakın…",
     dragOrClick: "Resmi sürükle-bırak veya tıkla",
-    coverImageFormats: "PNG, JPG, GIF (Max 5MB)",
+    coverImageFormats: "PNG, JPG, GIF (max 5MB)",
     questions: (n) => `Sorular (${n})`,
-    addQuestion: "Soru Ekle",
+    addQuestion: "Soru ekle",
     questionLabel: (n) => `Soru ${n}`,
     questionTextPlaceholder: "Soru metni",
     options: (n) => `Seçenekler (${n})`,
-    addOption: "Seçenek Ekle",
+    addOption: "Seçenek ekle",
     optionTextPlaceholder: "Seçenek metni",
     pointsLabel: "Puanlar:",
     results: (n) => `Sonuçlar (${n})`,
-    addResult: "Sonuç Ekle",
+    addResult: "Sonuç ekle",
     titlePlaceholder: "Başlık",
     descriptionPlaceholder: "Açıklama",
     color: "Renk",
-    resultImage: "Sonuç Resmi",
+    resultImage: "Sonuç resmi",
     dragNewImageShort: "Yeni resim için sürükle-bırak veya tıkla",
     resultImageFormats: "PNG, JPG, GIF",
     update: "Güncelle",
     coverAlt: "Kapak resmi",
     create: "Oluştur",
     // Toasts / prompts
-    loadTestsError: "Testler yüklenirken hata oluştu!",
+    loadTestsError: "Testler yüklenirken hata oluştu.",
     confirmDeleteTest: "Bu testi silmek istediğinizden emin misiniz?",
-    deleteSuccess: "Test başarıyla silindi!",
-    deleteError: "Test silinirken hata oluştu!",
-    selectImageFile: "Lütfen bir resim dosyası seçin!",
-    coverUploaded: "Kapak resmi yüklendi!",
-    imageUploadError: "Resim yüklenirken hata oluştu!",
-    resultUploaded: "Sonuç resmi yüklendi!",
-    fillRequired: "Lütfen tüm zorunlu alanları doldurun!",
-    testUpdated: "Test güncellendi!",
-    testCreated: "Test oluşturuldu!",
-    saveError: "Test kaydedilirken hata oluştu!",
+    deleteSuccess: "Test başarıyla silindi",
+    deleteError: "Test silinirken hata oluştu.",
+    selectImageFile: "Lütfen bir resim dosyası seçin.",
+    coverUploaded: "Kapak resmi yüklendi",
+    imageUploadError: "Resim yüklenirken hata oluştu.",
+    resultUploaded: "Sonuç resmi yüklendi",
+    fillRequired: "Lütfen tüm zorunlu alanları doldurun.",
+    testUpdated: "Test güncellendi",
+    testCreated: "Test oluşturuldu",
+    saveError: "Test kaydedilirken hata oluştu.",
     resultKeyPrompt: "Sonuç anahtarı girin (örn: gmail, youtube):",
     invalidJsonStructure:
       "Geçersiz JSON formatı! title, questions ve results alanları gerekli.",
-    jsonImported: "JSON başarıyla içe aktarıldı! Görselleri yükleyebilirsiniz.",
-    invalidJson: "Geçersiz JSON formatı!",
+    jsonImported: "JSON başarıyla içe aktarıldı. Görselleri yükleyebilirsiniz.",
+    invalidJson: "Geçersiz JSON formatı",
   },
   en: {
-    adminPanel: "Admin Panel",
-    pageTitle: "Personality Tests Management",
+    adminPanel: "Admin panel",
+    pageTitle: "Personality tests management",
     pageSubtitle: "Create, edit and manage personality tests",
-    searchPlaceholder: "Search test...",
+    searchPlaceholder: "Search test…",
     jsonImport: "JSON Import",
-    newTest: "New Test",
+    newTest: "New test",
     soruSuffix: (n) => `${n} questions`,
     orderLabel: (n) => `Order: ${n}`,
     edit: "Edit",
@@ -153,57 +154,57 @@ const COPY = {
     }
   }
 }`,
-    jsonInputPlaceholder: "Paste your JSON data here...",
+    jsonInputPlaceholder: "Paste your JSON data here…",
     importBtn: "Import",
     cancel: "Cancel",
-    editTestTitle: "Edit Test",
-    newTestTitle: "Create New Test",
-    basicInfo: "Basic Information",
-    testTitle: "Test Title *",
+    editTestTitle: "Edit test",
+    newTestTitle: "Create new test",
+    basicInfo: "Basic information",
+    testTitle: "Test title *",
     description: "Description *",
     order: "Order",
-    coverImage: "Cover Image",
+    coverImage: "Cover image",
     dragNewImage: "Drag and drop or click to upload a new image",
-    dropHere: "Drop it...",
+    dropHere: "Drop it…",
     dragOrClick: "Drag and drop or click an image",
-    coverImageFormats: "PNG, JPG, GIF (Max 5MB)",
+    coverImageFormats: "PNG, JPG, GIF (max 5MB)",
     questions: (n) => `Questions (${n})`,
-    addQuestion: "Add Question",
+    addQuestion: "Add question",
     questionLabel: (n) => `Question ${n}`,
     questionTextPlaceholder: "Question text",
     options: (n) => `Options (${n})`,
-    addOption: "Add Option",
+    addOption: "Add option",
     optionTextPlaceholder: "Option text",
     pointsLabel: "Points:",
     results: (n) => `Results (${n})`,
-    addResult: "Add Result",
+    addResult: "Add result",
     titlePlaceholder: "Title",
     descriptionPlaceholder: "Description",
     color: "Color",
-    resultImage: "Result Image",
+    resultImage: "Result image",
     dragNewImageShort: "Drag and drop or click for a new image",
     resultImageFormats: "PNG, JPG, GIF",
     update: "Update",
     coverAlt: "Cover image",
     create: "Create",
     // Toasts / prompts
-    loadTestsError: "An error occurred while loading tests!",
+    loadTestsError: "An error occurred while loading tests.",
     confirmDeleteTest: "Are you sure you want to delete this test?",
-    deleteSuccess: "Test deleted successfully!",
-    deleteError: "An error occurred while deleting the test!",
-    selectImageFile: "Please select an image file!",
-    coverUploaded: "Cover image uploaded!",
-    imageUploadError: "An error occurred while uploading the image!",
-    resultUploaded: "Result image uploaded!",
-    fillRequired: "Please fill in all required fields!",
-    testUpdated: "Test updated!",
-    testCreated: "Test created!",
-    saveError: "An error occurred while saving the test!",
+    deleteSuccess: "Test deleted successfully",
+    deleteError: "An error occurred while deleting the test.",
+    selectImageFile: "Please select an image file.",
+    coverUploaded: "Cover image uploaded",
+    imageUploadError: "An error occurred while uploading the image.",
+    resultUploaded: "Result image uploaded",
+    fillRequired: "Please fill in all required fields.",
+    testUpdated: "Test updated",
+    testCreated: "Test created",
+    saveError: "An error occurred while saving the test.",
     resultKeyPrompt: "Enter a result key (e.g. gmail, youtube):",
     invalidJsonStructure:
       "Invalid JSON format! The title, questions and results fields are required.",
-    jsonImported: "JSON imported successfully! You can now upload images.",
-    invalidJson: "Invalid JSON format!",
+    jsonImported: "JSON imported successfully. You can now upload images.",
+    invalidJson: "Invalid JSON format",
   },
 };
 
@@ -718,17 +719,12 @@ export default function AdminPersonalityTestsPage() {
 
       {/* JSON Import Modal */}
       {showJsonImport && (
-        <div className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4 animate-in fade-in-0 duration-short">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="json-import-title"
-            className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-rule bg-background text-foreground"
-          >
+        <Dialog open onOpenChange={(open) => { if (!open) { setShowJsonImport(false); setJsonInput(""); } }}>
+          <DialogContent hideClose aria-describedby={undefined} className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden rounded-lg border border-rule bg-background text-foreground p-0 gap-0">
             <div className="flex items-center justify-between gap-4 border-b border-rule p-4 sm:p-6">
-              <h2 id="json-import-title" className="font-display text-2xl font-bold">
+              <DialogTitle className="font-display text-2xl font-bold">
                 {copy.jsonImportTitle}
-              </h2>
+              </DialogTitle>
               <Button
                 type="button"
                 variant="ghost"
@@ -779,23 +775,18 @@ export default function AdminPersonalityTestsPage() {
                 {copy.cancel}
               </Button>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-modal overflow-y-auto bg-ink/60 p-4 animate-in fade-in-0 duration-short">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="test-form-title"
-            className="mx-auto my-8 w-full max-w-4xl rounded-lg border border-rule bg-background text-foreground"
-          >
+        <Dialog open onOpenChange={(open) => { if (!open) { handleFormClose(); } }}>
+          <DialogContent hideClose aria-describedby={undefined} className="max-w-4xl rounded-lg border border-rule bg-background text-foreground p-0 gap-0">
             <div className="sticky top-0 z-raised flex items-center justify-between gap-4 rounded-t-lg border-b border-rule bg-background p-4 sm:p-6">
-              <h2 id="test-form-title" className="font-display text-2xl font-bold">
+              <DialogTitle className="font-display text-2xl font-bold">
                 {editingTest ? copy.editTestTitle : copy.newTestTitle}
-              </h2>
+              </DialogTitle>
               <Button
                 type="button"
                 variant="ghost"
@@ -1134,8 +1125,8 @@ export default function AdminPersonalityTestsPage() {
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       <ToastContainer

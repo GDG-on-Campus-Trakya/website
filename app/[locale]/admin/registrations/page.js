@@ -30,11 +30,11 @@ export default function AdminRegistrationsPage() {
   const copy =
     locale === "en"
       ? {
-          loading: "Loading...",
+          loading: "Loading…",
           accessDenied: "Access denied",
-          title: "Event Registrations",
+          title: "Event registrations",
           subtitle: "View and manage all event registrations",
-          manageTitle: "Manage Event Registrations",
+          manageTitle: "Manage event registrations",
           noEvents: "No events found.",
           confirmDelete:
             "Are you sure you want to delete this registration? This action cannot be undone.",
@@ -48,15 +48,15 @@ export default function AdminRegistrationsPage() {
           name: "Name",
           email: "Email",
           userId: "User ID",
-          registrationDate: "Registration Date",
+          registrationDate: "Registration date",
           delete: "Delete",
         }
       : {
-          loading: "Yükleniyor...",
+          loading: "Yükleniyor…",
           accessDenied: "Erişim engellendi",
-          title: "Etkinlik Kayıtları",
+          title: "Etkinlik kayıtları",
           subtitle: "Tüm etkinlik kayıtlarını görüntüleyin ve yönetin",
-          manageTitle: "Etkinlik Kayıtlarını Yönet",
+          manageTitle: "Etkinlik kayıtlarını yönet",
           noEvents: "Etkinlik bulunamadı.",
           confirmDelete:
             "Bu kaydı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
@@ -66,11 +66,11 @@ export default function AdminRegistrationsPage() {
           registration: "kayıt",
           registrations: "kayıt",
           noRegisteredUsers: "Bu etkinlik için kayıtlı kullanıcı bulunamadı.",
-          unknownDate: "Bilinmeyen Tarih",
+          unknownDate: "Bilinmeyen tarih",
           name: "Ad",
           email: "Email",
           userId: "Kullanıcı ID",
-          registrationDate: "Kayıt Tarihi",
+          registrationDate: "Kayıt tarihi",
           delete: "Sil",
         };
   const [user, loading] = useAuthState(auth);
