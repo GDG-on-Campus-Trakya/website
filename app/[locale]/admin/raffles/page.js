@@ -18,7 +18,6 @@ import {
   Trash2,
   Megaphone,
   Loader2,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,22 +31,23 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { adminCopy } from "@/utils/adminCopy";
 import { useConfirm } from "@/components/ConfirmProvider";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const COPY = {
   tr: {
-    pageTitle: "Çekiliş Yönetimi",
+    pageTitle: "Çekiliş yönetimi",
     pageSubtitle: "Etkinlik çekilişlerini oluşturun ve yönetin",
     noEligibleEventTitle: "Çekiliş için uygun etkinlik yok (3 gün içinde ve en az 1 post)",
-    noEligibleEvent: "Uygun Etkinlik Yok",
-    newRaffle: "Yeni Çekiliş",
-    statTotalRaffles: "Toplam Çekiliş",
-    statActiveRaffles: "Aktif Çekiliş",
+    noEligibleEvent: "Uygun etkinlik yok",
+    newRaffle: "Yeni çekiliş",
+    statTotalRaffles: "Toplam çekiliş",
+    statActiveRaffles: "Aktif çekiliş",
     statCompleted: "Tamamlanan",
-    statTotalParticipants: "Toplam Katılım",
+    statTotalParticipants: "Toplam katılım",
     noRafflesTitle: "Henüz çekiliş yok",
-    noRafflesSubtitle: "İlk çekilişi oluşturun ve katılımcıları bekleyin!",
-    createRaffle: "Çekiliş Oluştur",
-    unknownEvent: "Bilinmeyen Etkinlik",
+    noRafflesSubtitle: "İlk çekilişi oluşturun ve katılımcıları bekleyin.",
+    createRaffle: "Çekiliş oluştur",
+    unknownEvent: "Bilinmeyen etkinlik",
     // Card
     statusCompleted: "Tamamlandı",
     statusActive: "Aktif",
@@ -55,22 +55,22 @@ const COPY = {
     participantsSuffix: "katılımcı",
     winnerLabel: (w) => `Kazanan: ${w}`,
     resultAnnounced: "Sonuç ilan edildi",
-    viewParticipants: "Katılımcıları Gör",
-    editRaffleTitle: "Çekiliş Detaylarını Düzenle",
-    drawWinner: "Kazanan Seç",
+    viewParticipants: "Katılımcıları gör",
+    editRaffleTitle: "Çekiliş detaylarını düzenle",
+    drawWinner: "Kazanan seç",
     endRaffle: "Sonlandır",
-    changeWinner: "Kazananı Değiştir",
-    announceResult: "Sonucu İlan Et",
-    deleteRaffleButton: "Çekilişi Sil",
+    changeWinner: "Kazananı değiştir",
+    announceResult: "Sonucu ilan et",
+    deleteRaffleButton: "Çekilişi sil",
     // Create modal
-    createModalTitle: "Yeni Çekiliş Oluştur",
+    createModalTitle: "Yeni çekiliş oluştur",
     eventLabel: "Etkinlik",
     selectEvent: "Etkinlik seçin",
     noEligibleEventOption: "Çekiliş için uygun etkinlik yok",
     postSuffix: (n) => `(${n} post)`,
-    raffleTitleLabel: "Çekiliş Başlığı",
+    raffleTitleLabel: "Çekiliş başlığı",
     prizeLabel: "Ödül",
-    descriptionOptionalLabel: "Açıklama (İsteğe Bağlı)",
+    descriptionOptionalLabel: "Açıklama (isteğe bağlı)",
     create: "Oluştur",
     cancel: "İptal",
     close: "Kapat",
@@ -78,64 +78,64 @@ const COPY = {
     participantsTitle: (title, n) => `${title} - Katılımcılar (${n})`,
     noParticipants: "Henüz katılımcı yok",
     // Change winner modal
-    changeWinnerTitle: "Kazananı Değiştir",
+    changeWinnerTitle: "Kazananı değiştir",
     raffleColon: "Çekiliş:",
-    currentWinnerColon: "Mevcut Kazanan:",
+    currentWinnerColon: "Mevcut kazanan:",
     notSelectedYet: "Henüz seçilmedi",
-    selectNewWinner: "Yeni Kazanan Seçin",
-    selectParticipant: "Katılımcı seçin...",
+    selectNewWinner: "Yeni kazanan seçin",
+    selectParticipant: "Katılımcı seçin…",
     noName: "İsim yok",
     // Edit modal
-    editModalTitle: "Çekiliş Düzenle",
+    editModalTitle: "Çekiliş düzenle",
     eventColon: "Etkinlik:",
-    raffleTitleRequired: "Çekiliş Başlığı *",
+    raffleTitleRequired: "Çekiliş başlığı *",
     raffleTitlePlaceholder: "Çekiliş başlığını girin",
     prizeRequired: "Ödül *",
     prizePlaceholder: "Ödülü girin",
     descriptionPlaceholder: "Çekiliş açıklamasını girin",
     update: "Güncelle",
     // Toasts / confirms
-    raffleLoadError: "Çekilişler yüklenirken hata oluştu!",
-    raffleCreated: "Çekiliş başarıyla oluşturuldu!",
-    raffleCreateError: "Çekiliş oluşturulurken hata oluştu!",
+    raffleLoadError: "Çekilişler yüklenirken hata oluştu.",
+    raffleCreated: "Çekiliş başarıyla oluşturuldu",
+    raffleCreateError: "Çekiliş oluşturulurken hata oluştu.",
     confirmDrawWinner: "Çekilişi sonlandırıp kazananı belirlemek istediğinizden emin misiniz?",
     winnerToast: (w) => `Kazanan: ${w}`,
-    drawWinnerError: "Kazanan seçilirken hata oluştu!",
+    drawWinnerError: "Kazanan seçilirken hata oluştu.",
     confirmEndRaffle: "Çekilişi kazanan seçmeden sonlandırmak istediğinizden emin misiniz?",
-    raffleEnded: "Çekiliş sonlandırıldı!",
-    raffleEndError: "Çekiliş sonlandırılırken hata oluştu!",
+    raffleEnded: "Çekiliş sonlandırıldı",
+    raffleEndError: "Çekiliş sonlandırılırken hata oluştu.",
     newWinnerToast: (w) => `Yeni kazanan: ${w}`,
-    changeWinnerError: "Kazanan değiştirilirken hata oluştu!",
+    changeWinnerError: "Kazanan değiştirilirken hata oluştu.",
     confirmAnnounce: "Çekiliş sonucunu sosyal kısımda ilan etmek istediğinizden emin misiniz?",
-    resultAnnouncedToast: "Çekiliş sonucu başarıyla ilan edildi!",
-    announceError: "Çekiliş sonucu ilan edilirken hata oluştu!",
-    raffleUpdated: "Çekiliş başarıyla güncellendi!",
-    raffleUpdateError: "Çekiliş güncellenirken hata oluştu!",
-    confirmDeleteRaffle: "Bu çekilişi ve tüm ilgili verileri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!",
+    resultAnnouncedToast: "Çekiliş sonucu başarıyla ilan edildi.",
+    announceError: "Çekiliş sonucu ilan edilirken hata oluştu.",
+    raffleUpdated: "Çekiliş başarıyla güncellendi",
+    raffleUpdateError: "Çekiliş güncellenirken hata oluştu.",
+    confirmDeleteRaffle: "Bu çekilişi ve tüm ilgili verileri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
     confirmDeleteRaffleFinal: "Son kez soruyoruz: Çekiliş tamamen silinecek, emin misiniz?",
-    raffleDeleted: "Çekiliş başarıyla silindi!",
-    raffleDeleteError: "Çekiliş silinirken hata oluştu!",
-    fillRequiredFields: "Lütfen gerekli alanları doldurun!",
-    selectWinnerPrompt: "Lütfen bir kazanan seçin!",
+    raffleDeleted: "Çekiliş başarıyla silindi",
+    raffleDeleteError: "Çekiliş silinirken hata oluştu.",
+    fillRequiredFields: "Lütfen gerekli alanları doldurun.",
+    selectWinnerPrompt: "Lütfen bir kazanan seçin.",
     confirmChangeWinner: "Seçilen kişiyi yeni kazanan yapmak istediğinizden emin misiniz?",
-    titleAndPrizeRequired: "Başlık ve ödül alanları zorunludur!",
+    titleAndPrizeRequired: "Başlık ve ödül alanları zorunludur.",
     confirmUpdateRaffle: "Çekiliş detaylarını güncellemek istediğinizden emin misiniz?",
     locale: "tr-TR",
   },
   en: {
-    pageTitle: "Raffle Management",
+    pageTitle: "Raffle management",
     pageSubtitle: "Create and manage event raffles",
     noEligibleEventTitle: "No eligible event for a raffle (within 3 days and at least 1 post)",
-    noEligibleEvent: "No Eligible Event",
-    newRaffle: "New Raffle",
-    statTotalRaffles: "Total Raffles",
-    statActiveRaffles: "Active Raffles",
+    noEligibleEvent: "No eligible event",
+    newRaffle: "New raffle",
+    statTotalRaffles: "Total raffles",
+    statActiveRaffles: "Active raffles",
     statCompleted: "Completed",
-    statTotalParticipants: "Total Participants",
+    statTotalParticipants: "Total participants",
     noRafflesTitle: "No raffles yet",
-    noRafflesSubtitle: "Create your first raffle and wait for participants!",
-    createRaffle: "Create Raffle",
-    unknownEvent: "Unknown Event",
+    noRafflesSubtitle: "Create your first raffle and wait for participants.",
+    createRaffle: "Create raffle",
+    unknownEvent: "Unknown event",
     // Card
     statusCompleted: "Completed",
     statusActive: "Active",
@@ -143,22 +143,22 @@ const COPY = {
     participantsSuffix: "participant(s)",
     winnerLabel: (w) => `Winner: ${w}`,
     resultAnnounced: "Result announced",
-    viewParticipants: "View Participants",
-    editRaffleTitle: "Edit Raffle Details",
-    drawWinner: "Draw Winner",
+    viewParticipants: "View participants",
+    editRaffleTitle: "Edit raffle details",
+    drawWinner: "Draw winner",
     endRaffle: "End",
-    changeWinner: "Change Winner",
-    announceResult: "Announce Result",
-    deleteRaffleButton: "Delete Raffle",
+    changeWinner: "Change winner",
+    announceResult: "Announce result",
+    deleteRaffleButton: "Delete raffle",
     // Create modal
-    createModalTitle: "Create New Raffle",
+    createModalTitle: "Create new raffle",
     eventLabel: "Event",
     selectEvent: "Select an event",
     noEligibleEventOption: "No eligible event for a raffle",
     postSuffix: (n) => `(${n} post(s))`,
-    raffleTitleLabel: "Raffle Title",
+    raffleTitleLabel: "Raffle title",
     prizeLabel: "Prize",
-    descriptionOptionalLabel: "Description (Optional)",
+    descriptionOptionalLabel: "Description (optional)",
     create: "Create",
     cancel: "Cancel",
     close: "Close",
@@ -166,47 +166,47 @@ const COPY = {
     participantsTitle: (title, n) => `${title} - Participants (${n})`,
     noParticipants: "No participants yet",
     // Change winner modal
-    changeWinnerTitle: "Change Winner",
+    changeWinnerTitle: "Change winner",
     raffleColon: "Raffle:",
-    currentWinnerColon: "Current Winner:",
+    currentWinnerColon: "Current winner:",
     notSelectedYet: "Not selected yet",
-    selectNewWinner: "Select New Winner",
-    selectParticipant: "Select a participant...",
+    selectNewWinner: "Select new winner",
+    selectParticipant: "Select a participant…",
     noName: "No name",
     // Edit modal
-    editModalTitle: "Edit Raffle",
+    editModalTitle: "Edit raffle",
     eventColon: "Event:",
-    raffleTitleRequired: "Raffle Title *",
+    raffleTitleRequired: "Raffle title *",
     raffleTitlePlaceholder: "Enter the raffle title",
     prizeRequired: "Prize *",
     prizePlaceholder: "Enter the prize",
     descriptionPlaceholder: "Enter the raffle description",
     update: "Update",
     // Toasts / confirms
-    raffleLoadError: "An error occurred while loading raffles!",
-    raffleCreated: "Raffle created successfully!",
-    raffleCreateError: "An error occurred while creating the raffle!",
+    raffleLoadError: "An error occurred while loading raffles.",
+    raffleCreated: "Raffle created successfully",
+    raffleCreateError: "An error occurred while creating the raffle.",
     confirmDrawWinner: "Are you sure you want to end the raffle and pick a winner?",
     winnerToast: (w) => `Winner: ${w}`,
-    drawWinnerError: "An error occurred while drawing the winner!",
+    drawWinnerError: "An error occurred while drawing the winner.",
     confirmEndRaffle: "Are you sure you want to end the raffle without picking a winner?",
-    raffleEnded: "Raffle ended!",
-    raffleEndError: "An error occurred while ending the raffle!",
+    raffleEnded: "Raffle ended",
+    raffleEndError: "An error occurred while ending the raffle.",
     newWinnerToast: (w) => `New winner: ${w}`,
-    changeWinnerError: "An error occurred while changing the winner!",
+    changeWinnerError: "An error occurred while changing the winner.",
     confirmAnnounce: "Are you sure you want to announce the raffle result in the social section?",
-    resultAnnouncedToast: "Raffle result announced successfully!",
-    announceError: "An error occurred while announcing the raffle result!",
-    raffleUpdated: "Raffle updated successfully!",
-    raffleUpdateError: "An error occurred while updating the raffle!",
-    confirmDeleteRaffle: "Are you sure you want to delete this raffle and all related data? This action cannot be undone!",
+    resultAnnouncedToast: "Raffle result announced successfully.",
+    announceError: "An error occurred while announcing the raffle result.",
+    raffleUpdated: "Raffle updated successfully",
+    raffleUpdateError: "An error occurred while updating the raffle.",
+    confirmDeleteRaffle: "Are you sure you want to delete this raffle and all related data? This action cannot be undone.",
     confirmDeleteRaffleFinal: "Asking one last time: the raffle will be permanently deleted, are you sure?",
-    raffleDeleted: "Raffle deleted successfully!",
-    raffleDeleteError: "An error occurred while deleting the raffle!",
-    fillRequiredFields: "Please fill in the required fields!",
-    selectWinnerPrompt: "Please select a winner!",
+    raffleDeleted: "Raffle deleted successfully",
+    raffleDeleteError: "An error occurred while deleting the raffle.",
+    fillRequiredFields: "Please fill in the required fields.",
+    selectWinnerPrompt: "Please select a winner.",
     confirmChangeWinner: "Are you sure you want to make the selected person the new winner?",
-    titleAndPrizeRequired: "Title and prize fields are required!",
+    titleAndPrizeRequired: "Title and prize fields are required.",
     confirmUpdateRaffle: "Are you sure you want to update the raffle details?",
     locale: "en-US",
   },
@@ -753,38 +753,19 @@ export default function AdminRafflesPage() {
   );
 }
 
-// Shared modal frame: overlay + panel, click on the overlay closes
+// Shared modal frame: a Radix dialog (focus trap, Escape, outside click), labelled close button
 function ModalFrame({ onClose, closeLabel, wide = false, title, children }) {
   return (
-    <div
-      className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4"
-      style={{ overscrollBehavior: 'contain' }}
-      onClick={onClose}
-    >
-      <div
-        className={cn(
-          "flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-lg border border-rule bg-background p-6 text-foreground animate-in fade-in-0 duration-short",
-          wide ? "max-w-2xl" : "max-w-md"
-        )}
-        style={{ overscrollBehavior: 'contain' }}
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        aria-describedby={undefined}
+        closeLabel={closeLabel}
+        className={cn("flex flex-col overflow-hidden", wide ? "max-w-2xl" : "max-w-md")}
       >
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <h2 className="min-w-0 font-display text-lg font-bold">{title}</h2>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            aria-label={closeLabel}
-            className="-mr-3 -mt-3 shrink-0"
-          >
-            <X aria-hidden="true" />
-          </Button>
-        </div>
+        <DialogTitle className="min-w-0 pr-10 font-display text-lg font-bold">{title}</DialogTitle>
         <div className="min-h-0 overflow-y-auto">{children}</div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

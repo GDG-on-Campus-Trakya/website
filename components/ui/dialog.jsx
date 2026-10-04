@@ -27,9 +27,10 @@ const DialogOverlay = React.forwardRef(({ className, ...props }, ref) => (
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
-// The close button's label follows the page language unless one is passed.
+// The close button's label follows the page language unless one is passed. `hideClose` is for
+// dialogs that draw their own close button in a custom header.
 const DialogContent = React.forwardRef(
-  ({ className, children, closeLabel, ...props }, ref) => {
+  ({ className, children, closeLabel, hideClose = false, ...props }, ref) => {
     const locale = useLocale();
 
     return (
@@ -44,10 +45,12 @@ const DialogContent = React.forwardRef(
           {...props}
         >
           {children}
+          {!hideClose && (
           <DialogPrimitive.Close className="absolute right-3 top-3 flex h-control w-control items-center justify-center rounded text-muted-foreground transition-colors duration-micro hover:bg-secondary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none">
             <X className="h-4 w-4" aria-hidden="true" />
             <span className="sr-only">{closeLabel ?? (locale === "en" ? "Close" : "Kapat")}</span>
           </DialogPrimitive.Close>
+          )}
         </DialogPrimitive.Content>
       </DialogPortal>
     );

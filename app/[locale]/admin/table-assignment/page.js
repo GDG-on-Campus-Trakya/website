@@ -39,20 +39,21 @@ import { PageHeader, Section, EmptyState } from "@/components/ui/page";
 import { Stat } from "@/components/ui/stat";
 import { adminCopy } from "@/utils/adminCopy";
 import { useConfirm } from "@/components/ConfirmProvider";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const COPY = {
   tr: {
-    adminPanel: "Admin Panel",
-    pageTitle: "Masa Yerleştirme Çarkı",
+    adminPanel: "Admin panel",
+    pageTitle: "Masa yerleştirme çarkı",
     pageSubtitle: "Katılımcıları masalara rastgele veya manuel yerleştirin",
-    totalTables: "Toplam Masa",
-    totalParticipants: "Toplam Katılımcı",
+    totalTables: "Toplam masa",
+    totalParticipants: "Toplam katılımcı",
     assigned: "Atanan",
     pending: "Bekleyen",
-    searchPlaceholder: "Katılımcı ara (sadece atananlar)...",
-    addTable: "Masa Ekle",
-    addParticipant: "Katılımcı Ekle",
-    randomAssign: "Rastgele Ata",
+    searchPlaceholder: "Katılımcı ara (sadece atananlar)…",
+    addTable: "Masa ekle",
+    addParticipant: "Katılımcı ekle",
+    randomAssign: "Rastgele ata",
     reset: "Sıfırla",
     clear: "Temizle",
     unassignedParticipants: (n) => `Atanmamış Katılımcılar (${n})`,
@@ -63,43 +64,43 @@ const COPY = {
     noTablesHint:
       "İlk masayı ekleyin ve katılımcıları yerleştirmeye başlayın!",
     // Toasts
-    loadTablesError: "Masalar yüklenirken hata oluştu!",
-    loadParticipantsError: "Katılımcılar yüklenirken hata oluştu!",
+    loadTablesError: "Masalar yüklenirken hata oluştu.",
+    loadParticipantsError: "Katılımcılar yüklenirken hata oluştu.",
     tableAdded: (name) => `${name} eklendi!`,
-    addTableError: "Masa eklenirken hata oluştu!",
+    addTableError: "Masa eklenirken hata oluştu.",
     tableUpdated: (name) => `${name} güncellendi!`,
-    updateTableError: "Masa güncellenirken hata oluştu!",
+    updateTableError: "Masa güncellenirken hata oluştu.",
     confirmRemoveTableWithParticipants:
       "Bu masada katılımcılar var. Masayı kaldırırsanız, katılımcılar atanmamış duruma gelecek. Devam etmek istiyor musunuz?",
     tableRemoved: (name) => `${name} kaldırıldı`,
-    removeTableError: "Masa kaldırılırken hata oluştu!",
-    enterParticipantName: "En az bir katılımcı adı girin!",
+    removeTableError: "Masa kaldırılırken hata oluştu.",
+    enterParticipantName: "En az bir katılımcı adı girin.",
     participantAdded: (name) => `${name} eklendi!`,
     participantsAdded: (n) => `${n} katılımcı eklendi!`,
-    addParticipantsError: "Katılımcılar eklenirken hata oluştu!",
-    noParticipantsToAssign: "Atanacak katılımcı yok!",
-    noTablesAddFirst: "Masa yok! Lütfen önce masa ekleyin.",
-    allTablesFull: "Tüm masalar dolu!",
+    addParticipantsError: "Katılımcılar eklenirken hata oluştu.",
+    noParticipantsToAssign: "Atanacak katılımcı yok",
+    noTablesAddFirst: "Masa yok. Lütfen önce masa ekleyin.",
+    allTablesFull: "Tüm masalar dolu",
     notEnoughCapacity:
       "Tüm katılımcılar için yeterli kapasite yok! Mevcut kapasiteye göre atama yapılacak.",
     assignedToTable: (name, table) => `${name} ${table}'e atandı!`,
-    assignError: "Atama sırasında hata oluştu!",
+    assignError: "Atama sırasında hata oluştu.",
     tableMarkedFull: (name) => `${name} dolu olarak işaretlenmiş!`,
     tableFull: (name) => `${name} dolu!`,
     participantUnassigned: "Katılımcı masadan çıkarıldı",
-    unassignError: "Katılımcı çıkarılırken hata oluştu!",
+    unassignError: "Katılımcı çıkarılırken hata oluştu.",
     confirmRemoveParticipant: (name) =>
       `${name} katılımcısını silmek istediğinizden emin misiniz?`,
     participantDeleted: (name) => `${name} silindi`,
-    deleteParticipantError: "Katılımcı silinirken hata oluştu!",
+    deleteParticipantError: "Katılımcı silinirken hata oluştu.",
     confirmReset: "Tüm atamaları sıfırlamak istediğinizden emin misiniz?",
-    allReset: "Tüm atamalar sıfırlandı!",
-    resetError: "Sıfırlama sırasında hata oluştu!",
+    allReset: "Tüm atamalar sıfırlandı",
+    resetError: "Sıfırlama sırasında hata oluştu.",
     tableMarkedFullInfo: (name) => `${name} dolu olarak işaretlendi`,
     tableAvailableAgain: (name) => `${name} tekrar müsait`,
-    toggleTableError: "Masa durumu güncellenirken hata oluştu!",
+    toggleTableError: "Masa durumu güncellenirken hata oluştu.",
     // ManualAssignmentRow
-    assignToTable: "Masaya Ata",
+    assignToTable: "Masaya ata",
     fullSuffix: "(Dolu)",
     noTable: "Masa yok",
     deleteParticipantTitle: "Katılımcıyı sil",
@@ -114,41 +115,41 @@ const COPY = {
       `Aramada ${n} kişi gösteriliyor (toplam ${total})`,
     removeFromTable: "Masadan çıkar",
     noOneYet: "Henüz kimse yok",
-    tableMarkedFullBtn: "Masa Dolu İşaretli",
-    capacityFull: "Kontenjan Doldu",
+    tableMarkedFullBtn: "Masa dolu işaretli",
+    capacityFull: "Kontenjan doldu",
     place: "Yerleştir",
     morePeople: (n) => `+${n} kişi daha`,
     // AddTableModal / EditTableModal
-    addNewTable: "Yeni Masa Ekle",
-    tableName: "Masa Adı",
+    addNewTable: "Yeni masa ekle",
+    tableName: "Masa adı",
     tableNamePlaceholder: "Örn: Masa 3",
     capacity: "Kapasite",
     cancel: "İptal",
     add: "Ekle",
-    tableNameRequired: "Masa adı gerekli!",
-    validCapacity: "Geçerli bir kapasite girin!",
-    editTable: "Masayı Düzenle",
+    tableNameRequired: "Masa adı gerekli",
+    validCapacity: "Geçerli bir kapasite girin.",
+    editTable: "Masayı düzenle",
     update: "Güncelle",
     // AddParticipantModal
-    addParticipantTitle: "Katılımcı Ekle",
-    participantNames: "Katılımcı İsimleri",
+    addParticipantTitle: "Katılımcı ekle",
+    participantNames: "Katılımcı isimleri",
     participantNamesPlaceholder:
       "Her satıra bir isim yazın:\nAhmet Yılmaz\nAyşe Demir\nMehmet Kaya",
     participantNamesHint:
       "Her satıra bir isim yazın. Birden fazla katılımcı ekleyebilirsiniz.",
   },
   en: {
-    adminPanel: "Admin Panel",
-    pageTitle: "Table Assignment Wheel",
+    adminPanel: "Admin panel",
+    pageTitle: "Table assignment wheel",
     pageSubtitle: "Assign participants to tables randomly or manually",
-    totalTables: "Total Tables",
-    totalParticipants: "Total Participants",
+    totalTables: "Total tables",
+    totalParticipants: "Total participants",
     assigned: "Assigned",
     pending: "Pending",
-    searchPlaceholder: "Search participant (assigned only)...",
-    addTable: "Add Table",
-    addParticipant: "Add Participant",
-    randomAssign: "Random Assign",
+    searchPlaceholder: "Search participant (assigned only)…",
+    addTable: "Add table",
+    addParticipant: "Add participant",
+    randomAssign: "Random assign",
     reset: "Reset",
     clear: "Clear",
     unassignedParticipants: (n) => `Unassigned Participants (${n})`,
@@ -159,41 +160,41 @@ const COPY = {
     noTablesHint:
       "Add the first table and start assigning participants!",
     // Toasts
-    loadTablesError: "An error occurred while loading tables!",
-    loadParticipantsError: "An error occurred while loading participants!",
+    loadTablesError: "An error occurred while loading tables.",
+    loadParticipantsError: "An error occurred while loading participants.",
     tableAdded: (name) => `${name} added!`,
-    addTableError: "An error occurred while adding the table!",
+    addTableError: "An error occurred while adding the table.",
     tableUpdated: (name) => `${name} updated!`,
-    updateTableError: "An error occurred while updating the table!",
+    updateTableError: "An error occurred while updating the table.",
     confirmRemoveTableWithParticipants:
       "This table has participants. If you remove the table, the participants will become unassigned. Do you want to continue?",
     tableRemoved: (name) => `${name} removed`,
-    removeTableError: "An error occurred while removing the table!",
-    enterParticipantName: "Enter at least one participant name!",
+    removeTableError: "An error occurred while removing the table.",
+    enterParticipantName: "Enter at least one participant name.",
     participantAdded: (name) => `${name} added!`,
     participantsAdded: (n) => `${n} participants added!`,
-    addParticipantsError: "An error occurred while adding participants!",
-    noParticipantsToAssign: "No participants to assign!",
-    noTablesAddFirst: "No tables! Please add a table first.",
-    allTablesFull: "All tables are full!",
+    addParticipantsError: "An error occurred while adding participants.",
+    noParticipantsToAssign: "No participants to assign.",
+    noTablesAddFirst: "No tables. Please add a table first.",
+    allTablesFull: "All tables are full.",
     notEnoughCapacity:
       "Not enough capacity for all participants! Assignment will be made based on available capacity.",
     assignedToTable: (name, table) => `${name} assigned to ${table}!`,
-    assignError: "An error occurred during assignment!",
+    assignError: "An error occurred during assignment.",
     tableMarkedFull: (name) => `${name} is marked as full!`,
     tableFull: (name) => `${name} is full!`,
     participantUnassigned: "Participant removed from table",
-    unassignError: "An error occurred while removing the participant!",
+    unassignError: "An error occurred while removing the participant.",
     confirmRemoveParticipant: (name) =>
       `Are you sure you want to delete the participant ${name}?`,
     participantDeleted: (name) => `${name} deleted`,
-    deleteParticipantError: "An error occurred while deleting the participant!",
+    deleteParticipantError: "An error occurred while deleting the participant.",
     confirmReset: "Are you sure you want to reset all assignments?",
-    allReset: "All assignments have been reset!",
-    resetError: "An error occurred during reset!",
+    allReset: "All assignments have been reset.",
+    resetError: "An error occurred during reset.",
     tableMarkedFullInfo: (name) => `${name} marked as full`,
     tableAvailableAgain: (name) => `${name} is available again`,
-    toggleTableError: "An error occurred while updating the table status!",
+    toggleTableError: "An error occurred while updating the table status.",
     // ManualAssignmentRow
     assignToTable: "Assign to Table",
     fullSuffix: "(Full)",
@@ -210,24 +211,24 @@ const COPY = {
       `Showing ${n} people in search (total ${total})`,
     removeFromTable: "Remove from table",
     noOneYet: "No one yet",
-    tableMarkedFullBtn: "Table Marked Full",
-    capacityFull: "Capacity Full",
+    tableMarkedFullBtn: "Table marked full",
+    capacityFull: "Capacity full",
     place: "Place",
     morePeople: (n) => `+${n} more people`,
     // AddTableModal / EditTableModal
-    addNewTable: "Add New Table",
-    tableName: "Table Name",
+    addNewTable: "Add new table",
+    tableName: "Table name",
     tableNamePlaceholder: "e.g. Table 3",
     capacity: "Capacity",
     cancel: "Cancel",
     add: "Add",
-    tableNameRequired: "Table name is required!",
-    validCapacity: "Enter a valid capacity!",
-    editTable: "Edit Table",
+    tableNameRequired: "Table name is required.",
+    validCapacity: "Enter a valid capacity.",
+    editTable: "Edit table",
     update: "Update",
     // AddParticipantModal
-    addParticipantTitle: "Add Participant",
-    participantNames: "Participant Names",
+    addParticipantTitle: "Add participant",
+    participantNames: "Participant names",
     participantNamesPlaceholder:
       "Write one name per line:\nJohn Smith\nJane Doe\nMike Johnson",
     participantNamesHint:
@@ -799,21 +800,15 @@ export default function TableAssignmentPage() {
   );
 }
 
-// Shared modal frame: overlay + panel, click on the overlay closes
+// Shared modal frame: a Radix dialog (focus trap, Escape, outside click)
 function ModalFrame({ onClose, title, children }) {
   return (
-    <div
-      className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="flex max-h-[90dvh] w-full max-w-md flex-col overflow-hidden rounded-lg border border-rule bg-background p-6 text-foreground animate-in fade-in-0 duration-short"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="mb-4 font-display text-lg font-bold">{title}</h2>
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent aria-describedby={undefined} className="flex max-w-md flex-col overflow-hidden">
+        <DialogTitle className="pr-10 font-display text-lg font-bold">{title}</DialogTitle>
         <div className="min-h-0 overflow-y-auto">{children}</div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

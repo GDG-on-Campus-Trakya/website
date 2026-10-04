@@ -23,25 +23,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Field } from "@/components/ui/field";
 import { useConfirm } from "@/components/ConfirmProvider";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const COPY = {
   tr: {
-    adminPanel: "Admin Panel",
-    pageTitle: "Çekiliş Çarkı",
+    adminPanel: "Admin panel",
+    pageTitle: "Çekiliş çarkı",
     pageSubtitle: "Çark için ürün ekleyin ve çevirerek kazanan belirleyin",
-    addItem: "Ürün Ekle",
+    addItem: "Ürün ekle",
     wheelHeading: "Çark",
-    spinning: "Dönüyor...",
-    spinWheel: "Çarkı Çevir!",
-    winnerTitle: "Kazanan!",
+    spinning: "Dönüyor…",
+    spinWheel: "Çarkı çevir",
+    winnerTitle: "Kazanan",
     itemsHeading: "Ürünler",
     probabilityPrefix: "Olasılık:",
     noItemsYet: "Henüz ürün eklenmemiş",
-    addFirstItem: "İlk Ürünü Ekle",
-    addItemModalTitle: "Yeni Ürün Ekle",
-    editItemModalTitle: "Ürün Düzenle",
+    addFirstItem: "İlk ürünü ekle",
+    addItemModalTitle: "Yeni ürün ekle",
+    editItemModalTitle: "Ürün düzenle",
     wheelEmptyPrompt: "Ürün eklemek için yukarıdaki butona tıklayın",
-    itemNameLabel: "Ürün Adı",
+    itemNameLabel: "Ürün adı",
     itemNamePlaceholder: "Örn: iPhone 15",
     probabilityFieldLabel: "Olasılık (%)",
     probabilityHint: "Yüksek olasılık = daha fazla kazanma şansı",
@@ -50,36 +51,36 @@ const COPY = {
     update: "Güncelle",
     add: "Ekle",
     // Toasts / confirms
-    itemsLoadError: "Ürünler yüklenirken hata oluştu!",
-    itemAdded: "Ürün başarıyla eklendi!",
-    itemAddError: "Ürün eklenirken hata oluştu!",
-    itemUpdated: "Ürün başarıyla güncellendi!",
-    itemUpdateError: "Ürün güncellenirken hata oluştu!",
+    itemsLoadError: "Ürünler yüklenirken hata oluştu.",
+    itemAdded: "Ürün başarıyla eklendi",
+    itemAddError: "Ürün eklenirken hata oluştu.",
+    itemUpdated: "Ürün başarıyla güncellendi",
+    itemUpdateError: "Ürün güncellenirken hata oluştu.",
     confirmDeleteItem: "Bu ürünü silmek istediğinizden emin misiniz?",
-    itemDeleted: "Ürün başarıyla silindi!",
-    itemDeleteError: "Ürün silinirken hata oluştu!",
-    needAtLeastOneItem: "Çark döndürmek için en az bir ürün eklemelisiniz!",
+    itemDeleted: "Ürün başarıyla silindi",
+    itemDeleteError: "Ürün silinirken hata oluştu.",
+    needAtLeastOneItem: "Çark döndürmek için en az bir ürün eklemelisiniz.",
     winnerToast: (name) => `Kazanan: ${name}!`,
-    itemNameRequired: "Ürün adı zorunludur!",
-    probabilityRange: "Olasılık 1-100 arasında olmalıdır!",
+    itemNameRequired: "Ürün adı zorunludur",
+    probabilityRange: "Olasılık 1-100 arasında olmalıdır.",
   },
   en: {
-    adminPanel: "Admin Panel",
-    pageTitle: "Raffle Wheel",
+    adminPanel: "Admin panel",
+    pageTitle: "Raffle wheel",
     pageSubtitle: "Add items to the wheel and spin to pick a winner",
-    addItem: "Add Item",
+    addItem: "Add item",
     wheelHeading: "Wheel",
-    spinning: "Spinning...",
-    spinWheel: "Spin the Wheel!",
-    winnerTitle: "Winner!",
+    spinning: "Spinning…",
+    spinWheel: "Spin the Wheel",
+    winnerTitle: "Winner",
     itemsHeading: "Items",
     probabilityPrefix: "Probability:",
     noItemsYet: "No items added yet",
-    addFirstItem: "Add First Item",
-    addItemModalTitle: "Add New Item",
-    editItemModalTitle: "Edit Item",
+    addFirstItem: "Add first item",
+    addItemModalTitle: "Add new item",
+    editItemModalTitle: "Edit item",
     wheelEmptyPrompt: "Click the button above to add an item",
-    itemNameLabel: "Item Name",
+    itemNameLabel: "Item name",
     itemNamePlaceholder: "e.g. iPhone 15",
     probabilityFieldLabel: "Probability (%)",
     probabilityHint: "Higher probability = greater chance of winning",
@@ -88,18 +89,18 @@ const COPY = {
     update: "Update",
     add: "Add",
     // Toasts / confirms
-    itemsLoadError: "An error occurred while loading items!",
-    itemAdded: "Item added successfully!",
-    itemAddError: "An error occurred while adding the item!",
-    itemUpdated: "Item updated successfully!",
-    itemUpdateError: "An error occurred while updating the item!",
+    itemsLoadError: "An error occurred while loading items.",
+    itemAdded: "Item added successfully",
+    itemAddError: "An error occurred while adding the item.",
+    itemUpdated: "Item updated successfully",
+    itemUpdateError: "An error occurred while updating the item.",
     confirmDeleteItem: "Are you sure you want to delete this item?",
-    itemDeleted: "Item deleted successfully!",
-    itemDeleteError: "An error occurred while deleting the item!",
-    needAtLeastOneItem: "You need to add at least one item to spin the wheel!",
+    itemDeleted: "Item deleted successfully",
+    itemDeleteError: "An error occurred while deleting the item.",
+    needAtLeastOneItem: "You need to add at least one item to spin the wheel.",
     winnerToast: (name) => `Winner: ${name}!`,
-    itemNameRequired: "Item name is required!",
-    probabilityRange: "Probability must be between 1 and 100!",
+    itemNameRequired: "Item name is required.",
+    probabilityRange: "Probability must be between 1 and 100.",
   },
 };
 
@@ -546,15 +547,9 @@ function ItemModal({ onClose, onSubmit, title, initialData = null, copy }) {
   ];
 
   return (
-    <div
-      className="fixed inset-0 z-modal flex items-center justify-center overflow-y-auto bg-ink/60 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md rounded-lg border border-rule bg-background p-6 text-foreground"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="mb-4 text-xl font-bold">{title}</h2>
+    <Dialog open onOpenChange={(open) => { if (!open) { onClose(); } }}>
+      <DialogContent aria-describedby={undefined} className="max-w-md rounded-lg border border-rule bg-background p-6 text-foreground">
+        <DialogTitle className="mb-4 pr-10 text-xl font-bold">{title}</DialogTitle>
 
         <form onSubmit={handleSubmit} className="space-y-2">
           <Field id="raffle-item-name" label={copy.itemNameLabel} required>
@@ -637,7 +632,7 @@ function ItemModal({ onClose, onSubmit, title, initialData = null, copy }) {
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

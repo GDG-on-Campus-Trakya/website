@@ -42,162 +42,163 @@ import { uploadImage, StoragePaths } from "@/utils/storageUtils";
 import UserMentionInput from "@/components/UserMentionInput";
 import { adminCopy } from "@/utils/adminCopy";
 import { useConfirm } from "@/components/ConfirmProvider";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const COPY = {
   tr: {
-    pageTitle: "Projeler Yönetimi",
+    pageTitle: "Projeler yönetimi",
     pageSubtitle: "Tüm projeleri görüntüleyin ve yönetin",
-    projectsPage: "Projeler Sayfası",
-    newProject: "Yeni Proje Ekle",
+    projectsPage: "Projeler sayfası",
+    newProject: "Yeni proje ekle",
     statsTitle: "İstatistikler",
-    totalProjects: "Toplam Proje",
-    collaborativeProjects: "İşbirlikçili Projeler",
-    githubLinked: "GitHub Linkli",
-    editProject: "Proje Düzenle",
-    projectTitle: "Proje Başlığı *",
+    totalProjects: "Toplam proje",
+    collaborativeProjects: "İşbirlikçili projeler",
+    githubLinked: "GitHub linkli",
+    editProject: "Proje düzenle",
+    projectTitle: "Proje başlığı *",
     projectTitlePlaceholder: "Proje başlığını girin",
-    englishTitle: "English Project Title",
+    englishTitle: "English project title",
     englishTitlePlaceholder: "Enter the English project title",
     description: "Açıklama *",
     descriptionPlaceholder: "Proje hakkında kısa bir açıklama yazın",
-    englishDescription: "English Description",
+    englishDescription: "English description",
     englishDescriptionPlaceholder:
       "Write a short English description for the project",
-    githubLink: "GitHub Linki",
-    projectImage: "Proje Görseli",
+    githubLink: "GitHub linki",
+    projectImage: "Proje görseli",
     currentImage: "Mevcut görsel:",
     currentImageAlt: "Mevcut proje görseli",
     imageReplaceNote:
       "Yeni bir görsel seçerseniz mevcut görsel değiştirilecektir.",
     collaborators: "İşbirlikçiler",
-    collaboratorsPlaceholder: "Kullanıcı emaili ile ara ve ekle...",
+    collaboratorsPlaceholder: "Kullanıcı emaili ile ara ve ekle…",
     selectedCollaborators: "Seçilen işbirlikçiler:",
-    projectStatus: "Proje Durumu",
+    projectStatus: "Proje durumu",
     statusActive: "Aktif",
     statusCompleted: "Tamamlanmış",
     statusPaused: "Beklemede",
-    archiveProject: "Projeyi Arşivle",
-    updating: "Güncelleniyor...",
-    adding: "Ekleniyor...",
-    updateProjectBtn: "Proje Güncelle",
-    addProjectBtn: "Proje Ekle",
+    archiveProject: "Projeyi arşivle",
+    updating: "Güncelleniyor…",
+    adding: "Ekleniyor…",
+    updateProjectBtn: "Proje güncelle",
+    addProjectBtn: "Proje ekle",
     allProjects: (n) => `Tüm Projeler (${n})`,
     noProjects: "Henüz proje bulunmuyor.",
-    addFirstProject: "İlk Projeyi Ekle",
+    addFirstProject: "İlk projeyi ekle",
     colProject: "Proje",
     colCollaborators: "İşbirlikçiler",
-    colSocialData: "Sosyal Veriler",
+    colSocialData: "Sosyal veriler",
     colDate: "Tarih",
     colActions: "İşlemler",
     manage: "Yönet",
-    socialDataManagement: "Sosyal Veri Yönetimi",
+    socialDataManagement: "Sosyal veri yönetimi",
     statsAndActions: "İstatistikler ve İşlemler",
     likes: "Beğeni",
     views: "Görüntülenme",
     comments: "Yorum",
-    resetViews: "Görüntülenme Sayısını Sıfırla",
-    resetLikes: "Tüm Beğenileri Sil",
+    resetViews: "Görüntülenme sayısını sıfırla",
+    resetLikes: "Tüm beğenileri sil",
     commentsCount: (n) => `Yorumlar (${n})`,
     noComments: "Henüz yorum bulunmuyor.",
-    fillRequired: "Lütfen tüm zorunlu alanları doldurun!",
-    projectUpdated: "Proje başarıyla güncellendi!",
-    projectAdded: "Proje başarıyla eklendi!",
+    fillRequired: "Lütfen tüm zorunlu alanları doldurun.",
+    projectUpdated: "Proje başarıyla güncellendi",
+    projectAdded: "Proje başarıyla eklendi",
     saveError: (editing) =>
       editing
         ? "Proje güncellenirken bir hata oluştu!"
         : "Proje eklenirken bir hata oluştu!",
-    loadError: "Projeler yüklenirken bir hata oluştu!",
+    loadError: "Projeler yüklenirken bir hata oluştu.",
     confirmDeleteProject: (title) =>
       `"${title}" projesini silmek istediğinizden emin misiniz?`,
-    projectDeleted: "Proje başarıyla silindi!",
-    deleteError: "Proje silinirken bir hata oluştu!",
+    projectDeleted: "Proje başarıyla silindi",
+    deleteError: "Proje silinirken bir hata oluştu.",
     confirmResetViews:
       "Görüntülenme sayısını sıfırlamak istediğinizden emin misiniz?",
-    viewsReset: "Görüntülenme sayısı sıfırlandı!",
-    viewsResetError: "Görüntülenme sayısı sıfırlanırken bir hata oluştu!",
+    viewsReset: "Görüntülenme sayısı sıfırlandı",
+    viewsResetError: "Görüntülenme sayısı sıfırlanırken bir hata oluştu.",
     confirmResetLikes: "Tüm beğenileri silmek istediğinizden emin misiniz?",
-    likesReset: "Tüm beğeniler silindi!",
-    likesResetError: "Beğeniler silinirken bir hata oluştu!",
+    likesReset: "Tüm beğeniler silindi",
+    likesResetError: "Beğeniler silinirken bir hata oluştu.",
     confirmDeleteComment: "Bu yorumu silmek istediğinizden emin misiniz?",
-    commentDeleted: "Yorum silindi!",
-    commentDeleteError: "Yorum silinirken bir hata oluştu!",
+    commentDeleted: "Yorum silindi",
+    commentDeleteError: "Yorum silinirken bir hata oluştu.",
   },
   en: {
-    pageTitle: "Projects Management",
+    pageTitle: "Projects management",
     pageSubtitle: "View and manage all projects",
-    projectsPage: "Projects Page",
-    newProject: "Add New Project",
+    projectsPage: "Projects page",
+    newProject: "Add new project",
     statsTitle: "Statistics",
-    totalProjects: "Total Projects",
-    collaborativeProjects: "Collaborative Projects",
-    githubLinked: "GitHub Linked",
-    editProject: "Edit Project",
-    projectTitle: "Project Title *",
+    totalProjects: "Total projects",
+    collaborativeProjects: "Collaborative projects",
+    githubLinked: "GitHub linked",
+    editProject: "Edit project",
+    projectTitle: "Project title *",
     projectTitlePlaceholder: "Enter the project title",
-    englishTitle: "English Project Title",
+    englishTitle: "English project title",
     englishTitlePlaceholder: "Enter the English project title",
     description: "Description *",
     descriptionPlaceholder: "Write a short description about the project",
-    englishDescription: "English Description",
+    englishDescription: "English description",
     englishDescriptionPlaceholder:
       "Write a short English description for the project",
-    githubLink: "GitHub Link",
-    projectImage: "Project Image",
+    githubLink: "GitHub link",
+    projectImage: "Project image",
     currentImage: "Current image:",
     currentImageAlt: "Current project image",
     imageReplaceNote:
       "If you select a new image, the current image will be replaced.",
     collaborators: "Collaborators",
-    collaboratorsPlaceholder: "Search and add by user email...",
+    collaboratorsPlaceholder: "Search and add by user email…",
     selectedCollaborators: "Selected collaborators:",
-    projectStatus: "Project Status",
+    projectStatus: "Project status",
     statusActive: "Active",
     statusCompleted: "Completed",
     statusPaused: "Paused",
-    archiveProject: "Archive Project",
-    updating: "Updating...",
-    adding: "Adding...",
-    updateProjectBtn: "Update Project",
-    addProjectBtn: "Add Project",
+    archiveProject: "Archive project",
+    updating: "Updating…",
+    adding: "Adding…",
+    updateProjectBtn: "Update project",
+    addProjectBtn: "Add project",
     allProjects: (n) => `All Projects (${n})`,
     noProjects: "No projects yet.",
     addFirstProject: "Add the First Project",
     colProject: "Project",
     colCollaborators: "Collaborators",
-    colSocialData: "Social Data",
+    colSocialData: "Social data",
     colDate: "Date",
     colActions: "Actions",
     manage: "Manage",
-    socialDataManagement: "Social Data Management",
+    socialDataManagement: "Social data management",
     statsAndActions: "Statistics and Actions",
     likes: "Likes",
     views: "Views",
     comments: "Comments",
-    resetViews: "Reset View Count",
-    resetLikes: "Delete All Likes",
+    resetViews: "Reset view count",
+    resetLikes: "Delete all likes",
     commentsCount: (n) => `Comments (${n})`,
     noComments: "No comments yet.",
-    fillRequired: "Please fill in all required fields!",
-    projectUpdated: "Project updated successfully!",
-    projectAdded: "Project added successfully!",
+    fillRequired: "Please fill in all required fields.",
+    projectUpdated: "Project updated successfully",
+    projectAdded: "Project added successfully",
     saveError: (editing) =>
       editing
         ? "An error occurred while updating the project!"
         : "An error occurred while adding the project!",
-    loadError: "An error occurred while loading projects!",
+    loadError: "An error occurred while loading projects.",
     confirmDeleteProject: (title) =>
       `Are you sure you want to delete the "${title}" project?`,
-    projectDeleted: "Project deleted successfully!",
-    deleteError: "An error occurred while deleting the project!",
+    projectDeleted: "Project deleted successfully",
+    deleteError: "An error occurred while deleting the project.",
     confirmResetViews: "Are you sure you want to reset the view count?",
-    viewsReset: "View count reset!",
-    viewsResetError: "An error occurred while resetting the view count!",
+    viewsReset: "View count reset",
+    viewsResetError: "An error occurred while resetting the view count.",
     confirmResetLikes: "Are you sure you want to delete all likes?",
-    likesReset: "All likes deleted!",
-    likesResetError: "An error occurred while deleting the likes!",
+    likesReset: "All likes deleted",
+    likesResetError: "An error occurred while deleting the likes.",
     confirmDeleteComment: "Are you sure you want to delete this comment?",
-    commentDeleted: "Comment deleted!",
-    commentDeleteError: "An error occurred while deleting the comment!",
+    commentDeleted: "Comment deleted",
+    commentDeleteError: "An error occurred while deleting the comment.",
   },
 };
 
@@ -885,26 +886,15 @@ export default function AdminProjectsPage() {
 
       {/* Social Data Management Modal */}
       {showSocialModal && selectedProject && (
-        <div
-          className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4 animate-in fade-in-0 duration-short"
-          onClick={() => setShowSocialModal(false)}
-          style={{ overscrollBehavior: 'contain' }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="social-modal-title"
-            onClick={(e) => e.stopPropagation()}
-            className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg border border-rule bg-background text-foreground"
-            style={{ overscrollBehavior: 'contain' }}
-          >
+        <Dialog open onOpenChange={(open) => { if (!open) { setShowSocialModal(false); } }}>
+          <DialogContent hideClose aria-describedby={undefined} className="max-h-[90vh] max-w-4xl overflow-hidden rounded-lg border border-rule bg-background text-foreground p-0 gap-0">
             {/* Modal Header */}
             <div className="border-b border-rule p-4 sm:p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h3 id="social-modal-title" className="font-display text-xl font-bold">
+                  <DialogTitle className="font-display text-xl font-bold">
                     {copy.socialDataManagement}
-                  </h3>
+                  </DialogTitle>
                   <p className="mt-1 break-words text-ink-2">{selectedProject.title}</p>
                 </div>
                 <Button
@@ -1030,8 +1020,8 @@ export default function AdminProjectsPage() {
                 </Button>
               </div>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       <ToastContainer
