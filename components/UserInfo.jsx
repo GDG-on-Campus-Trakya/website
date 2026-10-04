@@ -18,31 +18,34 @@ import { StoragePaths } from "../utils/storageUtils";
 
 const COPY = {
   tr: {
-    unnamed: "İsim girilmemiş",
+    unnamed: "Adın girilmemiş",
     incomplete:
-      "Lütfen etkinliklere katılabilmek için profil bilgilerinizi tamamlayın.",
-    name: "İsim",
+      "Adın, fakülten ya da bölümün eksik. Şimdi doldurursan etkinliklere tek adımda kayıt olursun.",
+    completeNow: "Şimdi doldur",
+    name: "Ad soyad",
     faculty: "Fakülte",
     department: "Bölüm",
-    cancel: "İptal",
-    saving: "Kaydediliyor...",
+    cancel: "Vazgeç",
+    saving: "Kaydediliyor…",
     save: "Kaydet",
-    editProfile: "Profili Düzenle",
+    editProfile: "Bilgilerini düzenle",
     nameRequired: "Adını yaz.",
     facultyRequired: "Fakülteni seç.",
     departmentRequired: "Bölümünü seç ya da yaz.",
     saveError: "Profil kaydedilemedi. Bağlantını kontrol edip tekrar dene.",
   },
   en: {
-    unnamed: "No name provided",
-    incomplete: "Please complete your profile information to join events.",
-    name: "Name",
+    unnamed: "No name given",
+    incomplete:
+      "Your name, faculty or department is missing. Fill them in now and registering for events takes one step.",
+    completeNow: "Fill in now",
+    name: "Full name",
     faculty: "Faculty",
     department: "Department",
     cancel: "Cancel",
-    saving: "Saving...",
+    saving: "Saving…",
     save: "Save",
-    editProfile: "Edit Profile",
+    editProfile: "Edit your details",
     nameRequired: "Enter your name.",
     facultyRequired: "Choose your faculty.",
     departmentRequired: "Choose or type your department.",
@@ -177,7 +180,7 @@ const UserInfo = ({ user }) => {
         <div className="relative shrink-0">
           <img
             src={profileData.photoURL || user.photoURL || "/logo.svg"}
-            alt="Profile"
+            alt=""
             className="h-24 w-24 rounded-full bg-paper-2 object-cover"
           />
           <ProfileImageUpload
@@ -189,17 +192,20 @@ const UserInfo = ({ user }) => {
           />
         </div>
         <div className="flex min-w-0 flex-col text-left">
-          <h2 className="break-words font-display text-2xl font-bold">
+          <h3 className="break-words font-display text-2xl font-bold">
             {profileData.name || copy.unnamed}
-          </h2>
+          </h3>
           <p className="break-all text-muted-foreground">{user.email}</p>
         </div>
       </div>
 
       <div className="w-full space-y-4">
         {!isProfileComplete() && !isEditing && (
-          <div className="rounded border border-ink bg-warning p-4 text-ink">
-            <p>{copy.incomplete}</p>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-y border-rule py-3">
+            <p className="max-w-measure text-sm text-ink-2">{copy.incomplete}</p>
+            <Button size="sm" onClick={() => setIsEditing(true)}>
+              {copy.completeNow}
+            </Button>
           </div>
         )}
 
@@ -237,7 +243,7 @@ const UserInfo = ({ user }) => {
               >
                 {copy.cancel}
               </Button>
-              <Button onClick={handleSave} disabled={isLoading}>
+              <Button onClick={handleSave} loading={isLoading}>
                 {isLoading ? copy.saving : copy.save}
               </Button>
             </div>
