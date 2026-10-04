@@ -1,5 +1,15 @@
 [
   {
+    "date": "2026-10-04",
+    "scope": "app",
+    "macrostructure": "Ecosystem Index (unchanged); login: split intro + form panel",
+    "theme": "custom",
+    "theme_axes": "light / geometric-sans / cool",
+    "vibe": "campus notice board, paper and blue ink",
+    "enrichment": "none",
+    "brief": "GDG on Campus Trakya · login redesign + site-wide UX pass inside design.md (auth return flow, mobile fixes)"
+  },
+  {
     "date": "2026-09-29",
     "macrostructure": "Ecosystem Index",
     "theme": "custom",

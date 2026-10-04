@@ -38,7 +38,10 @@ Rules: accent covers under 5% of a view; no gradients, no glass, no glow; no raw
 `components/ui/*` is the single vocabulary: Button (default, outline, secondary, ghost, link, destructive; `loading` prop), Input, Textarea, Select, Checkbox, Switch, Card, Badge, Field (label + control + helper/error), Dialog, AlertDialog, Drawer, and `page.jsx` (PageContainer, PageHeader, Section, EmptyState, Skeleton). New screens compose these; do not hand-roll button, input, badge or page-title class strings.
 
 ## Copy
-Concrete over promotional. No "seamless", "empower", "next-generation". Any changed Turkish string needs its English entry in `utils/legacyTranslations.js`.
+Concrete over promotional. No "seamless", "empower", "next-generation". Pages keep their strings in a per-page `COPY = { tr, en }` object (or `i18n/messages` for shared chrome); any changed Turkish string needs its English twin in the same place. Keep one form of address per page (sen or siz) and match what the page already uses.
+
+## Auth flow
+Pages that need an account send signed-out visitors to `loginHref(path)` (`utils/redirect.js`), never to the home page; the login page returns them to that path after sign-in. Only same-site paths are accepted. The login page is a split layout: intro and "what an account is for" on the left, the form panel on the right (stacked on mobile, form first). Google sign-in comes before email. `Field` takes an `action` for a link on the label row (e.g. "Forgot password?").
 
 ## Preserve (meaning lives in the colour)
 Quiz answer colours and order (red, blue, yellow, green); correct green and wrong red; timer thresholds; raffle wheel stored colours; social share brand colours; winner gold.
