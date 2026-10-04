@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
 import { PageHeader, Section, EmptyState } from "@/components/ui/page";
 import { Stat } from "@/components/ui/stat";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -99,6 +100,7 @@ const COPY = {
 };
 
 export default function AdminUsersPage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -243,7 +245,7 @@ export default function AdminUsersPage() {
 
   // Delete user
   const handleDeleteUser = async (firestoreId) => {
-    if (!confirm(copy.confirmDeleteUser)) return;
+    if (!(await confirm(copy.confirmDeleteUser, { destructive: true }))) return;
 
     try {
       // First, get all registrations for this user

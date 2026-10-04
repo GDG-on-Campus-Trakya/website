@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { adminCopy } from "@/utils/adminCopy";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -212,6 +213,7 @@ const COPY = {
 };
 
 export default function AdminRafflesPage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -407,7 +409,7 @@ export default function AdminRafflesPage() {
   };
 
   const handleDrawWinner = async (raffleId) => {
-    if (!confirm(copy.confirmDrawWinner)) return;
+    if (!(await confirm(copy.confirmDrawWinner))) return;
 
     const result = await raffleUtils.drawWinner(raffleId);
     if (result.success) {
@@ -444,7 +446,7 @@ export default function AdminRafflesPage() {
   };
 
   const handleEndRaffle = async (raffleId) => {
-    if (!confirm(copy.confirmEndRaffle)) return;
+    if (!(await confirm(copy.confirmEndRaffle))) return;
 
     const result = await raffleUtils.endRaffle(raffleId);
     if (result.success) {
@@ -505,7 +507,7 @@ export default function AdminRafflesPage() {
   };
 
   const handleAnnounceResult = async (raffleId) => {
-    if (!confirm(copy.confirmAnnounce)) return;
+    if (!(await confirm(copy.confirmAnnounce))) return;
 
     const result = await raffleUtils.announceRaffleResult(raffleId);
     if (result.success) {
@@ -551,9 +553,9 @@ export default function AdminRafflesPage() {
   };
 
   const handleDeleteRaffle = async (raffleId) => {
-    if (!confirm(copy.confirmDeleteRaffle)) return;
+    if (!(await confirm(copy.confirmDeleteRaffle, { destructive: true }))) return;
     
-    if (!confirm(copy.confirmDeleteRaffleFinal)) return;
+    if (!(await confirm(copy.confirmDeleteRaffleFinal, { destructive: true }))) return;
 
     // Find the raffle to be deleted for stats calculation
     const raffleToDelete = raffles.find(r => r.id === raffleId);
@@ -1001,16 +1003,17 @@ function ParticipantsModal({ raffle, participants, copy, onClose, formatDate }) 
 
 // Change Winner Modal
 function ChangeWinnerModal({ raffle, participants, copy, onClose, onChangeWinner }) {
+  const confirm = useConfirm();
   const [selectedWinnerId, setSelectedWinnerId] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedWinnerId) {
       toast.error(copy.selectWinnerPrompt);
       return;
     }
 
-    if (!confirm(copy.confirmChangeWinner)) return;
+    if (!(await confirm(copy.confirmChangeWinner))) return;
 
     onChangeWinner(raffle.id, selectedWinnerId);
   };
@@ -1056,20 +1059,21 @@ function ChangeWinnerModal({ raffle, participants, copy, onClose, onChangeWinner
 
 // Edit Raffle Modal
 function EditRaffleModal({ raffle, copy, onClose, onUpdate }) {
+  const confirm = useConfirm();
   const [formData, setFormData] = useState({
     title: raffle.title || "",
     description: raffle.description || "",
     prize: raffle.prize || "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title.trim() || !formData.prize.trim()) {
       toast.error(copy.titleAndPrizeRequired);
       return;
     }
 
-    if (!confirm(copy.confirmUpdateRaffle)) return;
+    if (!(await confirm(copy.confirmUpdateRaffle))) return;
 
     onUpdate(raffle.id, {
       title: formData.title.trim(),

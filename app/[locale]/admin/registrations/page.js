@@ -21,8 +21,10 @@ import { Button } from "@/components/ui/button";
 import { PageHeader, Section, EmptyState } from "@/components/ui/page";
 import { useLocale } from "next-intl";
 import { formatLocalizedDate, getLocalizedField } from "@/utils/localeUtils";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function AdminRegistrationsPage() {
+  const confirm = useConfirm();
   const locale = useLocale();
   const copy =
     locale === "en"
@@ -168,7 +170,7 @@ export default function AdminRegistrationsPage() {
 
   // rm a registration
   const handleRemoveRegistration = async (registrationId) => {
-    if (!confirm(copy.confirmDelete)) return;
+    if (!(await confirm(copy.confirmDelete, { destructive: true }))) return;
 
     try {
       await deleteDoc(doc(db, "registrations", registrationId));

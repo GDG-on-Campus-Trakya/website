@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { adminCopy } from "@/utils/adminCopy";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -73,6 +74,7 @@ const COPY = {
 };
 
 export default function AdminSocialPage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -192,7 +194,7 @@ export default function AdminSocialPage() {
   };
 
   const bulkHideVisible = async () => {
-    if (!confirm(copy.confirmHideAll)) return;
+    if (!(await confirm(copy.confirmHideAll))) return;
 
     const visiblePosts = posts.filter(post => !post.isHidden);
     let successCount = 0;
@@ -207,7 +209,7 @@ export default function AdminSocialPage() {
   };
 
   const bulkShowHidden = async () => {
-    if (!confirm(copy.confirmShowAll)) return;
+    if (!(await confirm(copy.confirmShowAll))) return;
 
     const hiddenPosts = posts.filter(post => post.isHidden);
     let successCount = 0;

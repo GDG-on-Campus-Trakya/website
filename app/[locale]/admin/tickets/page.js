@@ -18,8 +18,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader, EmptyState } from "@/components/ui/page";
 import { Stat } from "@/components/ui/stat";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function AdminTicketsPage() {
+  const confirm = useConfirm();
   const locale = useLocale();
   const copy =
     locale === "en"
@@ -458,7 +460,7 @@ export default function AdminTicketsPage() {
   };
 
   const handleDeleteTicket = async (ticketId) => {
-    if (!confirm(copy.errors.deleteConfirm)) {
+    if (!(await confirm(copy.errors.deleteConfirm, { destructive: true }))) {
       return;
     }
 

@@ -20,6 +20,7 @@ import { logger } from "@/utils/logger";
 import { checkUserRole, ROLES } from "@/utils/roleUtils";
 import { useLocale } from "next-intl";
 import { adminCopy } from "@/utils/adminCopy";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -207,6 +208,7 @@ const COPY = {
 };
 
 export default function AdminPersonalityTestsPage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -310,7 +312,7 @@ export default function AdminPersonalityTestsPage() {
   };
 
   const handleDelete = async (testId) => {
-    if (!confirm(copy.confirmDeleteTest)) return;
+    if (!(await confirm(copy.confirmDeleteTest, { destructive: true }))) return;
 
     try {
       await deleteDoc(doc(db, "personality_tests", testId));

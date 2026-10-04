@@ -36,6 +36,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader, Section, EmptyState } from "@/components/ui/page";
 import { Stat } from "@/components/ui/stat";
 import { adminCopy } from "@/utils/adminCopy";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -133,7 +134,10 @@ const COPY = {
     eventDeleteError: "Etkinlik silinirken bir hata oluştu!",
     emailRateLimit: (n) =>
       `Bu etkinlik için son email gönderiminden ${n} dakika sonra tekrar email gönderebilirsiniz.`,
-    emailsSent: "Email'ler başarıyla gönderildi!",
+    emailsSent: "E-postalar gönderildi.",
+    noRegistrations: "Bu etkinliğe kayıtlı kimse yok.",
+    emailError: "E-postalar gönderilemedi. Biraz sonra yeniden dene.",
+    qrError: "QR kod oluşturulamadı. Yeniden dene.",
   },
   en: {
     pageTitle: "Event Management",
@@ -230,11 +234,15 @@ const COPY = {
     eventDeleteError: "An error occurred while deleting the event!",
     emailRateLimit: (n) =>
       `You can send another email for this event ${n} minutes after the last one.`,
-    emailsSent: "Emails sent successfully!",
+    emailsSent: "E-mails sent.",
+    noRegistrations: "No one is registered for this event.",
+    emailError: "The e-mails were not sent. Try again in a while.",
+    qrError: "The QR code was not generated. Try again.",
   },
 };
 
 export default function AdminEventsPage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -411,7 +419,7 @@ export default function AdminEventsPage() {
 
   // Delete event
   const handleDeleteEvent = async (firestoreId) => {
-    if (!confirm(copy.confirmDeleteEvent)) return;
+    if (!(await confirm(copy.confirmDeleteEvent, { destructive: true }))) return;
 
     try {
       await deleteDoc(doc(db, "events", firestoreId));
@@ -477,7 +485,7 @@ export default function AdminEventsPage() {
       );
 
       if (registeredUserIds.length === 0) {
-        alert("No users registered for this event.");
+        toast.info(copy.noRegistrations);
         return;
       }
 
@@ -552,7 +560,7 @@ export default function AdminEventsPage() {
       toast.success(copy.emailsSent);
     } catch (error) {
       logger.error("Error sending emails:", error);
-      alert(error.message || "Error sending emails. Please try again later.");
+      toast.error(copy.emailError);
     }
   };
 
@@ -611,9 +619,7 @@ export default function AdminEventsPage() {
       setQRCodeModalOpen(true);
     } catch (error) {
       logger.error("Error generating QR code:", error);
-      alert(
-        error.message || "Error generating QR code. Please try again later."
-      );
+      toast.error(copy.qrError);
     }
   };
 

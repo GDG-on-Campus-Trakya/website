@@ -26,6 +26,7 @@ import { PageHeader, Section, EmptyState } from "@/components/ui/page";
 import { Stat } from "@/components/ui/stat";
 import { cn } from "@/lib/utils";
 import { adminCopy } from "@/utils/adminCopy";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -95,6 +96,7 @@ const COPY = {
 };
 
 export default function AdminSponsorsPage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -247,7 +249,7 @@ export default function AdminSponsorsPage() {
 
   // Delete sponsor
   const handleDeleteSponsor = async (firestoreId) => {
-    if (!confirm(copy.confirmDelete)) return;
+    if (!(await confirm(copy.confirmDelete, { destructive: true }))) return;
 
     try {
       await deleteDoc(doc(db, "sponsors", firestoreId));
