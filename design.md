@@ -43,5 +43,12 @@ Concrete over promotional. No "seamless", "empower", "next-generation". Pages ke
 ## Auth flow
 Pages that need an account send signed-out visitors to `loginHref(path)` (`utils/redirect.js`), never to the home page; the login page returns them to that path after sign-in. Only same-site paths are accepted. The login page is a split layout: intro and "what an account is for" on the left, the form panel on the right (stacked on mobile, form first). Google sign-in comes before email. `Field` takes an `action` for a link on the label row (e.g. "Forgot password?").
 
+## Home page (the one exception)
+The home page (`components/landing/Landing.jsx`) is the front door for new students, so it turns the system up; every other page stays on the rules above.
+- Google mark colours may fill blocks there: stat tiles, the top rule of the kind tiles, the dots in the event-name band. Small text never sits in a mark colour.
+- The headline runs above the type scale (`clamp(2.75rem, 7vw, 6.5rem)`).
+- Two strips loop sideways: event posters under the headline, event names on an ink band. They pause on hover and focus; with reduced motion they stand still and scroll by hand.
+- No member photos on the home page. Posters and event names carry it; shared photos stay on /social.
+
 ## Preserve (meaning lives in the colour)
 Quiz answer colours and order (red, blue, yellow, green); correct green and wrong red; timer thresholds; raffle wheel stored colours; social share brand colours; winner gold.
