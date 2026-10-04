@@ -10,21 +10,19 @@ import { Button } from "@/components/ui/button";
 
 const COPY = {
   tr: {
-    fileTooLarge: "Dosya boyutu 10 MB'dan küçük olmalıdır.",
-    invalidType: "Sadece JPEG, PNG, WebP ve HEIC formatları desteklenir.",
-    success: "Profil fotoğrafı başarıyla güncellendi!",
-    unauthorized: "Firebase Storage izin hatası. Lütfen yöneticiye başvurun.",
-    unknown: "Firebase Storage bağlantı hatası. Lütfen tekrar deneyin.",
-    generic: "Profil fotoğrafı yüklenirken hata oluştu",
+    fileTooLarge: "Fotoğraf 10 MB'tan küçük olmalı.",
+    invalidType: "JPEG, PNG, WebP ya da HEIC bir fotoğraf seç.",
+    unauthorized: "Fotoğraf yüklenemedi (izin hatası). Destek talebi açarsan bakarız.",
+    unknown: "Fotoğraf yüklenemedi. Bağlantını kontrol edip yeniden dene.",
+    generic: "Fotoğraf yüklenemedi. Yeniden dene.",
     title: "Profil fotoğrafını değiştir",
   },
   en: {
-    fileTooLarge: "The file size must be smaller than 10 MB.",
-    invalidType: "Only JPEG, PNG, WebP, and HEIC formats are supported.",
-    success: "Profile photo updated successfully.",
-    unauthorized: "Firebase Storage permission error. Please contact an administrator.",
-    unknown: "Firebase Storage connection error. Please try again.",
-    generic: "An error occurred while uploading the profile photo",
+    fileTooLarge: "The photo must be smaller than 10 MB.",
+    invalidType: "Choose a JPEG, PNG, WebP or HEIC photo.",
+    unauthorized: "The photo was not uploaded (permission error). Open a support request and we will look into it.",
+    unknown: "The photo was not uploaded. Check your connection and try again.",
+    generic: "The photo was not uploaded. Try again.",
     title: "Change profile photo",
   },
 };
@@ -61,7 +59,7 @@ const ProfileImageUpload = ({
 
       const result = await uploadImage(file, folder, prefix);
       onImageUpload(result);
-      toast.success(copy.success);
+      // The new photo appearing is the confirmation.
     } catch (uploadError) {
       logger.error("Profile photo upload error:", uploadError);
 
