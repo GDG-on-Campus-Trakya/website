@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import IntentLink from "@/components/IntentLink";
+import { OPEN_COOKIE_PREFERENCES } from "@/components/CookieConsent";
 
 const linkClass =
   "inline-flex min-h-11 items-center whitespace-nowrap rounded-sm text-sm text-ink-2 underline-offset-4 decoration-brand decoration-2 transition-colors duration-micro ease-out hover:text-ink hover:underline";
@@ -107,6 +108,16 @@ export default function Footer() {
                 </IntentLink>
               </li>
             ))}
+            {/* Changing the cookie choice has to be as easy as making it */}
+            <li>
+              <button
+                type="button"
+                className={linkClass}
+                onClick={() => window.dispatchEvent(new Event(OPEN_COOKIE_PREFERENCES))}
+              >
+                {t("cookieSettings")}
+              </button>
+            </li>
           </ul>
           <p className="font-outlier text-xs text-muted-foreground">{t("rights", { year })}</p>
         </div>

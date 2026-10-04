@@ -8,9 +8,9 @@ export default function ConditionalAnalytics() {
   const [canTrack, setCanTrack] = useState(false);
 
   useEffect(() => {
-    // Check initial consent
-    const consent = getCookieConsent();
-    setCanTrack(consent?.analytics === true);
+    // getCookieConsent is async: reading `.analytics` off the promise was always undefined,
+    // so analytics only ever ran in the tab where consent was just given.
+    getCookieConsent().then((consent) => setCanTrack(consent?.analytics === true));
 
     // Listen for consent changes
     const handleConsentChange = (event) => {

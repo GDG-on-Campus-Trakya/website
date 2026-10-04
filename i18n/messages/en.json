@@ -51,24 +51,18 @@
     "privacy": "Privacy policy",
     "terms": "Terms of use",
     "cookiePolicy": "Cookie policy",
+    "cookieSettings": "Cookie preferences",
     "support": "Support",
     "rights": "© {year} GDG on Campus Trakya University"
   },
   "cookieConsent": {
-    "title": "Cookie Usage",
-    "description": "Our website uses cookies and local storage to provide the best possible experience.",
-    "policy": "Cookie Policy",
-    "manage": "Manage your preferences →",
-    "acceptAll": "Accept All",
-    "acceptNecessary": "Necessary Only",
-    "necessaryTitle": "Necessary Cookies",
-    "necessaryDescription": "Required for authentication and core site functionality.",
-    "analyticsTitle": "Analytics Cookies",
-    "analyticsDescription": "Help us improve site performance.",
-    "functionalTitle": "Functional Cookies",
-    "functionalDescription": "Used for session tracking and user experience features.",
-    "savePreferences": "Save Preferences",
-    "cancel": "Cancel"
+    "title": "Cookie preferences",
+    "description": "We store what is needed for signing in and for your language. If you allow it, we also collect visit statistics (Vercel Analytics).",
+    "policy": "Cookie policy",
+    "acceptAll": "Allow",
+    "acceptNecessary": "Necessary only",
+    "currentAll": "Your current choice: statistics allowed.",
+    "currentNecessary": "Your current choice: necessary only."
   },
   "notFound": {
     "title": "Page not found.",

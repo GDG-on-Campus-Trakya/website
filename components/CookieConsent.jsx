@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
@@ -11,171 +11,97 @@ import {
 } from '@/utils/cookieConsent';
 import { useAccount } from '@/app/AuthProvider';
 
+// Dispatched by the footer's "Çerez tercihleri" link, so a choice can be changed as easily as
+// it was made.
+export const OPEN_COOKIE_PREFERENCES = 'open-cookie-preferences';
+
+// The only optional thing the site stores is Vercel Analytics, so the choice is two equal
+// buttons: necessary only, or necessary plus visit statistics.
 export default function CookieConsent() {
   const { user } = useAccount();
   const [showBanner, setShowBanner] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
+  const [current, setCurrent] = useState(null);
+  const bannerRef = useRef(null);
   const t = useTranslations('cookieConsent');
 
   useEffect(() => {
-    const checkConsent = async () => {
-      const userEmail = user?.email || null;
-      const consent = await getCookieConsent(userEmail);
-      if (!consent) {
-        setShowBanner(true);
-      }
+    let active = true;
+    getCookieConsent(user?.email || null).then((consent) => {
+      if (!active) return;
+      setCurrent(consent);
+      if (!consent) setShowBanner(true);
+    });
+    return () => {
+      active = false;
     };
-
-    checkConsent();
   }, [user]);
 
-  const acceptAll = async () => {
+  useEffect(() => {
+    const open = () => setShowBanner(true);
+    window.addEventListener(OPEN_COOKIE_PREFERENCES, open);
+    return () => window.removeEventListener(OPEN_COOKIE_PREFERENCES, open);
+  }, []);
+
+  // The banner is fixed to the bottom; pad the page by its height so it never hides the
+  // footer links underneath it.
+  useEffect(() => {
+    if (!showBanner || !bannerRef.current) return undefined;
+    const banner = bannerRef.current;
+    const pad = () => {
+      document.body.style.paddingBottom = `${banner.offsetHeight}px`;
+    };
+    pad();
+    const observer = new ResizeObserver(pad);
+    observer.observe(banner);
+    return () => {
+      observer.disconnect();
+      document.body.style.paddingBottom = '';
+    };
+  }, [showBanner]);
+
+  const choose = async (analytics) => {
     const userEmail = user?.email || null;
-    await saveCookieConsent(
-      {
-        necessary: true,
-        analytics: true,
-        functional: true
-      },
+    const consent = await saveCookieConsent(
+      { necessary: true, analytics, functional: false },
       userEmail
     );
-    setShowBanner(false);
-  };
-
-  const acceptNecessary = async () => {
-    const userEmail = user?.email || null;
-    await saveCookieConsent(
-      {
-        necessary: true,
-        analytics: false,
-        functional: false
-      },
-      userEmail
-    );
-    await clearNonNecessaryCookies(userEmail);
-    setShowBanner(false);
-  };
-
-  const savePreferences = async (preferences) => {
-    const userEmail = user?.email || null;
-    await saveCookieConsent(preferences, userEmail);
-    if (!preferences.functional) {
-      await clearNonNecessaryCookies(userEmail);
-    }
+    if (!analytics) await clearNonNecessaryCookies(userEmail);
+    setCurrent(consent);
     setShowBanner(false);
   };
 
   if (!showBanner) return null;
 
+  const currentChoice = current ? (current.analytics ? t('currentAll') : t('currentNecessary')) : null;
+
   return (
     <div
+      ref={bannerRef}
       role="region"
       aria-label={t('title')}
       className="fixed inset-x-0 bottom-0 z-toast border-t border-ink bg-paper text-ink"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="mx-auto w-full max-w-page px-gutter py-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
-          <div className="max-w-2xl flex-1">
-            <h2 className="font-display text-base font-bold">{t('title')}</h2>
-            <p className="mt-1 text-sm text-ink-2">
-              {t('description')}{' '}
-              <Link
-                href="/cookie-policy"
-                className="text-brand underline underline-offset-4 decoration-1 hover:decoration-2"
-              >
-                {t('policy')}
-              </Link>
-            </p>
-            {!showDetails && (
-              <button
-                type="button"
-                onClick={() => setShowDetails(true)}
-                className="mt-1 inline-flex min-h-11 items-center rounded-sm text-sm font-medium text-brand underline underline-offset-4 decoration-1 hover:decoration-2"
-              >
-                {t('manage')}
-              </button>
-            )}
+      <div className="mx-auto flex w-full max-w-page flex-col gap-3 px-gutter py-3 md:flex-row md:items-center md:justify-between md:gap-10 md:py-4">
+        <p className="max-w-2xl text-sm text-ink-2">
+          {t('description')}{' '}
+          <Link
+            href="/cookie-policy"
+            className="whitespace-nowrap text-brand underline underline-offset-4 decoration-1 hover:decoration-2"
+          >
+            {t('policy')}
+          </Link>
+          {currentChoice && <span className="block pt-1 text-muted-foreground">{currentChoice}</span>}
+        </p>
 
-            {showDetails && (
-              <CookiePreferences
-                onSave={savePreferences}
-                onCancel={() => setShowDetails(false)}
-              />
-            )}
-          </div>
-
-          {!showDetails && (
-            <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-              <Button onClick={acceptAll}>{t('acceptAll')}</Button>
-              <Button onClick={acceptNecessary} variant="outline">
-                {t('acceptNecessary')}
-              </Button>
-            </div>
-          )}
+        <div className="grid shrink-0 grid-cols-2 gap-3">
+          <Button variant="outline" onClick={() => choose(false)}>
+            {t('acceptNecessary')}
+          </Button>
+          <Button variant="outline" onClick={() => choose(true)}>
+            {t('acceptAll')}
+          </Button>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function PreferenceRow({ title, description, checked, disabled, onChange }) {
-  return (
-    <label className={`flex items-start gap-3 py-3 ${disabled ? '' : 'cursor-pointer'}`}>
-      <input
-        type="checkbox"
-        checked={checked}
-        disabled={disabled}
-        onChange={onChange}
-        className="mt-0.5 h-5 w-5 shrink-0 accent-brand"
-      />
-      <span>
-        <span className="block text-sm font-semibold text-ink">{title}</span>
-        <span className="block text-sm text-muted-foreground">{description}</span>
-      </span>
-    </label>
-  );
-}
-
-function CookiePreferences({ onSave, onCancel }) {
-  const [preferences, setPreferences] = useState({
-    analytics: true,
-    functional: true
-  });
-  const t = useTranslations('cookieConsent');
-
-  return (
-    <div className="mt-3 border-t border-rule">
-      <div className="divide-y divide-rule">
-        <PreferenceRow
-          title={t('necessaryTitle')}
-          description={t('necessaryDescription')}
-          checked={true}
-          disabled
-        />
-        <PreferenceRow
-          title={t('analyticsTitle')}
-          description={t('analyticsDescription')}
-          checked={preferences.analytics}
-          onChange={(e) =>
-            setPreferences({ ...preferences, analytics: e.target.checked })
-          }
-        />
-        <PreferenceRow
-          title={t('functionalTitle')}
-          description={t('functionalDescription')}
-          checked={preferences.functional}
-          onChange={(e) =>
-            setPreferences({ ...preferences, functional: e.target.checked })
-          }
-        />
-      </div>
-
-      <div className="flex flex-col gap-3 border-t border-rule pt-4 sm:flex-row">
-        <Button onClick={() => onSave(preferences)}>{t('savePreferences')}</Button>
-        <Button onClick={onCancel} variant="outline">
-          {t('cancel')}
-        </Button>
       </div>
     </div>
   );

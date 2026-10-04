@@ -51,24 +51,18 @@
     "privacy": "Gizlilik politikası",
     "terms": "Kullanım şartları",
     "cookiePolicy": "Çerez politikası",
+    "cookieSettings": "Çerez tercihleri",
     "support": "Destek",
     "rights": "© {year} GDG on Campus Trakya Üniversitesi"
   },
   "cookieConsent": {
-    "title": "Çerez Kullanımı",
-    "description": "Web sitemiz, size en iyi deneyimi sunmak için çerezler ve yerel depolama kullanmaktadır.",
-    "policy": "Çerez Politikası",
-    "manage": "Tercihlerini yönet →",
-    "acceptAll": "Tümünü Kabul Et",
-    "acceptNecessary": "Sadece Gerekli Çerezler",
-    "necessaryTitle": "Zorunlu Çerezler",
-    "necessaryDescription": "Kimlik doğrulama ve temel site işlevleri için gereklidir.",
-    "analyticsTitle": "Analitik Çerezler",
-    "analyticsDescription": "Site performansını iyileştirmemize yardımcı olur.",
-    "functionalTitle": "Fonksiyonel Çerezler",
-    "functionalDescription": "Oturum takibi ve kullanıcı deneyimi için kullanılır.",
-    "savePreferences": "Tercihleri Kaydet",
-    "cancel": "İptal"
+    "title": "Çerez tercihleri",
+    "description": "Giriş ve dil tercihin için gerekli olanları saklıyoruz. İzin verirsen ziyaret istatistiklerini de (Vercel Analytics) topluyoruz.",
+    "policy": "Çerez politikası",
+    "acceptAll": "İzin ver",
+    "acceptNecessary": "Sadece gerekli",
+    "currentAll": "Şu anki tercihin: istatistiklere izin verdin.",
+    "currentNecessary": "Şu anki tercihin: sadece gerekli olanlar."
   },
   "notFound": {
     "title": "Sayfa bulunamadı.",

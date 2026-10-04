@@ -95,7 +95,7 @@ export const FAQ_DATA = {
         {
           question: "Çerez kullanıyor musunuz?",
           answer:
-            "Giriş ve temel işlevler için gerekli olanları kullanıyoruz. Ziyaret istatistikleri (Vercel Analytics) yalnızca izin verirsen açılır. Ayrıntılar çerez politikasında.",
+            "Giriş ve temel işlevler için gerekli olanları kullanıyoruz. Ziyaret istatistikleri (Vercel Analytics) yalnızca izin verirsen açılır; tercihini sayfanın altındaki Çerez tercihleri bağlantısından değiştirebilirsin.",
         },
         {
           question: "Verilerim nasıl korunuyor?",
@@ -203,7 +203,7 @@ export const FAQ_DATA = {
         {
           question: "Do you use cookies?",
           answer:
-            "Only the ones needed for signing in and basic features. Visit statistics (Vercel Analytics) are switched on only if you allow them. The cookie policy has the details.",
+            "Only the ones needed for signing in and basic features. Visit statistics (Vercel Analytics) are switched on only if you allow them; change your choice with the Cookie preferences link at the bottom of the page.",
         },
         {
           question: "How is my data protected?",
