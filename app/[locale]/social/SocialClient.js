@@ -1,103 +1,61 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/firebase";
-import { socialUtils } from "@/utils/socialUtils";
-import PostCard from "@/components/PostCard";
-import PostModal from "@/components/PostModal";
-import PostUpload from "@/components/PostUpload";
-import AnnouncementCard from "@/components/AnnouncementCard";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import { Button } from "@/components/ui/button";
-import { fieldClasses } from "@/components/ui/input";
-import { PageContainer, PageHeader, EmptyState } from "@/components/ui/page";
-import { useRouter } from "@/i18n/navigation";
-import { loginHref } from "@/utils/redirect";
+// Hallmark · genre: editorial · macrostructure: Catalogue (photos banded by event)
+// design-system: design.md · designed-as-app
+
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLocale } from "next-intl";
+import { useAccount } from "@/app/AuthProvider";
+import PostModal from "@/components/PostModal";
+import PostUpload from "@/components/PostUpload";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useRouter } from "@/i18n/navigation";
+import { loginHref } from "@/utils/redirect";
+import { socialUtils } from "@/utils/socialUtils";
+import SocialBoard, { BOARD_COPY, groupPostsByEvent } from "./SocialBoard";
 
-export default function SocialClient() {
-  const locale = useLocale();
-  const copy =
-    locale === "en"
-      ? {
-          postsLoadError: "Failed to load posts.",
-          resultsLoadError: "Failed to load raffle results.",
-          loading: "Loading...",
-          signInRequired: "You need to sign in...",
-          title: "Social",
-          subtitle: "Share event moments and join raffles!",
-          photosTab: "Event Photos",
-          resultsTab: "Raffle Results",
-          filter: "Filter:",
-          allEvents: (count) => `All Events (${count} photos)`,
-          eventStats: (name, count) => `${name} (${count} photos)`,
-          activeEventsTitle: (count) => `${count} active events available`,
-          postsLoading: "Loading posts...",
-          noPhotos: "No event photos yet",
-          noPhotosForEvent: "No photos from this event yet",
-          firstPhoto: "Share the first event photo and join the raffle!",
-          sharePhoto: "Share Event Photo",
-          activeEventsAvailable: (count) => `${count} active events available`,
-          noActiveEvents: "There are no active events right now",
-          noActiveEventsBody:
-            "When new events start, you will be able to share your photos here.",
-          activeEventsHint:
-            "Events usually stay open for photo sharing for 3 days after they start.",
-          noResults: "No raffle results yet",
-          noResultsBody:
-            "Results will be announced here once event raffles are completed.",
-          resultsHint: "Share an event photo to join raffles.",
-          loadMore: "Load More",
-        }
-      : {
-          postsLoadError: "Postlar yüklenirken hata oluştu!",
-          resultsLoadError: "Çekiliş sonuçları yüklenirken hata oluştu!",
-          loading: "Yükleniyor...",
-          signInRequired: "Giriş yapmanız gerekiyor...",
-          title: "Sosyal Medya",
-          subtitle: "Etkinlik anlarını paylaş, çekilişlere katıl!",
-          photosTab: "Etkinlik Fotoğrafları",
-          resultsTab: "Çekiliş Sonuçları",
-          filter: "Filtre:",
-          allEvents: (count) => `Tüm Etkinlikler (${count} fotoğraf)`,
-          eventStats: (name, count) => `${name} (${count} fotoğraf)`,
-          activeEventsTitle: (count) => `${count} aktif etkinlik mevcut`,
-          postsLoading: "Postlar yükleniyor...",
-          noPhotos: "Henüz etkinlik fotoğrafı yok",
-          noPhotosForEvent: "Bu etkinlikten henüz fotoğraf yok",
-          firstPhoto: "İlk etkinlik fotoğrafını sen paylaş ve çekilişe katıl!",
-          sharePhoto: "Etkinlik Fotoğrafı Paylaş",
-          activeEventsAvailable: (count) => `${count} aktif etkinlik mevcut`,
-          noActiveEvents: "Şu anda aktif etkinlik yok",
-          noActiveEventsBody:
-            "Yeni etkinlikler başladığında burada fotoğraflarını paylaşabilirsin!",
-          activeEventsHint:
-            "Etkinlikler genellikle başladıktan sonra 3 gün boyunca fotoğraf paylaşımına açık kalır",
-          noResults: "Henüz çekiliş sonucu yok",
-          noResultsBody:
-            "Etkinlik çekilişleri tamamlandığında sonuçlar burada ilan edilecek!",
-          resultsHint: "Çekilişlere katılmak için etkinlik fotoğrafı paylaş",
-          loadMore: "Daha Fazla Yükle",
-        };
+const PAGE_SIZE = 24;
 
-  const [user, loading] = useAuthState(auth);
-  const [posts, setPosts] = useState([]);
-  const [announcements, setAnnouncements] = useState([]);
-  const [filteredPosts, setFilteredPosts] = useState([]);
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [showUpload, setShowUpload] = useState(false);
-  const [filter, setFilter] = useState("all");
-  const [currentTab, setCurrentTab] = useState("posts");
-  const [isLoading, setIsLoading] = useState(true);
-  const [lastDoc, setLastDoc] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [activeEvents, setActiveEvents] = useState([]);
-  const [loadingEvents, setLoadingEvents] = useState(true);
+const COPY = {
+  tr: {
+    loadMoreError: "Daha fazla fotoğraf yüklenemedi. Tekrar dene.",
+    shareTitle: "Fotoğraf paylaş",
+    shareDescription: "Paylaştığın fotoğraf herkese açık sosyal sayfada görünür.",
+  },
+  en: {
+    loadMoreError: "More photos could not be loaded. Try again.",
+    shareTitle: "Share a photo",
+    shareDescription: "The photo you share appears on the public social page.",
+  },
+};
+
+export default function SocialClient({ events = [] }) {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const { user, loading } = useAccount();
   const router = useRouter();
+  const [posts, setPosts] = useState([]);
+  const [status, setStatus] = useState("loading");
+  const [cursor, setCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [raffles, setRaffles] = useState([]);
+  const [activeEvents, setActiveEvents] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
+
+  const eventsById = useMemo(
+    () => Object.fromEntries(events.map((event) => [event.id, event])),
+    [events]
+  );
 
   useEffect(() => {
     if (!loading && !user) {
@@ -105,337 +63,136 @@ export default function SocialClient() {
     }
   }, [user, loading, router]);
 
-  useEffect(() => {
-    if (currentTab === "posts") {
-      loadPosts();
-    } else {
-      loadAnnouncements();
+  const loadFirstPage = useCallback(async () => {
+    setStatus("loading");
+    const result = await socialUtils.getPosts({ isHidden: false }, { limit: PAGE_SIZE });
+    if (!result.success) {
+      setStatus("error");
+      return;
     }
-    loadActiveEvents();
-  }, [currentTab]);
+    setPosts(result.posts);
+    setCursor(result.lastDoc);
+    setHasMore(result.hasMore);
+    setStatus("ready");
+  }, []);
 
-  useEffect(() => {
-    applyFilter();
-  }, [posts, filter]);
-
-  const loadActiveEvents = async () => {
-    setLoadingEvents(true);
-    const result = await socialUtils.getActiveEventsForPosting();
-    if (result.success) {
-      setActiveEvents(result.events.filter((event) => event.canPost));
-    }
-    setLoadingEvents(false);
-  };
-
-  const loadPosts = async (loadMore = false) => {
-    if (!loadMore) setIsLoading(true);
-
+  const loadMore = async () => {
+    setLoadingMore(true);
     const result = await socialUtils.getPosts(
       { isHidden: false },
-      { limit: 10, startAfter: loadMore ? lastDoc : null }
+      { limit: PAGE_SIZE, startAfter: cursor }
     );
+    setLoadingMore(false);
 
-    if (result.success) {
-      if (loadMore) {
-        setPosts((prev) => [...prev, ...result.posts]);
-      } else {
-        setPosts(result.posts);
-      }
-      setLastDoc(result.lastDoc);
-      setHasMore(result.posts.length === 10);
-    } else {
-      toast.error(copy.postsLoadError);
+    if (!result.success) {
+      toast.error(copy.loadMoreError);
+      return;
     }
-
-    setIsLoading(false);
+    setPosts((prev) => [...prev, ...result.posts]);
+    setCursor(result.lastDoc);
+    setHasMore(result.hasMore);
   };
 
-  const loadAnnouncements = async (loadMore = false) => {
-    if (!loadMore) setIsLoading(true);
+  useEffect(() => {
+    if (!user) return;
 
-    const result = await socialUtils.getAnnouncements({
-      limit: 20,
-      startAfter: loadMore ? lastDoc : null,
+    loadFirstPage();
+    socialUtils.getAnnouncements({ limit: 50 }).then((result) => {
+      if (result.success) {
+        setRaffles(result.announcements.filter((item) => item.type === "raffle_result"));
+      }
     });
+    socialUtils.getActiveEventsForPosting().then((result) => {
+      setActiveEvents(result.success ? result.events.filter((event) => event.canPost) : []);
+    });
+  }, [user?.uid, loadFirstPage]);
 
-    if (result.success) {
-      const raffleResults = result.announcements.filter(
-        (announcement) => announcement.type === "raffle_result"
-      );
+  const groups = useMemo(
+    () => groupPostsByEvent(posts, eventsById, locale, BOARD_COPY[locale].otherPhotos),
+    [posts, eventsById, locale]
+  );
 
-      if (loadMore) {
-        setAnnouncements((prev) => [...prev, ...raffleResults]);
+  // The viewer steps through photos in the order the board shows them.
+  const ordered = useMemo(() => groups.flatMap((group) => group.posts), [groups]);
+  const selectedIndex = ordered.findIndex((post) => post.id === selectedId);
+  const selectedPost = selectedIndex >= 0 ? ordered[selectedIndex] : null;
+
+  const { rafflesByEvent, earlierRaffles } = useMemo(() => {
+    const shown = new Set(groups.map((group) => group.eventId).filter(Boolean));
+    const byEvent = new Map();
+    const earlier = [];
+    for (const raffle of raffles) {
+      if (raffle.eventId && shown.has(raffle.eventId)) {
+        byEvent.set(raffle.eventId, [...(byEvent.get(raffle.eventId) || []), raffle]);
       } else {
-        setAnnouncements(raffleResults);
+        earlier.push(raffle);
       }
-      setLastDoc(result.lastDoc);
-      setHasMore(raffleResults.length === 20);
-    } else {
-      toast.error(copy.resultsLoadError);
     }
+    return { rafflesByEvent: byEvent, earlierRaffles: earlier };
+  }, [groups, raffles]);
 
-    setIsLoading(false);
+  const handlePostChange = (updated) => {
+    setPosts((prev) => prev.map((post) => (post.id === updated.id ? updated : post)));
   };
 
-  const applyFilter = () => {
-    let filtered = posts;
-
-    if (filter !== "all") {
-      filtered = posts.filter((post) => post.eventId === filter);
-    }
-
-    setFilteredPosts(filtered);
-  };
-
-  const handlePostClick = (post) => {
-    setSelectedPost(post);
-  };
-
-  const handlePostDelete = (postId) => {
+  const handleDelete = (postId) => {
     setPosts((prev) => prev.filter((post) => post.id !== postId));
+    setSelectedId((current) => (current === postId ? null : current));
   };
 
   const handleUploadComplete = () => {
-    setShowUpload(false);
-    if (currentTab === "posts") {
-      loadPosts();
-    }
+    setUploadOpen(false);
+    loadFirstPage();
   };
-
-  const getFilterStats = () => {
-    const total = posts.length;
-    const eventGroups = {};
-
-    posts.forEach((post) => {
-      if (post.eventId) {
-        eventGroups[post.eventId] = eventGroups[post.eventId] || {
-          count: 0,
-          name:
-            locale === "en"
-              ? post.eventNameEn || post.eventName
-              : post.eventName,
-        };
-        eventGroups[post.eventId].count++;
-      }
-    });
-
-    return { total, eventGroups };
-  };
-
-  if (loading) {
-    return (
-      <PageContainer>
-        <p role="status" className="text-ink-2">
-          {copy.loading}
-        </p>
-      </PageContainer>
-    );
-  }
-
-  if (!user) {
-    return (
-      <PageContainer>
-        <p role="status" className="text-ink-2">
-          {copy.signInRequired}
-        </p>
-      </PageContainer>
-    );
-  }
-
-  const stats = getFilterStats();
-
-  const tabClass = (active) =>
-    `-mb-px whitespace-nowrap border-b-2 py-3 text-sm font-medium transition-colors duration-micro ease-out ${
-      active
-        ? "border-ink text-ink"
-        : "border-transparent text-muted-foreground hover:text-ink"
-    }`;
 
   return (
-    <PageContainer>
-      <PageHeader
-        title={copy.title}
-        description={copy.subtitle}
-        actions={
-          currentTab === "posts" &&
-          (loadingEvents ? (
-            <Button disabled loading>
-              <Plus aria-hidden="true" />
-              {copy.sharePhoto}
-            </Button>
-          ) : activeEvents.length > 0 ? (
-            <Button
-              onClick={() => setShowUpload(true)}
-              title={copy.activeEventsTitle(activeEvents.length)}
-            >
-              <Plus aria-hidden="true" />
-              {copy.sharePhoto}
-            </Button>
-          ) : null)
-        }
+    <>
+      <SocialBoard
+        locale={locale}
+        groups={groups}
+        rafflesByEvent={rafflesByEvent}
+        earlierRaffles={earlierRaffles}
+        activeEvents={activeEvents}
+        status={loading || !user ? "loading" : status}
+        hasMore={hasMore}
+        loadingMore={loadingMore}
+        onLoadMore={loadMore}
+        onRetry={loadFirstPage}
+        onOpenPost={(post) => setSelectedId(post.id)}
+        onPostChange={handlePostChange}
+        onDelete={handleDelete}
+        onShare={() => setUploadOpen(true)}
       />
-
-      <div className="max-w-2xl">
-        <div className="flex gap-6 overflow-x-auto border-b border-rule">
-          <button
-            onClick={() => setCurrentTab("posts")}
-            aria-current={currentTab === "posts" ? "page" : undefined}
-            className={tabClass(currentTab === "posts")}
-          >
-            {copy.photosTab}
-          </button>
-
-          <button
-            onClick={() => setCurrentTab("results")}
-            aria-current={currentTab === "results" ? "page" : undefined}
-            className={tabClass(currentTab === "results")}
-          >
-            {copy.resultsTab}
-          </button>
-        </div>
-
-        {currentTab === "posts" && Object.keys(stats.eventGroups).length > 0 && (
-          <div className="flex min-w-0 flex-col gap-1.5 border-b border-rule py-4">
-            <label htmlFor="social-filter" className="text-sm font-medium">
-              {copy.filter}
-            </label>
-            <select
-              id="social-filter"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className={`${fieldClasses} h-control min-w-0 cursor-pointer py-2 text-sm`}
-            >
-              <option value="all">{copy.allEvents(stats.total)}</option>
-              {Object.entries(stats.eventGroups).map(([eventId, eventData]) => (
-                <option key={eventId} value={eventId}>
-                  {copy.eventStats(eventData.name, eventData.count)}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {isLoading ? (
-          <p role="status" className="py-12 text-sm text-muted-foreground">
-            {copy.postsLoading}
-          </p>
-        ) : (
-          <>
-            {currentTab === "posts" && filteredPosts.length > 0 && (
-              <div>
-                {filteredPosts.map((post) => (
-                  <ErrorBoundary key={post.id} locale={locale}>
-                    <PostCard
-                      post={post}
-                      onPostClick={handlePostClick}
-                      onDelete={handlePostDelete}
-                    />
-                  </ErrorBoundary>
-                ))}
-              </div>
-            )}
-
-            {currentTab === "results" && announcements.length > 0 && (
-              <div>
-                {announcements.map((announcement) => (
-                  <ErrorBoundary key={announcement.id} locale={locale}>
-                    <AnnouncementCard announcement={announcement} />
-                  </ErrorBoundary>
-                ))}
-              </div>
-            )}
-
-            {currentTab === "posts" && filteredPosts.length === 0 && (
-              <EmptyState
-                className="mt-8"
-                title={
-                  activeEvents.length > 0
-                    ? filter === "all"
-                      ? copy.noPhotos
-                      : copy.noPhotosForEvent
-                    : copy.noActiveEvents
-                }
-                description={
-                  activeEvents.length > 0 ? copy.firstPhoto : copy.noActiveEventsBody
-                }
-                action={
-                  activeEvents.length > 0 ? (
-                    <>
-                      <Button onClick={() => setShowUpload(true)}>
-                        {copy.sharePhoto}
-                      </Button>
-                      <p className="mt-4 text-sm text-muted-foreground">
-                        {copy.activeEventsAvailable(activeEvents.length)}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {copy.activeEventsHint}
-                    </p>
-                  )
-                }
-              />
-            )}
-
-            {currentTab === "results" && announcements.length === 0 && (
-              <EmptyState
-                className="mt-8"
-                title={copy.noResults}
-                description={copy.noResultsBody}
-                action={
-                  <p className="text-sm text-muted-foreground">{copy.resultsHint}</p>
-                }
-              />
-            )}
-
-            {((currentTab === "posts" && filteredPosts.length > 0) ||
-              (currentTab === "results" && announcements.length > 0)) &&
-              hasMore && (
-                <div className="py-8">
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      currentTab === "posts"
-                        ? loadPosts(true)
-                        : loadAnnouncements(true)
-                    }
-                  >
-                    {copy.loadMore}
-                  </Button>
-                </div>
-              )}
-          </>
-        )}
-      </div>
-
-      {showUpload && activeEvents.length > 0 && (
-        <div className="fixed inset-0 z-modal flex items-center justify-center overflow-y-auto bg-ink/60 p-4">
-          <PostUpload
-            onUploadComplete={handleUploadComplete}
-            onCancel={() => setShowUpload(false)}
-          />
-        </div>
-      )}
 
       <PostModal
         post={selectedPost}
         isOpen={!!selectedPost}
-        onClose={() => setSelectedPost(null)}
-        onDelete={handlePostDelete}
+        onClose={() => setSelectedId(null)}
+        onDelete={handleDelete}
+        onChange={handlePostChange}
+        onPrev={selectedIndex > 0 ? () => setSelectedId(ordered[selectedIndex - 1].id) : undefined}
+        onNext={
+          selectedIndex >= 0 && selectedIndex < ordered.length - 1
+            ? () => setSelectedId(ordered[selectedIndex + 1].id)
+            : undefined
+        }
       />
 
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-    </PageContainer>
+      <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader className="text-left sm:text-left">
+            <DialogTitle className="text-xl">{copy.shareTitle}</DialogTitle>
+            <DialogDescription>{copy.shareDescription}</DialogDescription>
+          </DialogHeader>
+          <PostUpload
+            activeEvents={activeEvents ?? undefined}
+            onUploadComplete={handleUploadComplete}
+            onCancel={() => setUploadOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <ToastContainer position="top-right" autoClose={4000} newestOnTop closeOnClick pauseOnHover theme="light" />
+    </>
   );
 }

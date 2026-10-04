@@ -1,6 +1,17 @@
 [
   {
     "date": "2026-10-04",
+    "scope": "page",
+    "page": "/social",
+    "macrostructure": "Catalogue (photos banded by event)",
+    "theme": "custom",
+    "theme_axes": "light / geometric-sans / cool",
+    "vibe": "campus notice board, paper and blue ink",
+    "enrichment": "none",
+    "brief": "GDG on Campus Trakya · social page redesign inside design.md (event bands with raffle winners, photo viewer, share form)"
+  },
+  {
+    "date": "2026-10-04",
     "scope": "app",
     "macrostructure": "Ecosystem Index (unchanged); login: split intro + form panel",
     "theme": "custom",

@@ -1,337 +1,339 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { X, ImageIcon } from "lucide-react";
-import { socialUtils } from "../utils/socialUtils";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { ImagePlus } from "lucide-react";
 import { toast } from "react-toastify";
-import { logger } from "@/utils/logger";
 import { useLocale } from "next-intl";
-import { getLocalizedField } from "@/utils/localeUtils";
+import { useAccount } from "@/app/AuthProvider";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/ui/field";
-import { fieldClasses } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { getEventStart } from "@/utils/eventTime";
+import { logger } from "@/utils/logger";
+import { formatLocalizedDate, getLocalizedField } from "@/utils/localeUtils";
+import { socialUtils } from "@/utils/socialUtils";
 
-export default function PostUpload({ onUploadComplete, onCancel }) {
-  const locale = useLocale();
-  const copy =
-    locale === "en"
-      ? {
-          invalidImage: "Please select a valid image file.",
-          fileTooLarge: "Image size must be smaller than 10MB.",
-          selected: "Image selected.",
-          previewError: "Failed to preview the image.",
-          uploadError: "Failed to upload the image.",
-          signInRequired: "You need to sign in.",
-          selectImage: "Please select an image.",
-          selectEvent: "Please select an event.",
-          createPostError: "Failed to create the post.",
-          success: "Post shared successfully.",
-          unexpectedError: "An unexpected error occurred.",
-          title: "New Post",
-          selectOrDrag: "Select or drag an image",
-          fileHelp: "JPG, PNG, HEIC (Max 10MB - Auto compressed)",
-          eventSelection: "Event Selection *",
-          chooseEvent: "Select an event",
-          expired: "(Expired)",
-          raffleHelp: "This post will automatically enter the raffle.",
-          noActiveEvents:
-            "There are no active events you can share photos for right now.",
-          description: "Description (Optional)",
-          descriptionPlaceholder: "Write something about your post...",
-          sharing: "Sharing...",
-          share: "Share",
-        }
-      : {
-          invalidImage: "Lütfen geçerli bir resim dosyası seçin!",
-          fileTooLarge: "Resim boyutu 10MB'dan küçük olmalıdır!",
-          selected: "Resim seçildi!",
-          previewError: "Resim önizlenirken hata oluştu!",
-          uploadError: "Resim yüklenirken hata oluştu!",
-          signInRequired: "Giriş yapmanız gerekiyor!",
-          selectImage: "Lütfen bir resim seçin!",
-          selectEvent: "Lütfen bir etkinlik seçin!",
-          createPostError: "Post oluşturulurken hata oluştu!",
-          success: "Post başarıyla paylaşıldı!",
-          unexpectedError: "Beklenmeyen bir hata oluştu!",
-          title: "Yeni Post",
-          selectOrDrag: "Resim seç veya sürükle",
-          fileHelp: "JPG, PNG, HEIC (Max 10MB - Otomatik sıkıştırılır)",
-          eventSelection: "Etkinlik Seçimi *",
-          chooseEvent: "Etkinlik seçin",
-          expired: "(Süresi dolmuş)",
-          raffleHelp: "Bu post çekilişe otomatik katılacak!",
-          noActiveEvents:
-            "Şu anda fotoğraf paylaşabileceğiniz aktif etkinlik yok.",
-          description: "Açıklama (İsteğe Bağlı)",
-          descriptionPlaceholder: "Postunuz hakkında bir şeyler yazın...",
-          sharing: "Paylaşılıyor...",
-          share: "Paylaş",
-        };
+const MAX_BYTES = 10 * 1024 * 1024;
+const CAPTION_MAX = 500;
+const POSTING_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
 
-  const [user] = useAuthState(auth);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [description, setDescription] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState("");
-  const [activeEvents, setActiveEvents] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [userProfileData, setUserProfileData] = useState(null);
-  const fileInputRef = useRef(null);
+const COPY = {
+  tr: {
+    event: "Etkinlik",
+    eventHelp: "Fotoğraf bu etkinliğin çekilişine otomatik katılır.",
+    until: (date) => `son gün ${date}`,
+    noEvents: "Şu an fotoğraf paylaşılabilecek bir etkinlik yok.",
+    chooseEvent: "Hangi etkinlikten olduğunu seç.",
+    photo: "Fotoğraf",
+    pick: "Fotoğraf seç ya da buraya sürükle",
+    pickHelp: "JPG, PNG veya HEIC, en fazla 10 MB. Yüklerken küçültülür.",
+    change: "Değiştir",
+    remove: "Kaldır",
+    choosePhoto: "Bir fotoğraf seç.",
+    notImage: "Bu dosya bir görsel değil. JPG, PNG veya HEIC seç.",
+    tooLarge: "Fotoğraf 10 MB'tan büyük. Daha küçük bir dosya seç.",
+    caption: "Açıklama",
+    optional: "isteğe bağlı",
+    captionPlaceholder: "Kimler var, ne oluyordu?",
+    share: "Paylaş",
+    cancel: "Vazgeç",
+    signInRequired: "Paylaşmak için giriş yap.",
+    uploadError: "Fotoğraf yüklenemedi. Bağlantını kontrol edip tekrar dene.",
+    postError: "Paylaşım kaydedilemedi. Tekrar dene.",
+  },
+  en: {
+    event: "Event",
+    eventHelp: "The photo enters this event's raffle automatically.",
+    until: (date) => `until ${date}`,
+    noEvents: "There is no event open for photos right now.",
+    chooseEvent: "Choose the event the photo is from.",
+    photo: "Photo",
+    pick: "Choose a photo or drop it here",
+    pickHelp: "JPG, PNG or HEIC, up to 10 MB. It is resized on upload.",
+    change: "Change",
+    remove: "Remove",
+    choosePhoto: "Choose a photo.",
+    notImage: "This file is not an image. Choose a JPG, PNG or HEIC.",
+    tooLarge: "The photo is larger than 10 MB. Choose a smaller file.",
+    caption: "Caption",
+    optional: "optional",
+    captionPlaceholder: "Who is in it, what was happening?",
+    share: "Share",
+    cancel: "Cancel",
+    signInRequired: "Sign in to share.",
+    uploadError: "The photo could not be uploaded. Check your connection and try again.",
+    postError: "The post could not be saved. Try again.",
+  },
+};
+
+// Share a photo from an event that is still open (three days from its start). Pass
+// `activeEvents` when the page already has them; otherwise they are loaded here.
+export default function PostUpload({ onUploadComplete, onCancel, activeEvents: givenEvents }) {
+  const locale = useLocale() === "en" ? "en" : "tr";
+  const copy = COPY[locale];
+  const { user, profile } = useAccount();
+  const [loadedEvents, setLoadedEvents] = useState(null);
+  const events = (givenEvents ?? loadedEvents ?? []).filter((event) => event.canPost);
+  const [eventId, setEventId] = useState("");
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [caption, setCaption] = useState("");
+  const [errors, setErrors] = useState({});
+  const [dragging, setDragging] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const inputRef = useRef(null);
 
   useEffect(() => {
-    loadActiveEvents();
-    if (user) {
-      loadUserProfile();
-    }
-  }, [user]);
+    if (givenEvents) return;
+    socialUtils.getActiveEventsForPosting().then((result) => {
+      setLoadedEvents(result.success ? result.events : []);
+    });
+  }, [givenEvents]);
 
-  const loadUserProfile = async () => {
-    try {
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (userDoc.exists()) {
-        setUserProfileData(userDoc.data());
-      }
-    } catch (error) {
-      logger.error("Error loading user profile:", error);
-    }
+  // One open event: nothing to choose
+  useEffect(() => {
+    if (!eventId && events.length === 1) setEventId(events[0].id);
+  }, [eventId, events]);
+
+  useEffect(() => {
+    if (!file) return undefined;
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  const deadline = (event) => {
+    const start = getEventStart(event);
+    if (!start) return null;
+    return formatLocalizedDate(new Date(start.getTime() + POSTING_WINDOW_MS), locale, {
+      timeZone: "Europe/Istanbul",
+      day: "numeric",
+      month: "long",
+    });
   };
 
-  const loadActiveEvents = async () => {
-    const result = await socialUtils.getActiveEventsForPosting();
-    if (result.success) {
-      setActiveEvents(result.events);
-    }
-  };
-
-  const handleImageSelect = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error(copy.invalidImage);
+  const chooseFile = (next) => {
+    if (!next) return;
+    if (!next.type.startsWith("image/") && !/\.hei[cf]$/i.test(next.name)) {
+      setErrors((prev) => ({ ...prev, photo: copy.notImage }));
       return;
     }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error(copy.fileTooLarge);
+    if (next.size > MAX_BYTES) {
+      setErrors((prev) => ({ ...prev, photo: copy.tooLarge }));
       return;
     }
-
-    try {
-      setSelectedImage(file);
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target.result);
-        toast.success(copy.selected);
-      };
-      reader.onerror = () => {
-        toast.error(copy.previewError);
-        setSelectedImage(null);
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      toast.error(copy.uploadError);
-      logger.error("Image select error:", error);
-    }
+    setErrors((prev) => ({ ...prev, photo: undefined }));
+    setFile(next);
   };
 
-  const handleDrop = (event) => {
+  const clearFile = () => {
+    setFile(null);
+    setPreview(null);
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file) {
-      handleImageSelect({ target: { files: [file] } });
-    }
-  };
-
-  const handleDragOver = (event) => {
-    event.preventDefault();
-  };
-
-  const clearImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
 
     if (!user) {
       toast.error(copy.signInRequired);
       return;
     }
 
-    if (!selectedImage) {
-      toast.error(copy.selectImage);
-      return;
-    }
+    const nextErrors = {
+      event: eventId ? undefined : copy.chooseEvent,
+      photo: file ? undefined : copy.choosePhoto,
+    };
+    setErrors(nextErrors);
+    if (nextErrors.event || nextErrors.photo) return;
 
-    if (!selectedEvent) {
-      toast.error(copy.selectEvent);
-      return;
-    }
-
-    setIsUploading(true);
+    setSubmitting(true);
 
     try {
-      const uploadResult = await socialUtils.uploadPostImage(
-        selectedImage,
-        user.uid
-      );
-
-      if (!uploadResult.success) {
+      const upload = await socialUtils.uploadPostImage(file, user.uid);
+      if (!upload.success) {
         toast.error(copy.uploadError);
-        setIsUploading(false);
         return;
       }
 
-      const eventData = activeEvents.find((event) => event.id === selectedEvent);
-      const postData = {
+      const chosen = events.find((item) => item.id === eventId);
+      const post = await socialUtils.createPost({
         userId: user.uid,
         userEmail: user.email,
-        userName: userProfileData?.name || user.displayName || user.email,
-        userPhoto: userProfileData?.photoURL || user.photoURL || null,
-        imageUrl: uploadResult.url,
-        description: description.trim(),
-        eventId: selectedEvent,
-        eventName: eventData?.name,
-        eventNameEn: eventData?.nameEn || "",
-      };
+        userName: profile?.name || user.displayName || user.email,
+        userPhoto: profile?.photoURL || user.photoURL || null,
+        imageUrl: upload.url,
+        description: caption.trim(),
+        eventId,
+        eventName: chosen?.name,
+        eventNameEn: chosen?.nameEn || "",
+      });
 
-      const postResult = await socialUtils.createPost(postData);
-
-      if (!postResult.success) {
-        toast.error(copy.createPostError);
-        setIsUploading(false);
+      if (!post.success) {
+        toast.error(copy.postError);
         return;
       }
 
-      await socialUtils.addToRaffle(selectedEvent, user.uid, postResult.id);
-
-      toast.success(copy.success);
-      setSelectedImage(null);
-      setImagePreview(null);
-      setDescription("");
-      setSelectedEvent("");
-
-      onUploadComplete && onUploadComplete();
+      await socialUtils.addToRaffle(eventId, user.uid, post.id);
+      onUploadComplete?.();
     } catch (error) {
       logger.error("Upload error:", error);
-      toast.error(copy.unexpectedError);
+      toast.error(copy.postError);
+    } finally {
+      setSubmitting(false);
     }
-
-    setIsUploading(false);
   };
 
   return (
-    <div className="relative w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-lg border border-rule bg-background text-foreground p-6">
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <h2 id="post-upload-title" className="text-xl font-bold">{copy.title}</h2>
-        {onCancel && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onCancel}
-            className="-mr-3 text-muted-foreground hover:text-foreground"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+      <fieldset
+        aria-describedby="post-upload-event-message"
+        aria-invalid={errors.event ? true : undefined}
+      >
+        <legend className="text-sm font-medium text-ink">{copy.event}</legend>
+        {events.length > 0 ? (
+          <ul className="mt-1.5 border-y border-rule">
+            {events.map((item) => (
+              <li key={item.id} className="border-b border-rule last:border-b-0">
+                <label className="flex min-h-12 cursor-pointer items-center gap-3 py-2 transition-colors duration-micro ease-out hover:bg-paper-2">
+                  <input
+                    type="radio"
+                    name="post-upload-event"
+                    value={item.id}
+                    checked={eventId === item.id}
+                    onChange={() => {
+                      setEventId(item.id);
+                      setErrors((prev) => ({ ...prev, event: undefined }));
+                    }}
+                    className="h-5 w-5 shrink-0 accent-brand"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block break-words font-medium text-ink">
+                      {getLocalizedField(item, "name", locale)}
+                    </span>
+                    {deadline(item) && (
+                      <span className="block font-outlier text-xs text-muted-foreground">
+                        {copy.until(deadline(item))}
+                      </span>
+                    )}
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-1.5 text-sm text-ink-2">{copy.noEvents}</p>
         )}
+        <p
+          id="post-upload-event-message"
+          role={errors.event ? "alert" : undefined}
+          className={cn("mt-1.5 min-h-[1lh] text-sm", errors.event ? "text-error" : "text-muted-foreground")}
+        >
+          {errors.event || (events.length > 0 ? copy.eventHelp : null)}
+        </p>
+      </fieldset>
+
+      <div className="flex flex-col gap-1.5">
+        <span id="post-upload-photo-label" className="text-sm font-medium text-ink">
+          {copy.photo}
+        </span>
+        <input
+          ref={inputRef}
+          id="post-upload-photo"
+          type="file"
+          accept="image/*,image/heic,image/heif"
+          onChange={(event) => chooseFile(event.target.files?.[0])}
+          aria-labelledby="post-upload-photo-label"
+          aria-describedby="post-upload-photo-message"
+          aria-invalid={errors.photo ? true : undefined}
+          className="peer sr-only"
+        />
+        {preview ? (
+          <div>
+            <div className="relative aspect-[4/3] overflow-hidden rounded bg-paper-2">
+              <Image src={preview} alt="" fill unoptimized className="object-contain" />
+            </div>
+            <div className="mt-1 flex items-center justify-between gap-3">
+              <p className="min-w-0 truncate font-outlier text-xs text-muted-foreground">{file?.name}</p>
+              <div className="flex shrink-0 gap-4">
+                <Button
+                  type="button"
+                  variant="link"
+                  className="min-h-11"
+                  onClick={() => inputRef.current?.click()}
+                >
+                  {copy.change}
+                </Button>
+                <Button type="button" variant="link" className="min-h-11 text-ink" onClick={clearFile}>
+                  {copy.remove}
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <label
+            htmlFor="post-upload-photo"
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragging(false);
+              chooseFile(event.dataTransfer.files?.[0]);
+            }}
+            className={cn(
+              "flex cursor-pointer flex-col items-start gap-2 rounded border border-dashed border-input px-4 py-8 transition-colors duration-micro ease-out hover:bg-paper-2 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring",
+              dragging && "border-ink bg-paper-2",
+              errors.photo && "border-error"
+            )}
+          >
+            <ImagePlus className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+            <span className="font-medium text-ink">{copy.pick}</span>
+          </label>
+        )}
+        <p
+          id="post-upload-photo-message"
+          role={errors.photo ? "alert" : undefined}
+          className={cn("min-h-[1lh] text-sm", errors.photo ? "text-error" : "text-muted-foreground")}
+        >
+          {errors.photo || copy.pickHelp}
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-4">
-          {!imagePreview ? (
-            <div
-              className="border border-dashed border-input rounded-lg p-8 text-left cursor-pointer transition-colors duration-micro hover:bg-secondary"
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <ImageIcon className="w-8 h-8 text-muted-foreground mb-4" />
-              <p className="text-ink text-md font-medium mb-1">{copy.selectOrDrag}</p>
-              <p className="text-muted-foreground text-sm">{copy.fileHelp}</p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,image/heic,image/heif"
-                onChange={handleImageSelect}
-                className="hidden"
-              />
-            </div>
-          ) : (
-            <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-paper-2">
-              <Image
-                src={imagePreview}
-                alt="Preview"
-                width={400}
-                height={300}
-                className="w-full h-full object-cover"
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                size="icon"
-                onClick={clearImage}
-                className="absolute top-2 right-2 border border-rule"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-        </div>
+      <Field
+        id="post-upload-caption"
+        label={copy.caption}
+        action={
+          <span className="font-outlier text-xs tabular-nums text-muted-foreground">
+            {caption.length}/{CAPTION_MAX}
+          </span>
+        }
+        help={copy.optional}
+      >
+        <Textarea
+          value={caption}
+          onChange={(event) => setCaption(event.target.value)}
+          placeholder={copy.captionPlaceholder}
+          rows={3}
+          maxLength={CAPTION_MAX}
+          className="resize-none"
+        />
+      </Field>
 
-        <Field
-          id="post-upload-event"
-          label={copy.eventSelection}
-          help={
-            selectedEvent
-              ? copy.raffleHelp
-              : activeEvents.length === 0
-                ? copy.noActiveEvents
-                : undefined
-          }
-        >
-          <select
-            value={selectedEvent}
-            onChange={(e) => setSelectedEvent(e.target.value)}
-            className={`${fieldClasses} h-control py-2`}
-            required
-          >
-            <option value="">{copy.chooseEvent}</option>
-            {activeEvents.map((event) => (
-              <option key={event.id} value={event.id} disabled={!event.canPost}>
-                {getLocalizedField(event, "name", locale)}{" "}
-                {!event.canPost && copy.expired}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        <Field id="post-upload-description" label={copy.description}>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder={copy.descriptionPlaceholder}
-            rows={3}
-            maxLength={500}
-            className="resize-none"
-          />
-        </Field>
-
-        <Button type="submit" disabled={isUploading} className="w-full">
-          {isUploading ? copy.sharing : copy.share}
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
+            {copy.cancel}
+          </Button>
+        )}
+        <Button type="submit" loading={submitting} disabled={events.length === 0}>
+          {copy.share}
         </Button>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 }
