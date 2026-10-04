@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/components/ui/page";
 import JsonLd from "@/components/JsonLd";
+import EventSignup from "@/components/EventSignup";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import { getAllEvents, getEventById, getSponsors } from "@/lib/content-data";
 import { buildMetadata } from "@/lib/seo";
