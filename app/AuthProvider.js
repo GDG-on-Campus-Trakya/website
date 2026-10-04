@@ -1,11 +1,17 @@
 'use client'
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useLocale } from 'next-intl'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from '@/lib/firebase/auth'
 import { logger } from "@/utils/logger";
 
-const AccountContext = createContext({ user: null, loading: true, profile: null, role: null })
+const AccountContext = createContext({
+  user: null,
+  loading: true,
+  profile: null,
+  role: null,
+  mergeProfile: () => {},
+})
 
 const SIGNED_OUT = { uid: null, profile: null, role: null }
 
@@ -43,10 +49,30 @@ export default function AuthProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
+  // After a page writes to users/{uid}, it passes the same fields here so every reader of the
+  // account (navbar, event registration) sees them without reading the document again.
+  const mergeProfile = useCallback(
+    (fields) => {
+      if (!user) return
+      setAccount((prev) => {
+        const base = prev.uid === user.uid ? prev : { ...SIGNED_OUT, uid: user.uid }
+        lastAccount = { ...base, profile: { ...(base.profile || {}), ...fields } }
+        return lastAccount
+      })
+    },
+    [user]
+  )
+
   const value = useMemo(() => {
     const current = user && account.uid === user.uid ? account : SIGNED_OUT
-    return { user: user ?? null, loading, profile: current.profile, role: current.role }
-  }, [user, loading, account])
+    return {
+      user: user ?? null,
+      loading,
+      profile: current.profile,
+      role: current.role,
+      mergeProfile,
+    }
+  }, [user, loading, account, mergeProfile])
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>
 }

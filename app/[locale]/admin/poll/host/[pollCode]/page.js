@@ -24,6 +24,7 @@ import {
   endPoll,
   updatePollStatus
 } from "@/utils/pollUtils";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -93,6 +94,7 @@ const COPY = {
 };
 
 export default function PollHostPage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -205,7 +207,7 @@ export default function PollHostPage() {
   };
 
   const handleEndPoll = async () => {
-    if (!confirm(copy.confirmEndPoll)) return;
+    if (!(await confirm(copy.confirmEndPoll))) return;
 
     try {
       await endPoll(pollId);

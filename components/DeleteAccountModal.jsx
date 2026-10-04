@@ -39,68 +39,68 @@ import { Trash2, AlertTriangle } from "lucide-react";
 
 const COPY = {
   tr: {
-    confirmationText: "HESABIMI SİLMEK İSTİYORUM",
-    invalidConfirmation: "Doğrulama metni yanlış girildi!",
-    noSession: "Kullanıcı oturumu bulunamadı!",
-    success: "Hesabınız başarıyla silindi!",
-    reauthInfo: "Güvenlik için tekrar giriş yapmanız gerekiyor...",
-    reauthCancelled:
-      "Tekrar giriş işlemi iptal edildi. Güvenlik nedeniyle çıkış yapılıyor...",
-    reauthFailed:
-      "Tekrar giriş başarısız. Güvenlik nedeniyle çıkış yapılıyor...",
-    genericError: "Hesap silinirken bir hata oluştu. Lütfen tekrar deneyin.",
-    title: "Hesabı Kalıcı Olarak Sil",
-    irreversible: "Bu işlem GERİ ALINAMAZ!",
-    description:
-      "Hesabınızı sildiğinizde aşağıdaki verileriniz kalıcı olarak silinecektir:",
+    confirmationText: "sil",
+    invalidConfirmation: "Onaylamak için kutuya sil yaz.",
+    noSession: "Oturumun kapanmış. Yeniden giriş yapıp tekrar dene.",
+    success: "Hesabın silindi.",
+    reauthInfo: "Güvenlik için Google hesabınla yeniden giriş yapman gerekiyor.",
+    reauthCancelled: "Yeniden giriş iptal edildi; güvenlik için çıkış yapıldı.",
+    reauthFailed: "Yeniden giriş yapılamadı; güvenlik için çıkış yapıldı.",
+    genericError: "Hesap silinemedi. Bağlantını kontrol edip yeniden dene.",
+    title: "Hesabını sil",
+    irreversible: "Bu geri alınamaz.",
+    description: "Hesabınla birlikte şunlar kalıcı olarak silinir:",
     items: [
-      "Profil bilgileriniz ve profil fotoğrafınız",
-      "Tüm etkinlik kayıtlarınız ve QR kodlarınız",
-      "Paylaştığınız tüm gönderiler ve fotoğraflar",
-      "Yaptığınız tüm yorumlar ve beğeniler",
-      "Oluşturduğunuz destek biletleri",
+      "Profil bilgilerin ve fotoğrafın",
+      "Etkinlik kayıtların ve QR biletlerin",
+      "Paylaştığın gönderiler ve fotoğraflar",
+      "Yorumların ve beğenilerin",
+      "Destek taleplerin",
     ],
-    prompt: "Devam etmek için aşağıdaki metni tam olarak yazın:",
-    inputPlaceholder: "Doğrulama metnini buraya yazın...",
-    cancel: "İptal",
-    deleting: "Siliniyor...",
-    delete: "Hesabı Sil",
+    prompt: "Onaylamak için kutuya sil yaz.",
+    inputPlaceholder: "sil",
+    cancel: "Vazgeç",
+    deleting: "Siliniyor…",
+    delete: "Hesabımı sil",
   },
   en: {
-    confirmationText: "I WANT TO DELETE MY ACCOUNT",
-    invalidConfirmation: "The confirmation text does not match.",
-    noSession: "No active user session was found.",
-    success: "Your account has been deleted successfully.",
-    reauthInfo: "For security, you need to sign in again...",
-    reauthCancelled:
-      "Reauthentication was cancelled. You will be signed out for security reasons...",
-    reauthFailed:
-      "Reauthentication failed. You will be signed out for security reasons...",
-    genericError: "An error occurred while deleting the account. Please try again.",
-    title: "Permanently Delete Account",
-    irreversible: "This action CANNOT be undone!",
-    description:
-      "If you delete your account, the following data will be removed permanently:",
+    confirmationText: "delete",
+    invalidConfirmation: "Type delete in the box to confirm.",
+    noSession: "Your session has ended. Sign in again and try once more.",
+    success: "Your account has been deleted.",
+    reauthInfo: "For security, sign in with your Google account again.",
+    reauthCancelled: "Signing in again was cancelled; you were signed out for security.",
+    reauthFailed: "Signing in again failed; you were signed out for security.",
+    genericError: "The account was not deleted. Check your connection and try again.",
+    title: "Delete your account",
+    irreversible: "This cannot be undone.",
+    description: "Along with your account, these are deleted permanently:",
     items: [
-      "Your profile information and profile photo",
-      "All event registrations and QR codes",
-      "All posts and photos you shared",
-      "All comments and likes you made",
-      "Support tickets you created",
+      "Your profile details and photo",
+      "Your event registrations and QR tickets",
+      "Posts and photos you shared",
+      "Your comments and likes",
+      "Your support requests",
     ],
-    prompt: "To continue, type the following text exactly:",
-    inputPlaceholder: "Type the confirmation text here...",
-    cancel: "Cancel",
-    deleting: "Deleting...",
-    delete: "Delete Account",
+    prompt: "Type delete in the box to confirm.",
+    inputPlaceholder: "delete",
+    cancel: "Keep my account",
+    deleting: "Deleting…",
+    delete: "Delete my account",
   },
 };
+
+// Phone keyboards capitalise the first letter and an English keyboard has no dotted İ, so the
+// typed word is compared without case and with İ/ı folded to I/i.
+const fold = (text) =>
+  text.trim().toLocaleLowerCase("tr").replace(/ı/g, "i").replace(/i̇/g, "i");
 
 const DeleteAccountModal = ({ isOpen, onClose }) => {
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const [user] = useAuthState(auth);
   const [confirmationText, setConfirmationText] = useState("");
+  const isConfirmationValid = fold(confirmationText) === fold(copy.confirmationText);
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
@@ -125,7 +125,7 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   const handleDeleteAccount = async () => {
-    if (confirmationText !== copy.confirmationText) {
+    if (!isConfirmationValid) {
       toast.error(copy.invalidConfirmation);
       return;
     }
@@ -214,7 +214,7 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const isConfirmationValid = confirmationText === copy.confirmationText;
+
 
   const handleClose = () => {
     if (!isDeleting) {
@@ -249,9 +249,6 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
           <Label htmlFor="delete-confirmation" className="leading-normal">
             {copy.prompt}
           </Label>
-          <p className="rounded bg-paper-2 px-3 py-2 text-center text-sm font-semibold text-ink">
-            {copy.confirmationText}
-          </p>
           <Input
             id="delete-confirmation"
             placeholder={copy.inputPlaceholder}
@@ -259,6 +256,9 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
             onChange={(event) => setConfirmationText(event.target.value)}
             disabled={isDeleting}
             autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
           />
         </div>
 
@@ -272,7 +272,7 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
             disabled={!isConfirmationValid || isDeleting}
             className={buttonVariants({ variant: "destructive" })}
           >
-            <Trash2 />
+            <Trash2 aria-hidden="true" />
             {isDeleting ? copy.deleting : copy.delete}
           </AlertDialogAction>
         </AlertDialogFooter>

@@ -10,6 +10,7 @@ import { usePostLike } from "@/components/usePostLike";
 import { canOptimizeImage } from "@/lib/images";
 import { cn } from "@/lib/utils";
 import { socialUtils } from "@/utils/socialUtils";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -59,6 +60,7 @@ export default function PostCard({
   showAdminActions = false,
   sizes = "(min-width: 1024px) 18vw, (min-width: 640px) 30vw, 48vw",
 }) {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const like = usePostLike(post, { onChange, errorMessage: copy.likeError });
@@ -66,7 +68,7 @@ export default function PostCard({
   const comments = post.commentCount || 0;
 
   const handleDelete = async () => {
-    if (!confirm(copy.confirmDelete)) return;
+    if (!(await confirm(copy.confirmDelete, { destructive: true }))) return;
 
     const result = await socialUtils.deletePost(post.id);
     if (result.success) {

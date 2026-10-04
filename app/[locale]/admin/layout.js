@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
-import { useAuthState } from "react-firebase-hooks/auth";
 import { ChevronDown, LayoutDashboard } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
-import { auth } from "@/firebase";
-import { checkUserRole } from "@/utils/roleUtils";
+import { useAccount } from "@/app/AuthProvider";
+import { ConfirmProvider } from "@/components/ConfirmProvider";
 import { buildAdminNav, FULL_WIDTH_ADMIN_ROUTES } from "@/components/admin/adminNav";
 
 const linkClass =
@@ -49,32 +47,25 @@ function AdminNav({ groups, overviewLabel, pathname }) {
   );
 }
 
+// Admin pages ask for confirmation through ConfirmProvider instead of window.confirm.
 export default function AdminLayout({ children }) {
+  return (
+    <ConfirmProvider>
+      <AdminShell>{children}</AdminShell>
+    </ConfirmProvider>
+  );
+}
+
+function AdminShell({ children }) {
   const locale = useLocale();
   const pathname = usePathname();
-  const [user, loading] = useAuthState(auth);
-  const [userRole, setUserRole] = useState(null);
+  // The role is already read with the account; no second lookup for the menu.
+  const { role: userRole } = useAccount();
 
   const copy =
     locale === "en"
       ? { menu: "Admin menu", overview: "Overview" }
       : { menu: "Yönetim menüsü", overview: "Genel bakış" };
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadRole = async () => {
-      if (!user?.email) {
-        setUserRole(null);
-        return;
-      }
-      const role = await checkUserRole(user.email);
-      if (!cancelled) setUserRole(role);
-    };
-    if (!loading) loadRole();
-    return () => {
-      cancelled = true;
-    };
-  }, [user, loading]);
 
   const groups = buildAdminNav(userRole, locale);
   const fullWidth = FULL_WIDTH_ADMIN_ROUTES.some((route) => pathname.startsWith(route));

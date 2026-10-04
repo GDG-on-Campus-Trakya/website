@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Field } from "@/components/ui/field";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -103,6 +104,7 @@ const COPY = {
 };
 
 export default function RaffleWheelPage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -197,7 +199,7 @@ export default function RaffleWheelPage() {
   };
 
   const handleDeleteItem = async (itemId) => {
-    if (!confirm(copy.confirmDeleteItem)) return;
+    if (!(await confirm(copy.confirmDeleteItem, { destructive: true }))) return;
 
     try {
       const itemRef = doc(db, "raffleWheelItems", itemId);

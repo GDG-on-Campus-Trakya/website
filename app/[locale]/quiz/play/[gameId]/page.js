@@ -4,13 +4,14 @@ import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { useParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Image from "next/image";
 import { Check, Info, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logger } from "@/utils/logger";
+import { loginHref } from "@/utils/redirect";
 import {
   subscribeToGame,
   subscribeToLeaderboard,
@@ -20,74 +21,72 @@ import {
 
 const COPY = {
   tr: {
-    gameNotFound: "Oyun bulunamadı!",
-    correctToast: (pts) => `Doğru! +${pts} puan`,
-    wrongToast: "Yanlış cevap!",
-    submitError: "Cevap gönderilirken hata oluştu!",
-    loading: "Yükleniyor...",
-    loginRequired: "Giriş yapmalısınız!",
-    resultCorrect: "Doğru Cevap!",
-    resultWrong: "Yanlış Cevap",
-    resultReceived: "Cevabınız alındı",
+    gameNotFound: "Oyun bulunamadı.",
+    submitError: "Cevabın gönderilemedi. Yeniden dene.",
+    loading: "Yükleniyor…",
+    loginRequired: "Oyunu oynamak için giriş yap.",
+    signIn: "Giriş yap",
+    resultCorrect: "Doğru",
+    resultWrong: "Yanlış",
+    resultReceived: "Cevabın alındı",
     pointsShort: "puan",
     pointsShortMobile: "p",
-    waitingTitle: "Oyun Başlamayı Bekliyor...",
-    waitingSubtitle: "Host oyunu başlattığında sorular görünecek",
-    syncing: "Sunucu ile senkronize ediliyor...",
-    timeLeft: "Kalan Süre",
+    waitingTitle: "Oyunun başlaması bekleniyor",
+    waitingSubtitle: "Oyunu yöneten kişi başlatınca sorular burada görünecek.",
+    syncing: "Eşitleniyor…",
+    timeLeft: "Kalan süre",
     questionAlt: "Soru",
-    answerReceivedTitle: "Cevabınız Alındı!",
-    answerReceivedSubtitle: "Sonuçları görmek için diğer oyuncuları bekleyin",
-    youWon: "Kazandınız!",
+    answerReceivedTitle: "Cevabın alındı",
+    answerReceivedSubtitle: "Sonuçlar için diğer oyuncuları bekle.",
+    youWon: "Kazandın",
     winner: "Kazanan",
     fastestLabel: "En hızlı doğru cevap:",
     secondsUnit: "saniye",
     correctAnswerIs: (ans) => `Doğru cevap: ${ans}`,
     correctAnswerHidden: "Doğru cevap oyun sırasında gizli tutuluyor.",
     top5: "İlk 5",
-    waitNextQuestion: "Sonraki soruyu bekleyin...",
-    gameOver: "Oyun Bitti!",
+    waitNextQuestion: "Sonraki soruyu bekle…",
+    gameOver: "Oyun bitti",
     pointsLabel: "Puan",
-    yourRank: (rank) => `Sıralamanız: #${rank}`,
-    kahootThanks: "Teşekkürler! Her soru için kazananlar gösterildi.",
-    finalRanking: "Final Sıralaması",
+    yourRank: (rank) => `Sıran: ${rank}.`,
+    kahootThanks: "Teşekkürler. Her sorunun kazananı gösterildi.",
+    finalRanking: "Son sıralama",
     correctSuffix: "doğru",
-    joinNewGame: "Yeni Oyuna Katıl",
+    joinNewGame: "Yeni oyuna katıl",
   },
   en: {
-    gameNotFound: "Game not found!",
-    correctToast: (pts) => `Correct! +${pts} points`,
-    wrongToast: "Wrong answer!",
-    submitError: "An error occurred while submitting your answer!",
-    loading: "Loading...",
-    loginRequired: "You need to sign in!",
-    resultCorrect: "Correct Answer!",
-    resultWrong: "Wrong Answer",
+    gameNotFound: "Game not found.",
+    submitError: "Your answer was not sent. Try again.",
+    loading: "Loading…",
+    loginRequired: "Sign in to play.",
+    signIn: "Sign in",
+    resultCorrect: "Correct",
+    resultWrong: "Wrong",
     resultReceived: "Answer received",
     pointsShort: "points",
     pointsShortMobile: "p",
-    waitingTitle: "Waiting for the game to start...",
-    waitingSubtitle: "Questions will appear once the host starts the game",
-    syncing: "Syncing with the server...",
-    timeLeft: "Time Left",
+    waitingTitle: "Waiting for the game to start",
+    waitingSubtitle: "Questions appear here when the host starts the game.",
+    syncing: "Syncing…",
+    timeLeft: "Time left",
     questionAlt: "Question",
-    answerReceivedTitle: "Answer Received!",
-    answerReceivedSubtitle: "Wait for the other players to see the results",
-    youWon: "You Won!",
+    answerReceivedTitle: "Answer received",
+    answerReceivedSubtitle: "Wait for the other players to see the results.",
+    youWon: "You won",
     winner: "Winner",
     fastestLabel: "Fastest correct answer:",
     secondsUnit: "seconds",
     correctAnswerIs: (ans) => `Correct answer: ${ans}`,
     correctAnswerHidden: "The correct answer is kept hidden during the game.",
     top5: "Top 5",
-    waitNextQuestion: "Wait for the next question...",
-    gameOver: "Game Over!",
+    waitNextQuestion: "Wait for the next question…",
+    gameOver: "Game over",
     pointsLabel: "Points",
     yourRank: (rank) => `Your rank: #${rank}`,
-    kahootThanks: "Thanks! Winners were shown for each question.",
-    finalRanking: "Final Ranking",
+    kahootThanks: "Thanks. The winner of each question was shown.",
+    finalRanking: "Final ranking",
     correctSuffix: "correct",
-    joinNewGame: "Join a New Game",
+    joinNewGame: "Join a new game",
   },
 };
 
@@ -328,11 +327,6 @@ export default function PlayGamePage() {
         pointsEarned: result.pointsEarned || 0
       });
 
-      if (result.isCorrect) {
-        toast.success(copy.correctToast(result.pointsEarned));
-      } else {
-        toast.error(copy.wrongToast);
-      }
     } catch (error) {
       logger.error("Error submitting answer:", error);
       toast.error(copy.submitError);
@@ -344,18 +338,23 @@ export default function PlayGamePage() {
     }
   };
 
-  if (loading || !game) {
+  // Signed-out visitors never receive the game (the database needs a signed-in user), so check
+  // the account before waiting for it.
+  if (!loading && !user) {
     return (
-      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
-        <p className="text-lg">{copy.loading}</p>
+      <div className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center gap-6 bg-stage px-4 text-center text-stage-ink">
+        <p className="text-lg font-semibold">{copy.loginRequired}</p>
+        <Button asChild size="lg">
+          <Link href={loginHref(`/quiz/play/${gameId}`)}>{copy.signIn}</Link>
+        </Button>
       </div>
     );
   }
 
-  if (!user) {
+  if (loading || !game) {
     return (
       <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
-        <p className="text-lg font-semibold">{copy.loginRequired}</p>
+        <p className="text-lg">{copy.loading}</p>
       </div>
     );
   }
@@ -667,12 +666,8 @@ export default function PlayGamePage() {
                 </div>
               )}
 
-              <Button
-                onClick={() => router.push("/quiz/join")}
-                size="lg"
-                className="w-full"
-              >
-                {copy.joinNewGame}
+              <Button asChild size="lg" className="w-full">
+                <Link href="/game">{copy.joinNewGame}</Link>
               </Button>
             </div>
           )}

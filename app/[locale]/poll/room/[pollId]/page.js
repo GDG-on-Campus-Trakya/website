@@ -4,7 +4,9 @@ import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { useParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
+import { loginHref } from "@/utils/redirect";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Check, Trophy, Users } from "lucide-react";
@@ -20,36 +22,36 @@ import {
 
 const COPY = {
   tr: {
-    pollNotFound: "Poll bulunamadı!",
-    voteSaved: "Oyunuz kaydedildi!",
-    voteError: "Oy gönderilirken hata oluştu!",
-    loading: "Yükleniyor...",
-    loginRequired: "Giriş yapmalısınız!",
+    pollNotFound: "Oylama bulunamadı.",
+    voteError: "Oy gönderilemedi. Yeniden dene.",
+    loading: "Yükleniyor…",
+    loginRequired: "Oylamaya katılmak için giriş yap.",
+    signIn: "Giriş yap",
     playersSuffix: "oyuncu",
-    waitingTitle: "Oylama Başlamayı Bekliyor...",
-    waitingSubtitle: "Host oylamayı başlattığında eşleşmeler görünecek",
+    waitingTitle: "Oylamanın başlaması bekleniyor",
+    waitingSubtitle: "Oylamayı yöneten kişi başlatınca eşleşmeler burada görünecek.",
     votesSuffix: "oy",
-    voteSavedTitle: "Oyunuz Kaydedildi!",
-    voteSavedSubtitle: "Diğer oyuncuları bekleyin",
+    voteSavedTitle: "Oy verdin",
+    voteSavedSubtitle: "Diğer oyuncuları bekle.",
     winner: "Kazanan",
-    winnerExclaim: "Kazanan!",
-    waitNextMatch: "Sonraki eşleşmeyi bekleyin...",
+    winnerExclaim: "Kazanan",
+    waitNextMatch: "Sonraki eşleşmeyi bekle…",
   },
   en: {
-    pollNotFound: "Poll not found!",
-    voteSaved: "Your vote has been saved!",
-    voteError: "An error occurred while submitting your vote!",
-    loading: "Loading...",
-    loginRequired: "You need to sign in!",
+    pollNotFound: "Poll not found.",
+    voteError: "Your vote was not sent. Try again.",
+    loading: "Loading…",
+    loginRequired: "Sign in to vote.",
+    signIn: "Sign in",
     playersSuffix: "players",
-    waitingTitle: "Waiting for the voting to start...",
-    waitingSubtitle: "Matchups will appear once the host starts the voting",
+    waitingTitle: "Waiting for the voting to start",
+    waitingSubtitle: "Matchups appear here when the host starts the voting.",
     votesSuffix: "votes",
-    voteSavedTitle: "Your Vote Has Been Saved!",
-    voteSavedSubtitle: "Wait for the other players",
+    voteSavedTitle: "Vote saved",
+    voteSavedSubtitle: "Wait for the other players.",
     winner: "Winner",
-    winnerExclaim: "Winner!",
-    waitNextMatch: "Wait for the next matchup...",
+    winnerExclaim: "Winner",
+    waitNextMatch: "Wait for the next matchup…",
   },
 };
 
@@ -132,8 +134,8 @@ export default function PollRoomPage() {
     setHasVoted(true);
 
     try {
+      // The stage switches to "Oy verdin"; no toast on top of it.
       await submitVote(pollId, playerId, poll.currentMatchIndex, choice);
-      toast.success(copy.voteSaved);
     } catch (error) {
       logger.error("Error submitting vote:", error);
       toast.error(copy.voteError);
@@ -142,18 +144,23 @@ export default function PollRoomPage() {
     }
   };
 
-  if (loading || !poll) {
+  // Signed-out visitors never receive the poll (the database needs a signed-in user), so check
+  // the account before waiting for it.
+  if (!loading && !user) {
     return (
-      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
-        <p className="text-lg">{copy.loading}</p>
+      <div className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center gap-6 bg-stage px-4 text-center text-stage-ink">
+        <p className="text-lg font-semibold">{copy.loginRequired}</p>
+        <Button asChild size="lg">
+          <Link href={loginHref(`/poll/room/${pollId}`)}>{copy.signIn}</Link>
+        </Button>
       </div>
     );
   }
 
-  if (!user) {
+  if (loading || !poll) {
     return (
       <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
-        <p className="text-lg font-semibold">{copy.loginRequired}</p>
+        <p className="text-lg">{copy.loading}</p>
       </div>
     );
   }

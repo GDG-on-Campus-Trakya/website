@@ -41,6 +41,7 @@ import {
 import { uploadImage, StoragePaths } from "@/utils/storageUtils";
 import UserMentionInput from "@/components/UserMentionInput";
 import { adminCopy } from "@/utils/adminCopy";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -201,6 +202,7 @@ const COPY = {
 };
 
 export default function AdminProjectsPage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -454,7 +456,7 @@ export default function AdminProjectsPage() {
   };
 
   const handleDeleteProject = async (projectId, projectTitle) => {
-    if (window.confirm(copy.confirmDeleteProject(projectTitle))) {
+    if ((await confirm(copy.confirmDeleteProject(projectTitle), { destructive: true }))) {
       try {
         await deleteDoc(doc(db, "projects", projectId));
         setProjects(prev => prev.filter(project => project.id !== projectId));
@@ -472,7 +474,7 @@ export default function AdminProjectsPage() {
   };
 
   const handleResetViews = async (projectId) => {
-    if (window.confirm(copy.confirmResetViews)) {
+    if ((await confirm(copy.confirmResetViews, { destructive: true }))) {
       try {
         await updateDoc(doc(db, "projects", projectId), {
           views: 0
@@ -490,7 +492,7 @@ export default function AdminProjectsPage() {
   };
 
   const handleResetLikes = async (projectId) => {
-    if (window.confirm(copy.confirmResetLikes)) {
+    if ((await confirm(copy.confirmResetLikes, { destructive: true }))) {
       try {
         await updateDoc(doc(db, "projects", projectId), {
           likes: []
@@ -508,7 +510,7 @@ export default function AdminProjectsPage() {
   };
 
   const handleDeleteComment = async (projectId, commentId) => {
-    if (window.confirm(copy.confirmDeleteComment)) {
+    if ((await confirm(copy.confirmDeleteComment, { destructive: true }))) {
       try {
         const project = projects.find(p => p.id === projectId);
         const updatedComments = project.comments.filter(c => c.id !== commentId);

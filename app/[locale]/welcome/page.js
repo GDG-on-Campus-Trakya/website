@@ -22,17 +22,19 @@ const WhatsAppIcon = ({ className }) => (
 const COPY = {
   tr: {
     title: "GDG on Campus Trakya Üniversitesi",
-    subtitle: "Hoş geldiniz! Bizi takip edin ve keşfedin.",
+    subtitle: "Etkinlik kaydı ve duyurular sitede; anlık haberler sosyal medyada.",
     whatsapp: "Info Session WhatsApp Grubu",
-    continue: "Siteye Devam Et",
-    copyright: "©2025 GDG on Campus Trakya Üniversitesi",
+    continue: "Etkinlikler ve kayıt",
+    home: "Ana sayfa",
+    copyright: (year) => `© ${year} GDG on Campus Trakya Üniversitesi`,
   },
   en: {
     title: "GDG on Campus Trakya University",
-    subtitle: "Welcome! Follow us and explore the community.",
+    subtitle: "Event registration and announcements are on the site; quick news is on social media.",
     whatsapp: "Info Session WhatsApp Group",
-    continue: "Continue to the Site",
-    copyright: "©2025 GDG on Campus Trakya University",
+    continue: "Events and registration",
+    home: "Home page",
+    copyright: (year) => `© ${year} GDG on Campus Trakya University`,
   },
 };
 
@@ -68,7 +70,7 @@ export default function WelcomePage() {
       <div className="max-w-xl">
         <Image
           src="/logo.svg"
-          alt="GDG on Campus Trakya Logo"
+          alt="GDG on Campus Trakya"
           width={96}
           height={96}
           className="h-16 w-auto"
@@ -77,13 +79,20 @@ export default function WelcomePage() {
         <h1 className="mt-8 font-display text-display-s font-extrabold">{copy.title}</h1>
         <p className="mt-3 text-md text-ink-2">{copy.subtitle}</p>
 
-        <div className="mt-8">
+        {/* Most visitors arrive from the Instagram bio looking for an event to sign up for. */}
+        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
           <Button asChild size="lg">
-            <Link href="/">
+            <Link href="/events">
               {copy.continue}
               <ArrowRight aria-hidden="true" />
             </Link>
           </Button>
+          <Link
+            href="/"
+            className="inline-flex min-h-11 items-center rounded-sm font-medium text-brand underline underline-offset-4 decoration-1 transition-colors duration-micro ease-out hover:decoration-2"
+          >
+            {copy.home}
+          </Link>
         </div>
 
         <ul className="mt-12 border-t-2 border-ink">
@@ -99,7 +108,7 @@ export default function WelcomePage() {
                   className="group flex min-h-14 items-center justify-between gap-4 border-b border-rule py-3 transition-colors duration-micro ease-out hover:bg-paper-2 focus-visible:outline-offset-[-2px]"
                 >
                   <span className="flex min-w-0 items-center gap-3">
-                    <Icon className="h-5 w-5 shrink-0 text-ink-2" />
+                    <Icon className="h-5 w-5 shrink-0 text-ink-2" aria-hidden="true" />
                     <span className="min-w-0 font-medium text-ink group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
                       {link.name}
                     </span>
@@ -111,7 +120,9 @@ export default function WelcomePage() {
           })}
         </ul>
 
-        <p className="mt-8 text-sm text-muted-foreground">{copy.copyright}</p>
+        <p className="mt-8 text-sm text-muted-foreground">
+          {copy.copyright(new Date().getFullYear())}
+        </p>
       </div>
     </PageContainer>
   );

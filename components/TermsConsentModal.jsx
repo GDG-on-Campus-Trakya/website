@@ -17,40 +17,41 @@ import { Link } from "@/i18n/navigation";
 
 const COPY = {
   tr: {
-    title: "Hoş Geldiniz!",
+    title: "Başlamadan önce",
     description:
-      "GDG on Campus Trakya platformuna hoş geldiniz. Devam etmeden önce lütfen aşağıdaki şartları okuyup kabul edin.",
+      "Hesabını kullanmaya başlamadan önce gizlilik politikasını ve kullanım şartlarını onaylaman gerekiyor.",
     privacyPrefix: "Gizlilik Politikasını",
     privacySuffix: "okudum ve kabul ediyorum.",
     privacyHelp:
-      "Kişisel verilerinizin nasıl toplandığını, kullanıldığını ve korunduğunu öğrenin.",
+      "Kişisel verilerinin nasıl toplandığını, kullanıldığını ve korunduğunu anlatır.",
     termsPrefix: "Kullanım Şartlarını",
     termsSuffix: "okudum ve kabul ediyorum.",
     termsHelp:
-      "Platform kullanımı, hesap sorumluluklarınız ve topluluk kurallarını inceleyin.",
+      "Siteyi kullanma kurallarını, hesabınla ilgili sorumluluklarını ve topluluk kurallarını anlatır.",
     kvkkTitle: "KVKK Bilgilendirmesi:",
     kvkkBody:
       "Bu platform KVKK uyarınca kişisel verilerinizi açık rızanızla işlemektedir. Verileriniz yalnızca etkinlik organizasyonu, istatistiksel analiz ve destek hizmetleri için kullanılacaktır.",
-    decline: "Reddet ve Çıkış Yap",
-    accept: "Kabul Et ve Devam Et",
+    decline: "Reddet ve çıkış yap",
+    accept: "Onayla ve devam et",
   },
   en: {
-    title: "Welcome!",
+    title: "Before you start",
     description:
-      "Welcome to the GDG on Campus Trakya platform. Before continuing, please read and accept the terms below.",
+      "Before you use your account, confirm the privacy policy and the terms of use.",
     privacyPrefix: "I have read and accept the",
-    privacySuffix: "Privacy Policy.",
+    // The link text supplies "Privacy Policy"; repeating it here printed it twice.
+    privacySuffix: ".",
     privacyHelp:
       "Learn how your personal data is collected, used, and protected.",
     termsPrefix: "I have read and accept the",
-    termsSuffix: "Terms of Use.",
+    termsSuffix: ".",
     termsHelp:
       "Review platform usage rules, your account responsibilities, and the community guidelines.",
     kvkkTitle: "Privacy Notice:",
     kvkkBody:
       "This platform processes your personal data for community operations, statistical analysis, and support services in line with applicable privacy obligations.",
-    decline: "Decline and Sign Out",
-    accept: "Accept and Continue",
+    decline: "Decline and sign out",
+    accept: "Accept and continue",
   },
 };
 
@@ -107,9 +108,8 @@ export default function TermsConsentModal({ isOpen, onAccept, onDecline }) {
                 {locale === "en" ? `${copy.privacyPrefix} ` : ""}
                 <Link href="/privacy" target="_blank" className={linkClass}>
                   {locale === "en" ? "Privacy Policy" : copy.privacyPrefix}
-                </Link>{" "}
-                {locale === "en" ? "" : copy.privacySuffix}
-                {locale === "en" ? copy.privacySuffix : ""}
+                </Link>
+                {locale === "en" ? copy.privacySuffix : ` ${copy.privacySuffix}`}
               </Label>
               <p className="mt-1 text-xs text-muted-foreground">{copy.privacyHelp}</p>
             </div>
@@ -127,9 +127,8 @@ export default function TermsConsentModal({ isOpen, onAccept, onDecline }) {
                 {locale === "en" ? `${copy.termsPrefix} ` : ""}
                 <Link href="/terms" target="_blank" className={linkClass}>
                   {locale === "en" ? "Terms of Use" : copy.termsPrefix}
-                </Link>{" "}
-                {locale === "en" ? "" : copy.termsSuffix}
-                {locale === "en" ? copy.termsSuffix : ""}
+                </Link>
+                {locale === "en" ? copy.termsSuffix : ` ${copy.termsSuffix}`}
               </Label>
               <p className="mt-1 text-xs text-muted-foreground">{copy.termsHelp}</p>
             </div>

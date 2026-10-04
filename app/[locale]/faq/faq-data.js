@@ -1,337 +1,221 @@
-// Shared by the FAQ page (UI) and its FAQPage JSON-LD.
+// Shared by the FAQ page (UI) and its FAQPage JSON-LD. Every answer describes something the
+// site actually does; check the feature before adding or changing one.
 export const FAQ_DATA = {
   tr: [
-      {
-        category: "Genel Sorular",
-        questions: [
-          {
-            question: "GDG on Campus Trakya nedir?",
-            answer:
-              "GDG on Campus Trakya, Google Developer Groups programının Trakya Üniversitesi'ndeki resmi topluluğudur. Teknoloji meraklısı öğrencileri bir araya getirerek eğitim etkinlikleri, workshop'lar ve networking fırsatları sunuyoruz.",
-          },
-          {
-            question: "Bu platform nasıl çalışıyor?",
-            answer:
-              "Platformumuz açık kaynak olarak geliştirildi. Firebase altyapısı ile güvenli veri saklama sağlıyor, Next.js ile modern bir web deneyimi sunuyoruz. Kaynak kodlarımızı GitHub üzerinden inceleyebilirsiniz.",
-          },
-          {
-            question: "Kimler katılabilir?",
-            answer:
-              "Trakya Üniversitesi öğrencileri katılabilir. Kayıt sırasında fakülte ve bölüm bilgilerinizi doğru girmeniz gerekir. Tüm bölümlerden öğrenciler topluluğumuza katılabilir.",
-          },
-        ],
-      },
-      {
-        category: "Hesap ve Profil",
-        questions: [
-          {
-            question: "Nasıl hesap oluşturabilirim?",
-            answer:
-              "Google hesabınızla giriş yaparak otomatik olarak hesap oluşturabilirsiniz. İlk girişte profil bilgilerinizi tamamlamanız gerekir.",
-          },
-          {
-            question: "Profil bilgilerimi nasıl güncellerim?",
-            answer:
-              "Profil sayfanızdaki düzenleme alanlarından ad, fakülte, bölüm ve profil fotoğrafı bilgilerinizi güncelleyebilirsiniz.",
-          },
-          {
-            question: "Hesabımı silebilir miyim?",
-            answer:
-              "Evet. Profil sayfanızdaki hesap silme alanını kullanabilir veya destek bileti açabilirsiniz. Bu işlem verilerinizi kalıcı olarak kaldırır.",
-          },
-          {
-            question: "Verilerim güvende mi?",
-            answer:
-              "Evet. Verileriniz Firebase güvenlik kuralları ve HTTPS şifreleme ile korunur. Ayrıntılar için gizlilik politikamızı inceleyebilirsiniz.",
-          },
-        ],
-      },
-      {
-        category: "Etkinlikler",
-        questions: [
-          {
-            question: "Etkinliklere nasıl kayıt olurum?",
-            answer:
-              "Etkinlikler sayfasından ilgilendiğiniz etkinliği açıp kayıt adımlarını tamamlayabilirsiniz. Bazı etkinliklerde profil bilgilerinizin eksiksiz olması gerekir.",
-          },
-          {
-            question: "QR kod sistemi nasıl çalışıyor?",
-            answer:
-              "Kayıt sonrası profilinizde etkinliğe özel bir QR kod oluşur. Etkinlik günü organizasyon ekibine bu kodu göstererek katılımınızı doğrulatabilirsiniz.",
-          },
-          {
-            question: "Kayıt iptal edebilir miyim?",
-            answer:
-              "Evet. Profilinizdeki kayıtlı etkinlikler alanından iptal işlemi yapabilirsiniz. Etkinlik tarihi yaklaştığında bazı kısıtlamalar uygulanabilir.",
-          },
-          {
-            question: "Etkinlik doluysa ne yapmalıyım?",
-            answer:
-              "Bekleme listesi varsa katılabilir veya yeni etkinlik duyurularını takip edebilirsiniz. Sosyal medya hesaplarımızda da güncellemeler paylaşıyoruz.",
-          },
-        ],
-      },
-      {
-        category: "Destek Sistemi",
-        questions: [
-          {
-            question: "Nasıl destek alabilirim?",
-            answer:
-              "Destek sayfası üzerinden şikayet, öneri, teknik destek veya genel yardım başlıklarında bilet oluşturabilirsiniz. Gerekirse dosya da ekleyebilirsiniz.",
-          },
-          {
-            question: "Destek biletlerimi nasıl takip ederim?",
-            answer:
-              "Tüm biletlerinizi destek sayfasında görebilir, yanıtları takip edebilir ve kapatılan biletleri gerekirse yeniden açabilirsiniz.",
-          },
-          {
-            question: "Ne kadar sürede yanıt alırım?",
-            answer:
-              "Genellikle 3-5 iş günü içinde dönüş yapmayı hedefliyoruz. Daha hızlı temas gerekiyorsa sosyal medya hesaplarımızı da kullanabilirsiniz.",
-          },
-          {
-            question: "Hangi dosya türlerini yükleyebilirim?",
-            answer:
-              "JPG, PNG, GIF, PDF ve TXT dosyalarını yükleyebilirsiniz. Maksimum dosya boyutu 5 MB, en fazla 3 dosya ekleyebilirsiniz.",
-          },
-        ],
-      },
-      {
-        category: "Teknik Sorular",
-        questions: [
-          {
-            question: "Site mobil uyumlu mu?",
-            answer:
-              "Evet. Arayüz telefon, tablet ve masaüstü cihazlarda uyumlu çalışacak şekilde tasarlanmıştır.",
-          },
-          {
-            question: "Hangi teknolojiler kullanılıyor?",
-            answer:
-              "Next.js, React, Firebase, Tailwind CSS, Framer Motion ve Vercel gibi modern araçlar kullanıyoruz.",
-          },
-          {
-            question: "Çerez kullanıyor musunuz?",
-            answer:
-              "Zorunlu olmayan çerezleri varsayılan olarak kullanmıyoruz. Analitik ve izin davranışları için ilgili politika sayfalarını inceleyebilirsiniz.",
-          },
-          {
-            question: "Site ne kadar hızlı?",
-            answer:
-              "Next.js optimizasyonları, görsel iyileştirmeleri ve dağıtım altyapısı sayesinde sayfalar hızlı yüklenir.",
-          },
-          {
-            question: "Kaynak kodlara nasıl erişebilirim?",
-            answer:
-              "Proje açık kaynak yaklaşımıyla geliştiriliyor. İlgili depolar ve güncellemeler topluluk kanallarımız üzerinden takip edilebilir.",
-          },
-        ],
-      },
-      {
-        category: "Gizlilik ve Güvenlik",
-        questions: [
-          {
-            question: "Kişisel verilerim nasıl korunuyor?",
-            answer:
-              "Verileriniz güvenlik kuralları ve HTTPS şifreleme ile korunur. Gizlilik politikamız veri işleme detaylarını açıklar.",
-          },
-          {
-            question: "Verilerimi kimlerle paylaşıyorsunuz?",
-            answer:
-              "Kişisel verilerinizi üçüncü taraflarla reklam amaçlı paylaşmıyoruz. Hizmetin çalışması için gereken sınırlı kullanım senaryoları politika belgelerinde açıklanır.",
-          },
-          {
-            question: "Bir güvenlik sorunu olursa ne yapıyorsunuz?",
-            answer:
-              "Olası güvenlik sorunlarında etkiyi sınırlandırmak, gerekli incelemeleri yürütmek ve kullanıcıları bilgilendirmek için standart müdahale adımlarını uygularız.",
-          },
-        ],
-      },
-      {
-        category: "İletişim",
-        questions: [
-          {
-            question: "Size nasıl ulaşabilirim?",
-            answer:
-              "Öncelikli kanal site içindeki destek sistemidir. Ayrıca Instagram ve LinkedIn hesaplarımız üzerinden de bize ulaşabilirsiniz.",
-          },
-          {
-            question: "Acil durumlar için iletişim var mı?",
-            answer:
-              "Etkinlik günü veya teknik bir aksaklık sırasında en hızlı kanal sosyal medya hesaplarımızdır. Gerektiğinde etkinlik özelinde ek iletişim kanalları açılır.",
-          },
-          {
-            question: "Geri bildirimlerim değerlendiriliyor mu?",
-            answer:
-              "Evet. Topluluktan gelen geri bildirimler ürün ve etkinlik kararlarında doğrudan dikkate alınır.",
-          },
-        ],
-      },
-    ],
+    {
+      category: "Genel",
+      questions: [
+        {
+          question: "GDG on Campus Trakya nedir?",
+          answer:
+            "Google Developer Groups on Campus programının Trakya Üniversitesi'ndeki topluluğu. Öğrenciler yürütüyor; yazılım ve Google teknolojileri üzerine atölye, konuşma ve hackathon düzenliyoruz.",
+        },
+        {
+          question: "Kimler katılabilir?",
+          answer:
+            "Trakya Üniversitesi'nin her bölümünden öğrenciler. Bir etkinliğe ilk kayıt olduğunda adını, fakülteni ve bölümünü bir kez soruyoruz.",
+        },
+      ],
+    },
+    {
+      category: "Hesap ve profil",
+      questions: [
+        {
+          question: "Nasıl hesap açarım?",
+          answer:
+            "Giriş sayfasından Google hesabınla ya da e-posta adresin ve bir şifreyle. E-postayla açarsan gelen bağlantıyla adresini doğrulaman gerekir.",
+        },
+        {
+          question: "Profil bilgilerimi nasıl değiştiririm?",
+          answer:
+            "Profil sayfasından adını, fakülteni, bölümünü ve fotoğrafını değiştirebilirsin.",
+        },
+        {
+          question: "Hesabımı silebilir miyim?",
+          answer:
+            "Evet. Profil sayfasındaki hesap silme bölümünden silebilirsin; verilerin kalıcı olarak kaldırılır. Takılırsan destek talebi aç.",
+        },
+      ],
+    },
+    {
+      category: "Etkinlikler",
+      questions: [
+        {
+          question: "Etkinliğe nasıl kayıt olurum?",
+          answer:
+            "Etkinlikler sayfasında etkinliği aç ve Kayıt ol'a bas. Giriş yapman gerekir; fakülte ya da bölüm bilgin eksikse kayıt sırasında sorulur.",
+        },
+        {
+          question: "QR bilet ne işe yarıyor?",
+          answer:
+            "Kayıt olunca profiline o etkinliğe özel bir QR kod düşer. Girişte ekibe gösterirsin; okutulunca katılımın kaydedilir.",
+        },
+        {
+          question: "Kaydımı iptal edebilir miyim?",
+          answer: "Evet. Profilindeki kayıtlı etkinlikler listesinden kaydını silebilirsin.",
+        },
+      ],
+    },
+    {
+      category: "Destek",
+      questions: [
+        {
+          question: "Nasıl destek alırım?",
+          answer:
+            "Destek sayfasından talep aç: şikâyet, öneri, teknik sorun ya da genel bir soru olabilir. İstersen dosya da ekleyebilirsin.",
+        },
+        {
+          question: "Taleplerimi nasıl takip ederim?",
+          answer:
+            "Açtığın talepler destek sayfasında listelenir. Yanıtları orada görürsün; kapanan bir talebi gerekirse yeniden açabilirsin.",
+        },
+        {
+          question: "Ne kadar sürede yanıt alırım?",
+          answer:
+            "Genellikle 3–5 iş günü içinde dönüyoruz. Daha acilse Instagram'dan yaz.",
+        },
+        {
+          question: "Talebime hangi dosyaları ekleyebilirim?",
+          answer: "JPG, PNG, GIF, PDF ve TXT. En fazla 3 dosya, her biri en fazla 5 MB.",
+        },
+        {
+          question: "Size başka nasıl ulaşırım?",
+          answer: "Instagram ve LinkedIn hesaplarımızdan da yazabilirsin; bağlantılar sayfanın altında.",
+        },
+      ],
+    },
+    {
+      category: "Site ve gizlilik",
+      questions: [
+        {
+          question: "Sitenin kaynak kodu açık mı?",
+          answer:
+            "Evet, GitHub'da: github.com/GDG-on-Campus-Trakya/website. Bir hata bulursan orada issue açabilir ya da katkı verebilirsin.",
+        },
+        {
+          question: "Çerez kullanıyor musunuz?",
+          answer:
+            "Giriş ve temel işlevler için gerekli olanları kullanıyoruz. Ziyaret istatistikleri (Vercel Analytics) yalnızca izin verirsen açılır; tercihini sayfanın altındaki Çerez tercihleri bağlantısından değiştirebilirsin.",
+        },
+        {
+          question: "Verilerim nasıl korunuyor?",
+          answer:
+            "Hesap ve kayıt verilerin Firebase'de tutulur; kimin neyi okuyabileceğini güvenlik kuralları sınırlar ve bağlantı HTTPS ile şifrelenir. Ayrıntılar gizlilik politikasında.",
+        },
+        {
+          question: "Verilerimi kimlerle paylaşıyorsunuz?",
+          answer:
+            "Reklam ya da pazarlama için kimseyle paylaşmıyoruz. Sitenin çalışması için kullanılan hizmetler (Firebase, Vercel Analytics) gizlilik politikasında listelenir.",
+        },
+      ],
+    },
+  ],
   en: [
-      {
-        category: "General",
-        questions: [
-          {
-            question: "What is GDG on Campus Trakya?",
-            answer:
-              "GDG on Campus Trakya is the official Trakya University community in the Google Developer Groups program. We bring together students interested in technology through events, workshops, and networking opportunities.",
-          },
-          {
-            question: "How does this platform work?",
-            answer:
-              "The platform is built as an open-source project. We use Firebase for secure data storage and Next.js for a modern web experience. You can inspect the source code on GitHub.",
-          },
-          {
-            question: "Who can join?",
-            answer:
-              "Students at Trakya University can join. During registration you should provide accurate faculty and department information. Students from all departments are welcome.",
-          },
-        ],
-      },
-      {
-        category: "Account and Profile",
-        questions: [
-          {
-            question: "How do I create an account?",
-            answer:
-              "You can create an account automatically by signing in with your Google account. On your first visit, you will be asked to complete your profile details.",
-          },
-          {
-            question: "How do I update my profile information?",
-            answer:
-              "You can update your name, faculty, department, and profile photo from the profile editing area on your account page.",
-          },
-          {
-            question: "Can I delete my account?",
-            answer:
-              "Yes. You can use the account deletion option on your profile page or open a support ticket. This permanently removes your data.",
-          },
-          {
-            question: "Is my data secure?",
-            answer:
-              "Yes. Your data is protected with Firebase security rules and HTTPS encryption. You can review our privacy policy for more detail.",
-          },
-        ],
-      },
-      {
-        category: "Events",
-        questions: [
-          {
-            question: "How do I register for events?",
-            answer:
-              "Open the event you want from the events page and complete the registration flow. Some events require a complete user profile before registration.",
-          },
-          {
-            question: "How does the QR code system work?",
-            answer:
-              "After registration, a unique QR code for that event is generated in your profile. You can show it to the organizing team on event day to confirm attendance.",
-          },
-          {
-            question: "Can I cancel my registration?",
-            answer:
-              "Yes. You can cancel from the registered events section in your profile. Some restrictions may apply as the event date approaches.",
-          },
-          {
-            question: "What if an event is full?",
-            answer:
-              "If a waiting list is available you can join it, or follow upcoming event announcements. We also share updates on social media.",
-          },
-        ],
-      },
-      {
-        category: "Support System",
-        questions: [
-          {
-            question: "How can I get support?",
-            answer:
-              "You can create tickets through the support page for complaints, suggestions, technical issues, or general help. You can also attach files when needed.",
-          },
-          {
-            question: "How do I track my support tickets?",
-            answer:
-              "You can view all tickets on the support page, follow responses there, and reopen closed tickets when necessary.",
-          },
-          {
-            question: "How long does it take to get a response?",
-            answer:
-              "We usually aim to respond within 3 to 5 business days. If faster contact is needed, you can also reach out on social media.",
-          },
-          {
-            question: "What file types can I upload?",
-            answer:
-              "You can upload JPG, PNG, GIF, PDF, and TXT files. The maximum file size is 5 MB and you can attach up to 3 files.",
-          },
-        ],
-      },
-      {
-        category: "Technical",
-        questions: [
-          {
-            question: "Is the site mobile-friendly?",
-            answer:
-              "Yes. The interface is designed to work well across phones, tablets, and desktop devices.",
-          },
-          {
-            question: "What technologies are used?",
-            answer:
-              "We use modern tools such as Next.js, React, Firebase, Tailwind CSS, Framer Motion, and Vercel.",
-          },
-          {
-            question: "Do you use cookies?",
-            answer:
-              "We do not rely on non-essential cookies by default. For analytics and consent behavior, review the relevant policy pages.",
-          },
-          {
-            question: "How fast is the site?",
-            answer:
-              "Pages load quickly thanks to Next.js optimizations, image handling, and the deployment infrastructure.",
-          },
-          {
-            question: "How can I access the source code?",
-            answer:
-              "The project is built with an open-source mindset. Relevant repositories and updates can be followed through our community channels.",
-          },
-        ],
-      },
-      {
-        category: "Privacy and Security",
-        questions: [
-          {
-            question: "How is my personal data protected?",
-            answer:
-              "Your data is protected with security rules and HTTPS encryption. Our privacy policy explains the processing details.",
-          },
-          {
-            question: "Who do you share my data with?",
-            answer:
-              "We do not share personal data with third parties for advertising. Limited service-related use cases are documented in our policy pages.",
-          },
-          {
-            question: "What happens if there is a security issue?",
-            answer:
-              "If a security issue occurs, we follow a standard response process to limit impact, investigate the incident, and notify users when necessary.",
-          },
-        ],
-      },
-      {
-        category: "Contact",
-        questions: [
-          {
-            question: "How can I reach you?",
-            answer:
-              "The primary channel is the built-in support system. You can also reach us through our Instagram and LinkedIn accounts.",
-          },
-          {
-            question: "Is there a contact option for urgent cases?",
-            answer:
-              "On event days or during technical issues, social media is usually the fastest channel. Additional communication channels may be opened for specific events when needed.",
-          },
-          {
-            question: "Do you review feedback?",
-            answer:
-              "Yes. Feedback from the community directly informs product and event decisions.",
-          },
-        ],
-      },
-    ],
+    {
+      category: "General",
+      questions: [
+        {
+          question: "What is GDG on Campus Trakya?",
+          answer:
+            "The Google Developer Groups on Campus community at Trakya University. It is run by students; we hold workshops, talks and hackathons on software and Google technologies.",
+        },
+        {
+          question: "Who can join?",
+          answer:
+            "Students from any department at Trakya University. The first time you register for an event we ask once for your name, faculty and department.",
+        },
+      ],
+    },
+    {
+      category: "Account and profile",
+      questions: [
+        {
+          question: "How do I create an account?",
+          answer:
+            "On the sign-in page, with your Google account or with your e-mail address and a password. If you use e-mail, confirm your address with the link we send you.",
+        },
+        {
+          question: "How do I change my profile details?",
+          answer: "On your profile page you can change your name, faculty, department and photo.",
+        },
+        {
+          question: "Can I delete my account?",
+          answer:
+            "Yes. Use the account deletion section on your profile page; your data is removed permanently. If you get stuck, open a support request.",
+        },
+      ],
+    },
+    {
+      category: "Events",
+      questions: [
+        {
+          question: "How do I register for an event?",
+          answer:
+            "Open the event on the events page and press Register. You need to be signed in; if your faculty or department is missing, you are asked for it while registering.",
+        },
+        {
+          question: "What is the QR ticket for?",
+          answer:
+            "When you register, a QR code for that event appears on your profile. Show it to the team at the door; scanning it records your attendance.",
+        },
+        {
+          question: "Can I cancel my registration?",
+          answer: "Yes. Remove it from the list of registered events on your profile.",
+        },
+      ],
+    },
+    {
+      category: "Support",
+      questions: [
+        {
+          question: "How do I get support?",
+          answer:
+            "Open a request on the support page: a complaint, a suggestion, a technical problem or a general question. You can attach files too.",
+        },
+        {
+          question: "How do I follow my requests?",
+          answer:
+            "Your requests are listed on the support page. Replies appear there, and you can reopen a closed request if you need to.",
+        },
+        {
+          question: "How soon will I get a reply?",
+          answer:
+            "Usually within 3–5 working days. If it is urgent, message us on Instagram.",
+        },
+        {
+          question: "Which files can I attach to a request?",
+          answer: "JPG, PNG, GIF, PDF and TXT. Up to 3 files, each up to 5 MB.",
+        },
+        {
+          question: "How else can I reach you?",
+          answer: "You can also write to us on Instagram and LinkedIn; the links are at the bottom of the page.",
+        },
+      ],
+    },
+    {
+      category: "Site and privacy",
+      questions: [
+        {
+          question: "Is the site open source?",
+          answer:
+            "Yes, it is on GitHub: github.com/GDG-on-Campus-Trakya/website. If you find a bug you can open an issue there or contribute.",
+        },
+        {
+          question: "Do you use cookies?",
+          answer:
+            "Only the ones needed for signing in and basic features. Visit statistics (Vercel Analytics) are switched on only if you allow them; change your choice with the Cookie preferences link at the bottom of the page.",
+        },
+        {
+          question: "How is my data protected?",
+          answer:
+            "Your account and registration data is stored in Firebase; security rules limit who can read what, and connections are encrypted with HTTPS. The privacy policy has the details.",
+        },
+        {
+          question: "Who do you share my data with?",
+          answer:
+            "No one, for advertising or marketing. The services the site needs to run (Firebase, Vercel Analytics) are listed in the privacy policy.",
+        },
+      ],
+    },
+  ],
 };

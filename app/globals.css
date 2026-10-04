@@ -143,3 +143,17 @@ select {
   border-radius: var(--radius);
   box-shadow: var(--shadow-whisper);
 }
+
+/* The remaining toasts are mostly errors: a coloured edge says which kind, the countdown bar
+   adds nothing (they still close on their own and pause on hover). */
+.Toastify__toast--error {
+  border-left: 3px solid var(--color-error);
+}
+
+.Toastify__toast--success {
+  border-left: 3px solid var(--color-success);
+}
+
+.Toastify__progress-bar--wrp {
+  display: none;
+}

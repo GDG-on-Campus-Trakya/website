@@ -39,8 +39,10 @@ export function getDocumentMetadata(locale) {
 
   return {
     metadataBase: new URL(baseUrl),
+    // `absolute`, not `default`: the locale layout's title would otherwise pass through the
+    // root layout's template and end in the site name twice on pages without their own title.
     title: {
-      default: meta.title,
+      absolute: meta.title,
       template: '%s | GDG on Campus Trakya'
     },
     description: meta.description,

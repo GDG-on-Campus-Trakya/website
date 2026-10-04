@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader, EmptyState } from "@/components/ui/page";
 import { adminCopy } from "@/utils/adminCopy";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -115,6 +116,7 @@ const COPY = {
 };
 
 export default function DatasetsPage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -259,7 +261,7 @@ export default function DatasetsPage() {
   };
 
   const handleDeleteDataset = async (datasetId) => {
-    if (!confirm(copy.confirmDeleteDataset)) return;
+    if (!(await confirm(copy.confirmDeleteDataset, { destructive: true }))) return;
 
     try {
       await deleteDataset(datasetId);

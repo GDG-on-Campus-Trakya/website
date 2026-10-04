@@ -1,61 +1,77 @@
 'use client';
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { Calendar, User, Clock, Share2, Linkedin, ChevronRight, Instagram } from 'lucide-react';
+import { ChevronRight, Link2, Share2 } from 'lucide-react';
 import Image from 'next/image';
 import { useLocale } from 'next-intl';
-import { formatLocalizedDate, getLocalizedField } from '@/utils/localeUtils';
+import {
+  formatLocalizedDate,
+  getLocalizedField,
+  withYearIfNotCurrent,
+} from '@/utils/localeUtils';
+import { plainTextToMarkdown } from '@/utils/plainTextMarkdown';
 import { Button } from '@/components/ui/button';
-import { PageContainer, Section } from '@/components/ui/page';
+import { EmptyState, PageContainer, Section } from '@/components/ui/page';
+
+const MarkdownRenderer = dynamic(() => import('@/components/MarkdownRenderer'));
 
 const COPY = {
   tr: {
-    notPublished: "Bu duyuru yayında değil!",
-    notFound: "Duyuru bulunamadı!",
-    loading: "Duyuru yükleniyor...",
-    home: "Ana Sayfa",
+    notFound: "Bu duyuru yok ya da yayından kaldırılmış.",
+    backToList: "Tüm duyurular",
+    loading: "Duyuru yükleniyor…",
+    home: "Ana sayfa",
     announcements: "Duyurular",
-    noContent: "Bu duyuru için içerik bulunmuyor.",
-    details: "Duyuru Bilgileri",
-    author: "Yazar",
-    published: "Yayınlanma",
-    updated: "Güncellenme",
+    noContent: "Bu duyurunun metni yok.",
+    by: "Yazan",
+    updated: "Güncellendi",
     share: "Paylaş",
-    recent: "Son Duyurular",
+    shareNative: "Paylaş",
+    copyLink: "Bağlantıyı kopyala",
+    copied: "Bağlantı kopyalandı.",
+    copyFailed: "Kopyalanamadı; adres çubuğundaki bağlantıyı kullan.",
+    recent: "Son duyurular",
   },
   en: {
-    notPublished: "This announcement is not published!",
-    notFound: "Announcement not found!",
-    loading: "Loading announcement...",
+    notFound: "This announcement does not exist or has been taken down.",
+    backToList: "All announcements",
+    loading: "Loading announcement…",
     home: "Home",
     announcements: "Announcements",
-    noContent: "This announcement has no content.",
-    details: "Announcement Details",
-    author: "Author",
-    published: "Published",
+    noContent: "This announcement has no text.",
+    by: "By",
     updated: "Updated",
     share: "Share",
-    recent: "Recent Announcements",
+    shareNative: "Share",
+    copyLink: "Copy link",
+    copied: "Link copied.",
+    copyFailed: "Could not copy; use the link in the address bar.",
+    recent: "Recent announcements",
   },
 };
+
+const shareLink =
+  "inline-flex min-h-11 items-center rounded-sm text-sm font-medium text-brand underline underline-offset-4 decoration-1 transition-colors duration-micro ease-out hover:decoration-2";
 
 export default function AnnouncementDetailClient({
   initialAnnouncement = null,
   initialRecent = [],
 }) {
   const params = useParams();
-  const router = useRouter();
   const locale = useLocale();
   const copy = COPY[locale === "en" ? "en" : "tr"];
   // The server sends the announcement; without it (no Firebase Admin), load it here.
   const [announcement, setAnnouncement] = useState(initialAnnouncement);
   const [recentAnnouncements, setRecentAnnouncements] = useState(initialRecent);
   const [isLoading, setIsLoading] = useState(!initialAnnouncement);
+  const [missing, setMissing] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [canNativeShare, setCanNativeShare] = useState(false);
+  // Known only in the browser; share links are completed after hydration.
+  const [pageUrl, setPageUrl] = useState('');
+  const [copyStatus, setCopyStatus] = useState(null);
 
   useEffect(() => {
     if (params.id && !initialAnnouncement) {
@@ -65,21 +81,20 @@ export default function AnnouncementDetailClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
+  useEffect(() => {
+    setCanNativeShare(typeof navigator.share === 'function');
+    setPageUrl(window.location.href);
+  }, []);
+
   const loadAnnouncement = async () => {
     setIsLoading(true);
     // Only without server data, so Firestore is not part of the page's bundle.
     const { announcementsUtils } = await import('@/utils/announcementsUtils');
     const result = await announcementsUtils.getAnnouncementById(params.id);
-    if (result.success) {
-      if (!result.announcement.isPublished) {
-        toast.error(copy.notPublished);
-        router.push('/announcements');
-        return;
-      }
+    if (result.success && result.announcement.isPublished) {
       setAnnouncement(result.announcement);
     } else {
-      toast.error(copy.notFound);
-      router.push('/announcements');
+      setMissing(true);
     }
     setIsLoading(false);
   };
@@ -92,20 +107,24 @@ export default function AnnouncementDetailClient({
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return locale === 'en' ? 'No date' : 'Tarih yok';
-    try {
-      return formatLocalizedDate(dateString, locale, {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (error) {
-      return locale === 'en' ? 'No date' : 'Tarih yok';
-    }
-  };
+  // Dates only: the minute an announcement was saved means nothing to a reader.
+  const longDate = (value) =>
+    value
+      ? formatLocalizedDate(value, locale, {
+          timeZone: 'Europe/Istanbul',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })
+      : null;
+  const shortDate = (value) =>
+    value
+      ? formatLocalizedDate(
+          value,
+          locale,
+          withYearIfNotCurrent(value, { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long' })
+        )
+      : null;
 
   const announcementTitle = getLocalizedField(announcement, 'title', locale);
   const announcementDescription = getLocalizedField(
@@ -116,15 +135,22 @@ export default function AnnouncementDetailClient({
   const announcementContent =
     getLocalizedField(announcement, 'content', locale) || announcementDescription;
 
-  const shareOnX = () => {
-    const text = encodeURIComponent(announcementTitle);
-    const url = encodeURIComponent(window.location.href);
-    window.open(`https://x.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+  const shareNatively = async () => {
+    try {
+      await navigator.share({ title: announcementTitle, url: pageUrl });
+    } catch {
+      // Closing the share sheet rejects too; nothing to report.
+    }
   };
 
-  const shareOnLinkedIn = () => {
-    const url = encodeURIComponent(window.location.href);
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(pageUrl);
+      setCopyStatus('copied');
+    } catch {
+      setCopyStatus('failed');
+    }
+    setTimeout(() => setCopyStatus(null), 4000);
   };
 
   if (isLoading) {
@@ -135,9 +161,26 @@ export default function AnnouncementDetailClient({
     );
   }
 
-  if (!announcement) {
-    return null;
+  if (missing || !announcement) {
+    return (
+      <PageContainer>
+        <EmptyState
+          title={copy.notFound}
+          action={
+            <Link href="/announcements" className={shareLink}>
+              {copy.backToList}
+            </Link>
+          }
+        />
+      </PageContainer>
+    );
   }
+
+  const updated =
+    announcement.updatedAt &&
+    longDate(announcement.updatedAt) !== longDate(announcement.createdAt)
+      ? longDate(announcement.updatedAt)
+      : null;
 
   return (
     <PageContainer>
@@ -156,7 +199,7 @@ export default function AnnouncementDetailClient({
             </Link>
           </li>
           <li className="shrink-0"><ChevronRight className="h-4 w-4" aria-hidden="true" /></li>
-          {/* Uzun başlık: shrink kaldırıldı, ellipsis aktif */}
+          {/* A long title is cut with an ellipsis instead of pushing the trail onto two lines */}
           <li className="min-w-0">
             <span className="block max-w-[40vw] truncate text-ink sm:max-w-[60vw] lg:max-w-[40ch]">
               {announcementTitle}
@@ -166,97 +209,112 @@ export default function AnnouncementDetailClient({
       </nav>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:gap-12">
-        {/* Main Content */}
         <article className="min-w-0">
-          <h1 className="break-words text-4xl font-extrabold leading-tight">
+          <h1 className="break-words font-display text-4xl font-extrabold leading-tight">
             {announcementTitle}
           </h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            {announcement.createdAt && (
+              <time dateTime={announcement.createdAt} className="font-outlier">
+                {longDate(announcement.createdAt)}
+              </time>
+            )}
+            {announcement.authorName && (
+              <span>
+                {announcement.createdAt && ' · '}
+                {copy.by}: {announcement.authorName}
+              </span>
+            )}
+            {updated && (
+              <span>
+                {' · '}
+                {copy.updated}: <span className="font-outlier">{updated}</span>
+              </span>
+            )}
+          </p>
           {announcement.imageUrl && !imageError && (
-            <div className="relative mt-6 aspect-[16/9] w-full overflow-hidden rounded-lg bg-paper-2">
+            <div className="relative mt-6 aspect-[16/9] w-full overflow-hidden rounded bg-paper-2">
               <Image
                 src={announcement.imageUrl}
                 alt={announcementTitle}
                 fill
+                sizes="(min-width: 1024px) 720px, 100vw"
                 className="object-cover"
                 onError={() => setImageError(true)}
                 priority
               />
             </div>
           )}
-          <div className="mt-6 max-w-measure whitespace-pre-wrap break-words leading-relaxed text-ink-2 [overflow-wrap:anywhere]">
-            {announcementContent}
-          </div>
-          {!announcementContent && (
-            <p className="text-sm italic text-muted-foreground">{copy.noContent}</p>
+          {announcementContent ? (
+            <div className="mt-6 max-w-measure break-words [overflow-wrap:anywhere]">
+              <MarkdownRenderer content={plainTextToMarkdown(announcementContent)} />
+            </div>
+          ) : (
+            <p className="mt-6 text-sm text-muted-foreground">{copy.noContent}</p>
           )}
         </article>
 
-        {/* Sidebar */}
         <aside className="min-w-0">
-          {/* Author & Date */}
-          <Section title={copy.details} className="mt-0 md:mt-0">
-            <dl className="space-y-4 text-sm">
-              {announcement.authorName && (
-                <div className="flex items-start gap-3">
-                  <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  <div className="min-w-0 flex-1">
-                    <dt className="text-xs text-muted-foreground">{copy.author}</dt>
-                    <dd className="break-words font-medium">{announcement.authorName}</dd>
-                  </div>
-                </div>
+          <Section title={copy.share} className="mt-0 md:mt-0">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+              {canNativeShare && (
+                <Button type="button" variant="outline" onClick={shareNatively} className="mr-1">
+                  <Share2 aria-hidden="true" />
+                  {copy.shareNative}
+                </Button>
               )}
-              <div className="flex items-start gap-3">
-                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <dt className="text-xs text-muted-foreground">{copy.published}</dt>
-                  <dd className="break-words font-outlier">{formatDate(announcement.createdAt)}</dd>
-                </div>
-              </div>
-              {announcement.updatedAt && announcement.updatedAt !== announcement.createdAt && (
-                <div className="flex items-start gap-3">
-                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  <div className="min-w-0 flex-1">
-                    <dt className="text-xs text-muted-foreground">{copy.updated}</dt>
-                    <dd className="break-words font-outlier">{formatDate(announcement.updatedAt)}</dd>
-                  </div>
-                </div>
-              )}
-            </dl>
-          </Section>
-
-          {/* Share */}
-          <Section title={copy.share} className="mt-8 md:mt-8">
-            <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={shareOnX} aria-label="X">
-                <svg width="20" height="20" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" fill="currentColor"/>
-                </svg>
-              </Button>
-              <Button variant="outline" className="flex-1" onClick={shareOnLinkedIn} aria-label="LinkedIn">
-                <Linkedin className="!size-5 text-[#0A66C2]" aria-hidden="true" />
-              </Button>
-              <Button asChild variant="outline" className="flex-1">
-                <a href="https://www.instagram.com/gdgoncampustu/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                  <Instagram className="!size-5 text-[#E1306C]" aria-hidden="true" />
-                </a>
-              </Button>
+              <button type="button" onClick={copyLink} className={`${shareLink} gap-1.5`}>
+                <Link2 className="h-4 w-4" aria-hidden="true" />
+                {copy.copyLink}
+              </button>
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`${announcementTitle} ${pageUrl}`.trim())}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={shareLink}
+              >
+                WhatsApp
+              </a>
+              <a
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={shareLink}
+              >
+                LinkedIn
+              </a>
+              <a
+                href={`https://x.com/intent/post?text=${encodeURIComponent(announcementTitle)}&url=${encodeURIComponent(pageUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={shareLink}
+              >
+                X
+              </a>
             </div>
+            <p role="status" className="min-h-[1lh] text-sm text-ink-2">
+              {copyStatus === 'copied' && copy.copied}
+              {copyStatus === 'failed' && copy.copyFailed}
+            </p>
           </Section>
 
-          {/* Recent Announcements */}
           {recentAnnouncements.length > 0 && (
             <Section title={copy.recent} className="mt-8 md:mt-8">
               <ul>
                 {recentAnnouncements.map(item => (
                   <li key={item.id}>
                     <Link
-                      href={`/announcements/${item.id}`}
+                      href={`/announcements/${item.docId ?? item.id}`}
                       className="group block border-b border-rule py-3 transition-colors duration-micro ease-out hover:bg-paper-2"
                     >
                       <p className="line-clamp-2 font-medium group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
                         {getLocalizedField(item, 'title', locale)}
                       </p>
-                      <p className="mt-1 font-outlier text-xs text-muted-foreground">{formatDate(item.createdAt)}</p>
+                      {item.createdAt && (
+                        <p className="mt-1 font-outlier text-xs text-muted-foreground">
+                          {shortDate(item.createdAt)}
+                        </p>
+                      )}
                     </Link>
                   </li>
                 ))}
@@ -265,19 +323,6 @@ export default function AnnouncementDetailClient({
           )}
         </aside>
       </div>
-
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
     </PageContainer>
   );
 }

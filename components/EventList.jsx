@@ -1,265 +1,261 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocale } from "next-intl";
-import { X } from "lucide-react";
+import { Maximize2 } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/page";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { getEventStart } from "@/utils/eventTime";
 import {
   formatLocalizedDate,
   getLocalizedField,
+  withYearIfNotCurrent,
 } from "@/utils/localeUtils";
 
 const COPY = {
   tr: {
-    empty: "Henüz bir etkinliğe kayıt olmadınız.",
-    eventDate: "Etkinlik Tarihi",
-    eventLocation: "Etkinlik Lokasyonu",
-    registrationDate: "Kayıt Tarihi",
-    upcoming: "Yaklaşan",
-    past: "Geçmiş",
-    download: "Kodu İndir",
-    remove: "Kayıt Sil",
-    expiredQr: "Bu etkinlik sona erdiği için QR kodu mevcut değil.",
-    close: "Kapat",
+    upcoming: "Yaklaşan biletlerin",
+    past: "Geçmiş etkinliklerin",
+    showAtDoor: "Girişte bu QR kodu göster.",
+    qrLoading: "QR kod hazırlanıyor…",
+    qrMissing: "Bu kaydın QR kodu bulunamadı. Destek talebi açarsan yardımcı oluruz.",
+    enlarge: "Büyüt",
+    enlargeLabel: (name) => `${name} QR kodunu büyüt`,
+    enlargedHelp: "Ekran parlaklığını artırırsan daha kolay okunur.",
+    download: "QR kodu indir",
+    eventPage: "Etkinlik sayfası",
+    cancel: "Kaydı iptal et",
+    attended: "Katıldın",
+    qrAlt: (name) => `${name} QR bileti`,
   },
   en: {
-    empty: "You have not registered for any events yet.",
-    eventDate: "Event Date",
-    eventLocation: "Event Location",
-    registrationDate: "Registration Date",
-    upcoming: "Upcoming",
-    past: "Past",
-    download: "Download Code",
-    remove: "Remove Registration",
-    expiredQr: "This event has ended, so its QR code is no longer available.",
-    close: "Close",
+    upcoming: "Your upcoming tickets",
+    past: "Your past events",
+    showAtDoor: "Show this QR code at the door.",
+    qrLoading: "Preparing the QR code…",
+    qrMissing: "The QR code for this registration is missing. Open a support request and we will help.",
+    enlarge: "Enlarge",
+    enlargeLabel: (name) => `Enlarge the QR code for ${name}`,
+    enlargedHelp: "Turning up the screen brightness makes it easier to scan.",
+    download: "Download QR code",
+    eventPage: "Event page",
+    cancel: "Cancel registration",
+    attended: "Attended",
+    qrAlt: (name) => `QR ticket for ${name}`,
   },
 };
 
-const isExpired = (eventDate, eventTime, isClient = true) => {
-  if (!isClient) return false;
-  const now = new Date();
-  const [hours, minutes] = eventTime.split(":").map(Number);
-  const eventDateTime = new Date(eventDate);
-  eventDateTime.setHours(hours, minutes, 0, 0);
+// An event counts as past six hours after it starts, so the ticket stays up during the event.
+const GRACE_MS = 6 * 60 * 60 * 1000;
 
-  const graceEndTime = new Date(eventDateTime);
-  graceEndTime.setHours(graceEndTime.getHours() + 6);
+const textLink =
+  "inline-flex min-h-11 items-center rounded-sm text-sm font-medium text-brand underline underline-offset-4 decoration-1 transition-colors duration-micro ease-out hover:decoration-2";
 
-  return now > graceEndTime;
-};
-
-const EventList = ({
+// The profile as a ticket wallet: upcoming tickets first, soonest on top, each with a QR code
+// large enough to scan at the door; past events as a short list underneath.
+export default function EventList({
   registrations,
   events,
   removeRegistration,
   qrCodes,
   downloadQRCode,
-}) => {
+}) {
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
-  const [enlargedQR, setEnlargedQR] = useState(null);
-  const [isClient, setIsClient] = useState(false);
+  const [enlarged, setEnlarged] = useState(null);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const now = Date.now();
+  const tickets = registrations
+    .map((registration) => {
+      const event = events.find((entry) => entry.id === registration.eventId);
+      if (!event) return null;
+      const start = getEventStart(event);
+      return {
+        registration,
+        event,
+        start,
+        name: getLocalizedField(event, "name", locale),
+        location: getLocalizedField(event, "location", locale),
+        ended: start ? now > start.getTime() + GRACE_MS : false,
+      };
+    })
+    .filter(Boolean);
 
-  useEffect(() => {
-    if (enlargedQR) {
-      document.body.classList.add("modal-open");
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.classList.remove("modal-open");
-      document.body.style.overflow = "unset";
-    }
+  const upcoming = tickets
+    .filter((ticket) => !ticket.ended)
+    .sort((a, b) => (a.start?.getTime() ?? 0) - (b.start?.getTime() ?? 0));
+  const past = tickets
+    .filter((ticket) => ticket.ended)
+    .sort((a, b) => b.start.getTime() - a.start.getTime());
 
-    return () => {
-      document.body.classList.remove("modal-open");
-      document.body.style.overflow = "unset";
-    };
-  }, [enlargedQR]);
-
-  if (registrations.length === 0) {
-    return <EmptyState title={copy.empty} />;
-  }
+  const longDate = (date) =>
+    formatLocalizedDate(
+      date,
+      locale,
+      withYearIfNotCurrent(date, {
+        timeZone: "Europe/Istanbul",
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      })
+    );
+  const shortDate = (date) =>
+    formatLocalizedDate(date, locale, {
+      timeZone: "Europe/Istanbul",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  const eventHref = (event) => `/events/${event.docId ?? event.id}`;
 
   return (
     <>
-      <ul className="list-none border-t-2 border-ink p-0">
-        {registrations.map((registration) => {
-          const event = events.find((entry) => entry.id === registration.eventId);
-          if (!event) return null;
+      {upcoming.length > 0 && (
+        <section aria-labelledby="tickets-upcoming">
+          <h3 id="tickets-upcoming" className="sr-only">
+            {copy.upcoming}
+          </h3>
+          <ul>
+            {upcoming.map(({ registration, event, start, name, location }) => {
+              const qrCode = qrCodes[registration.qrCodeId];
 
-          const signedUpAtValue =
-            registration.signedUpAt?.seconds != null
-              ? registration.signedUpAt.seconds * 1000
-              : registration.signedUpAt || (isClient ? Date.now() : 0);
-          const signedUpDate = formatLocalizedDate(signedUpAtValue, locale, {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          });
+              return (
+                <li key={registration.id} className="border-b border-rule py-6 first:pt-2">
+                  {/* Phone: name, QR, then the links. Wider: the QR sits beside both. */}
+                  <div className="grid gap-x-6 gap-y-4 sm:grid-cols-[minmax(0,1fr)_14rem] sm:grid-rows-[auto_1fr]">
+                    <div className="min-w-0 sm:col-start-1 sm:row-start-1">
+                      {start && (
+                        <p className="font-outlier text-sm capitalize text-muted-foreground">
+                          <time dateTime={start.toISOString()}>{longDate(start)}</time>
+                          {event.time && <span> · {event.time}</span>}
+                        </p>
+                      )}
+                      <h4 className="mt-1 font-display text-2xl font-bold leading-tight">{name}</h4>
+                      {location && <p className="mt-1 text-ink-2">{location}</p>}
+                    </div>
 
-          const expired = isExpired(event.date, event.time, isClient);
-          const status = expired ? copy.past : copy.upcoming;
-          const eventName = getLocalizedField(event, "name", locale);
-          const eventLocation = getLocalizedField(event, "location", locale);
-          const eventCategory = getLocalizedField(event, "category", locale);
+                    <div className="sm:col-start-2 sm:row-span-2 sm:row-start-1">
+                      {qrCode ? (
+                        <button
+                          type="button"
+                          onClick={() => setEnlarged({ qrCode, name })}
+                          aria-label={copy.enlargeLabel(name)}
+                          className="group block w-full max-w-[16rem] rounded border border-rule bg-background p-2 transition-colors duration-micro ease-out hover:border-ink sm:max-w-none"
+                        >
+                          <img src={qrCode} alt={copy.qrAlt(name)} className="aspect-square w-full" />
+                          <span className="mt-1 flex items-center justify-center gap-1.5 text-sm text-muted-foreground group-hover:text-ink">
+                            <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+                            {copy.enlarge}
+                          </span>
+                        </button>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          {registration.qrCodeId ? copy.qrLoading : copy.qrMissing}
+                        </p>
+                      )}
+                    </div>
 
-          return (
-            <li
-              key={registration.id}
-              className="grid gap-x-6 gap-y-4 border-b border-rule py-5 md:grid-cols-[8rem_minmax(0,1fr)_auto]"
-            >
-              <img
-                src={event.imageUrl || "/logo.svg"}
-                alt={eventName}
-                className="aspect-square w-32 rounded bg-paper-2 object-cover"
-              />
-
-              <div className="min-w-0">
-                <h3 className="font-display text-xl font-bold leading-tight">
-                  {eventName}
-                </h3>
-                <dl className="mt-2 space-y-1 text-sm">
-                  <div>
-                    <dt className="inline text-muted-foreground">{copy.eventDate}:</dt>{" "}
-                    <dd className="inline font-outlier tabular-nums">
-                      {formatLocalizedDate(event.date, locale, {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}{" "}
-                      {event.time}
-                    </dd>
+                    <div className="sm:col-start-1 sm:row-start-2">
+                      <p className="text-sm text-ink-2">{copy.showAtDoor}</p>
+                      <div className="mt-1 flex flex-wrap gap-x-5">
+                        <Link href={eventHref(event)} className={textLink}>
+                          {copy.eventPage}
+                        </Link>
+                        {qrCode && (
+                          <button
+                            type="button"
+                            className={textLink}
+                            onClick={() => downloadQRCode(qrCode, name)}
+                          >
+                            {copy.download}
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <dt className="inline text-muted-foreground">{copy.eventLocation}:</dt>{" "}
-                    <dd className="inline">{eventLocation}</dd>
-                  </div>
-                  <div>
-                    <dt className="inline text-muted-foreground">{copy.registrationDate}:</dt>{" "}
-                    <dd className="inline font-outlier tabular-nums">{signedUpDate}</dd>
-                  </div>
-                </dl>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Badge>{eventCategory}</Badge>
-                  <Badge variant={expired ? "neutral" : "success"}>{status}</Badge>
-                </div>
-              </div>
 
-              <div className="flex flex-col gap-3 md:w-44">
-                {!expired && qrCodes[registration.qrCodeId] && (
-                  <div className="flex flex-col items-start gap-3 md:items-stretch">
+                  {/* Kept apart from the QR code so it is not tapped by accident at the door */}
+                  <div className="mt-6 border-t border-dashed border-rule pt-2">
                     <button
                       type="button"
-                      className="block w-32 rounded border border-rule bg-background p-1 transition-colors duration-micro ease-out hover:bg-paper-2 md:mx-auto"
-                      onClick={() =>
-                        setEnlargedQR({
-                          qrCode: qrCodes[registration.qrCodeId],
-                          eventName,
-                        })
-                      }
+                      onClick={() => removeRegistration({ ...registration, eventName: name })}
+                      className="inline-flex min-h-11 items-center rounded-sm text-sm font-medium text-error underline underline-offset-4 decoration-1 hover:decoration-2"
                     >
-                      <img
-                        src={qrCodes[registration.qrCodeId]}
-                        alt="QR Code"
-                        className="h-full w-full"
-                      />
+                      {copy.cancel}
                     </button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() =>
-                        downloadQRCode(qrCodes[registration.qrCodeId], eventName)
-                      }
-                    >
-                      {copy.download}
-                    </Button>
                   </div>
-                )}
-                {!expired && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-error text-error"
-                    onClick={() => removeRegistration(registration)}
-                  >
-                    {copy.remove}
-                  </Button>
-                )}
-                {expired && (
-                  <p className="text-sm text-muted-foreground">{copy.expiredQr}</p>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
-      {enlargedQR && (
-        <div
-          className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4 animate-in fade-in-0 duration-short"
-          onClick={() => setEnlargedQR(null)}
-        >
-          <div
-            className="mx-auto w-full max-w-sm rounded-lg border border-rule bg-background p-6 text-foreground"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="min-w-0 truncate font-display text-lg font-bold">
-                {enlargedQR.eventName}
-              </h3>
+      {past.length > 0 && (
+        <section aria-labelledby="tickets-past" className={upcoming.length > 0 ? "mt-10" : ""}>
+          <h3 id="tickets-past" className="border-t-2 border-ink pt-3 font-display text-lg font-bold">
+            {copy.past}
+          </h3>
+          <ul className="mt-2">
+            {past.map(({ registration, event, start, name }) => (
+              <li key={registration.id}>
+                <Link
+                  href={eventHref(event)}
+                  className="group grid grid-cols-[6.5rem_minmax(0,1fr)_auto] items-baseline gap-x-4 border-b border-rule py-3 transition-colors duration-micro ease-out hover:bg-paper-2"
+                >
+                  <time
+                    dateTime={start.toISOString()}
+                    className="font-outlier text-sm text-muted-foreground"
+                  >
+                    {shortDate(start)}
+                  </time>
+                  <span className="font-medium text-ink group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
+                    {name}
+                  </span>
+                  {registration.didJoinEvent ? (
+                    <Badge variant="success">{copy.attended}</Badge>
+                  ) : (
+                    <span />
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <Dialog open={Boolean(enlarged)} onOpenChange={(open) => !open && setEnlarged(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="pr-10">{enlarged?.name}</DialogTitle>
+            <DialogDescription>{copy.enlargedHelp}</DialogDescription>
+          </DialogHeader>
+          {enlarged && (
+            <>
+              <img
+                src={enlarged.qrCode}
+                alt={copy.qrAlt(enlarged.name)}
+                className="aspect-square w-full rounded border border-rule"
+              />
               <Button
                 type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={copy.close}
-                onClick={() => setEnlargedQR(null)}
+                variant="outline"
+                onClick={() => downloadQRCode(enlarged.qrCode, enlarged.name)}
               >
-                <X aria-hidden="true" />
+                {copy.download}
               </Button>
-            </div>
-
-            <div className="flex flex-col items-center gap-4">
-              <div className="rounded border border-rule bg-background p-3">
-                <img
-                  src={enlargedQR.qrCode}
-                  alt="QR Code"
-                  className="h-64 w-64 max-w-full sm:h-80 sm:w-80"
-                />
-              </div>
-
-              <div className="flex w-full flex-col gap-3 sm:flex-row">
-                <Button
-                  type="button"
-                  className="flex-1"
-                  onClick={() =>
-                    downloadQRCode(enlargedQR.qrCode, enlargedQR.eventName)
-                  }
-                >
-                  {copy.download}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setEnlargedQR(null)}
-                >
-                  {copy.close}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
-};
-
-export default EventList;
+}

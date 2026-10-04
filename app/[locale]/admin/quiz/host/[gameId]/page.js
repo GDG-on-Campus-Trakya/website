@@ -26,6 +26,7 @@ import {
 } from "@/utils/quizUtils";
 import { useLocale } from "next-intl";
 import { adminCopy } from "@/utils/adminCopy";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -107,6 +108,7 @@ const COPY = {
 };
 
 export default function HostGamePage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -305,7 +307,7 @@ export default function HostGamePage() {
   };
 
   const handleEndGame = async () => {
-    if (!confirm(copy.confirmEndGame)) return;
+    if (!(await confirm(copy.confirmEndGame))) return;
 
     try {
       await endGame(gameId);
@@ -317,7 +319,7 @@ export default function HostGamePage() {
   };
 
   const handleDeleteAndExit = async () => {
-    if (!confirm(copy.confirmDeleteAndExit)) return;
+    if (!(await confirm(copy.confirmDeleteAndExit, { destructive: true }))) return;
 
     try {
       await deleteGame(gameId);

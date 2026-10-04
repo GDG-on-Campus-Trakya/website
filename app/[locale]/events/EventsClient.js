@@ -1,25 +1,14 @@
 "use client";
 
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db } from "@/firebase";
+import { db } from "@/firebase";
 import { logger } from "@/utils/logger";
-import {
-  addDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  getDoc,
-  doc,
-  updateDoc,
-} from "firebase/firestore";
+import { collection, getDocs, getDoc, doc } from "firebase/firestore";
 import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
-import { loginHref } from "@/utils/redirect";
+import { Link } from "@/i18n/navigation";
 import Calendar from "@/components/Calendar";
 import {
   Drawer,
@@ -32,13 +21,15 @@ import {
 } from "@/components/ui/drawer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Check, ChevronLeft, ChevronRight, Clock, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Download } from "lucide-react";
+import EventSignup from "@/components/EventSignup";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, PageContainer, PageHeader, Skeleton } from "@/components/ui/page";
 import { canOptimizeImage } from "@/lib/images";
 import {
   formatLocalizedDate,
+  withYearIfNotCurrent,
   getLocalizedField,
   getLocaleCode,
 } from "@/utils/localeUtils";
@@ -50,74 +41,52 @@ const MarkdownRenderer = dynamic(() => import("@/components/MarkdownRenderer"));
 const COPY = {
   tr: {
     title: "Etkinlikler",
-    subtitle: "Katılmak istediğiniz etkinlikleri keşfedin ve kaydolun!",
+    subtitle: "Atölyeler, konuşmalar ve hackathon'lar. Bir etkinliği aç, ayrıntılarını gör, kayıt ol.",
     upcoming: "Yaklaşan",
     past: "Geçmiş",
     today: "Bugün",
     tomorrow: "Yarın",
-    noEvents: "Yaklaşan bir etkinlik yok. Takipte kalın!",
+    noEvents: "Şu an planlanmış etkinlik yok. Yenisi duyurulunca burada görünecek.",
     noEventsOnDate: "Bu günde etkinlik yok.",
     clearDate: "Tüm etkinlikler",
-    loading: "Yükleniyor...",
-    error: "Hata",
+    loading: "Yükleniyor…",
     category: "Kategori",
-    location: "Lokasyon",
-    sponsors: "Sponsorluk",
-    documents: "Etkinlik Dokümanları",
-    signedUp: "Kayıt Olundu",
-    signUp: "Kayıt Ol",
-    signInToSignUp: "Kayıt Olmak için Giriş Yapın",
+    location: "Yer",
+    sponsors: "Sponsorlar",
+    documents: "Etkinlik belgeleri",
     eventEnded: "Bu etkinlik sona erdi.",
     close: "Kapat",
     previous: "Önceki etkinlik",
     next: "Sonraki etkinlik",
-    loginRequired: "Kayıt olmak için giriş yapmalısınız.",
-    profileMissing: "Profil bilgileriniz bulunamadı.",
-    profileIncomplete:
-      "Etkinliğe kayıt olabilmek için profil bilgilerinizi tamamlamanız gerekmektedir.",
-    alreadySignedUp: "Bu etkinliğe zaten kayıt oldunuz.",
-    signupSuccess: "Etkinliğe başarıyla kayıt oldunuz!",
-    signupError: "Kayıt olurken bir hata oluştu. Lütfen tekrar deneyin.",
-    qrEventMissing: "QR kod için etkinlik bulunamadı.",
-    invalidQr: "Geçersiz QR kod.",
-    qrError: "QR kod işlenirken bir hata oluştu.",
+    qrEventMissing: "Bu QR koduna ait etkinlik artık listede yok.",
+    invalidQr: "Bu QR kodu tanınmadı.",
+    qrError: "QR kodu açılamadı. Sayfayı yenileyip yeniden dene.",
     sponsorFallback: "Sponsor",
     eventPage: "Etkinlik sayfası",
     archive: "Geçmiş etkinlikler",
   },
   en: {
     title: "Events",
-    subtitle: "Discover the events you want to join and register easily.",
+    subtitle: "Workshops, talks and hackathons. Open an event to see the details and register.",
     upcoming: "Upcoming",
     past: "Past",
     today: "Today",
     tomorrow: "Tomorrow",
-    noEvents: "There are no upcoming events right now. Check back soon.",
+    noEvents: "Nothing is scheduled right now. New events appear here when they are announced.",
     noEventsOnDate: "No events on this day.",
     clearDate: "All events",
-    loading: "Loading...",
-    error: "Error",
+    loading: "Loading…",
     category: "Category",
     location: "Location",
     sponsors: "Sponsors",
-    documents: "Event Documents",
-    signedUp: "Registered",
-    signUp: "Register",
-    signInToSignUp: "Sign in to register",
+    documents: "Event documents",
     eventEnded: "This event has ended.",
     close: "Close",
     previous: "Previous event",
     next: "Next event",
-    loginRequired: "You need to sign in before registering.",
-    profileMissing: "Your profile information could not be found.",
-    profileIncomplete:
-      "You need to complete your profile information before registering for an event.",
-    alreadySignedUp: "You are already registered for this event.",
-    signupSuccess: "You have registered for the event successfully!",
-    signupError: "An error occurred while registering. Please try again.",
-    qrEventMissing: "No event was found for this QR code.",
-    invalidQr: "Invalid QR code.",
-    qrError: "An error occurred while processing the QR code.",
+    qrEventMissing: "The event for this QR code is no longer listed.",
+    invalidQr: "This QR code was not recognised.",
+    qrError: "The QR code could not be opened. Reload the page and try again.",
     sponsorFallback: "Sponsor",
     eventPage: "Event page",
     archive: "Past events",
@@ -164,7 +133,6 @@ function SearchParamsHandler({ onQRCodeRedirect, onEventParam, events }) {
 function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
-  const router = useRouter();
   const [events, setEvents] = useState(initialEvents);
   const [sponsors, setSponsors] = useState(initialSponsors);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -173,9 +141,7 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(null);
   const [filterStatus, setFilterStatus] = useState("upcoming");
-  const [user, , authError] = useAuthState(auth);
   const [isClient, setIsClient] = useState(false);
-  const [hasSignedUp, setHasSignedUp] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [imageCache, setImageCache] = useState(new Map());
 
@@ -248,100 +214,6 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
   const isExpired = (event) => {
     const start = getEventStart(event);
     return start ? getNow() > start : false;
-  };
-
-  useEffect(() => {
-    const checkSignupStatus = async () => {
-      if (!user || !selectedEvent) {
-        setHasSignedUp(false);
-        return;
-      }
-
-      try {
-        const registrationsRef = collection(db, "registrations");
-        const signupQuery = query(
-          registrationsRef,
-          where("eventId", "==", selectedEvent.id),
-          where("userId", "==", user.uid)
-        );
-
-        const querySnapshot = await getDocs(signupQuery);
-        setHasSignedUp(!querySnapshot.empty);
-      } catch (signupStatusError) {
-        logger.error("Error checking signup status:", signupStatusError);
-      }
-    };
-
-    checkSignupStatus();
-  }, [user, selectedEvent]);
-
-  const handleSignup = async () => {
-    if (!user) {
-      toast.error(copy.loginRequired);
-      return;
-    }
-
-    try {
-      const userRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userRef);
-
-      if (!userDoc.exists()) {
-        toast.error(copy.profileMissing);
-        router.push("/profile");
-        return;
-      }
-
-      const userData = userDoc.data();
-      if (!userData.name || !userData.faculty || !userData.department) {
-        toast.error(copy.profileIncomplete);
-        router.push("/profile");
-        return;
-      }
-
-      const registrationsRef = collection(db, "registrations");
-      const signupQuery = query(
-        registrationsRef,
-        where("eventId", "==", selectedEvent.id),
-        where("userId", "==", user.uid)
-      );
-
-      const querySnapshot = await getDocs(signupQuery);
-
-      if (!querySnapshot.empty) {
-        toast.info(copy.alreadySignedUp);
-        setHasSignedUp(true);
-        return;
-      }
-
-      const newRegistration = await addDoc(registrationsRef, {
-        eventId: selectedEvent.id,
-        userId: user.uid,
-        signedUpAt: new Date(),
-        didJoinEvent: false,
-      });
-
-      const qrCodeRef = collection(db, "qrCodes");
-      const newQrCode = await addDoc(qrCodeRef, {
-        registrationId: newRegistration.id,
-        createdAt: new Date(),
-      });
-
-      const qrCodeData = `qrCode=${newQrCode.id}`;
-
-      await updateDoc(doc(qrCodeRef, newQrCode.id), {
-        code: qrCodeData,
-      });
-
-      await updateDoc(doc(registrationsRef, newRegistration.id), {
-        qrCodeId: newQrCode.id,
-      });
-
-      toast.success(copy.signupSuccess);
-      setHasSignedUp(true);
-    } catch (signupError) {
-      logger.error("Error signing up for event:", signupError);
-      toast.error(copy.signupError);
-    }
   };
 
   const handleEventParam = (eventId) => {
@@ -434,12 +306,14 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
   const getDayLabel = (date) => {
     const eventDate = new Date(date);
 
+    const dateOptions = withYearIfNotCurrent(eventDate, {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+    });
+
     if (!isClient) {
-      return formatLocalizedDate(eventDate, locale, {
-        weekday: "long",
-        month: "short",
-        day: "numeric",
-      });
+      return formatLocalizedDate(eventDate, locale, dateOptions);
     }
 
     const today = new Date();
@@ -456,11 +330,7 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
       return copy.tomorrow;
     }
 
-    return formatLocalizedDate(eventDate, locale, {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-    });
+    return formatLocalizedDate(eventDate, locale, dateOptions);
   };
 
   // The drawer waits briefly for its image; start the download when the visitor points at
@@ -599,13 +469,6 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
     <PageContainer>
       <PageHeader title={copy.title} description={copy.subtitle} />
 
-      {/* The list is server-rendered and does not wait for the auth check; only a failure is shown. */}
-      {authError && (
-        <p role="alert" className="mb-8 rounded border border-error px-4 py-3 text-sm text-error">
-          {copy.error}: {authError.message}
-        </p>
-      )}
-
       <Suspense fallback={null}>
         <SearchParamsHandler
           onQRCodeRedirect={handleQRCodeRedirect}
@@ -727,9 +590,11 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
                         </span>
                         <span className="mt-3 flex flex-wrap gap-2">
                           <Badge>{getEventCategory(event)}</Badge>
-                          <Badge variant={expired ? "neutral" : "success"}>
-                            {expired ? copy.past : copy.upcoming}
-                          </Badge>
+                          {selectedDate && (
+                            <Badge variant={expired ? "neutral" : "success"}>
+                              {expired ? copy.past : copy.upcoming}
+                            </Badge>
+                          )}
                         </span>
                       </span>
                     </button>
@@ -912,33 +777,13 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
 
             <DrawerFooter className="mt-6 p-0">
               {selectedEvent && !isExpired(selectedEvent) ? (
-                user ? (
-                  hasSignedUp ? (
-                    <Button type="button" variant="secondary" className="w-full" disabled>
-                      <Check aria-hidden="true" />
-                      {copy.signedUp}
-                    </Button>
-                  ) : (
-                    <Button type="button" className="w-full" onClick={handleSignup}>
-                      {copy.signUp}
-                    </Button>
-                  )
-                ) : (
-                  <Button
-                    type="button"
-                    className="w-full"
-                    onClick={() =>
-                      router.push(
-                        loginHref(`/events?event=${selectedEvent.docId ?? selectedEvent.id}`)
-                      )
-                    }
-                  >
-                    {copy.signInToSignUp}
-                  </Button>
-                )
+                <EventSignup
+                  event={selectedEvent}
+                  returnPath={`/events?event=${selectedEvent.docId ?? selectedEvent.id}`}
+                />
               ) : (
                 selectedEvent && (
-                  <p className="flex items-center gap-2 border border-error px-4 py-3 text-sm font-medium text-error">
+                  <p className="flex items-center gap-2 border border-rule px-4 py-3 text-sm font-medium text-ink-2">
                     <Clock aria-hidden="true" className="h-4 w-4 shrink-0" />
                     {copy.eventEnded}
                   </p>

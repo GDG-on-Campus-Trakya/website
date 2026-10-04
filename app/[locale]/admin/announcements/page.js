@@ -18,6 +18,7 @@ import { PageHeader, EmptyState, Skeleton } from "@/components/ui/page";
 import { Stat } from "@/components/ui/stat";
 import { useLocale } from "next-intl";
 import { adminCopy } from "@/utils/adminCopy";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -81,6 +82,7 @@ const COPY = {
 };
 
 export default function AdminDuyurularPage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -195,7 +197,7 @@ export default function AdminDuyurularPage() {
   };
 
   const handleDelete = async (announcementId) => {
-    if (!confirm(copy.confirmDelete)) return;
+    if (!(await confirm(copy.confirmDelete, { destructive: true }))) return;
 
     const result = await announcementsUtils.deleteAnnouncement(announcementId);
 
@@ -233,7 +235,7 @@ export default function AdminDuyurularPage() {
     }
 
     if (
-      !confirm(copy.confirmBulkToggle(targetAnnouncements.length, publish))
+      !(await confirm(copy.confirmBulkToggle(targetAnnouncements.length, publish)))
     )
       return;
 

@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ToastContainer } from "react-toastify";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Eye, Heart, MessageSquare } from "lucide-react";
@@ -9,7 +8,6 @@ import { EmptyState, PageContainer, PageHeader, Skeleton } from "@/components/ui
 import { logger } from "@/utils/logger";
 import { formatLocalizedDate, getLocalizedField } from "@/utils/localeUtils";
 import { toDate } from "@/utils/dateHelpers";
-import "react-toastify/dist/ReactToastify.css";
 
 export default function ProjectsClient({ initialProjects = null }) {
   // The server sends the projects. Without it (no Firebase Admin), load them here.
@@ -20,36 +18,40 @@ export default function ProjectsClient({ initialProjects = null }) {
   const copy =
     locale === "en"
       ? {
-          loading: "Loading projects...",
-          title: "Community Projects",
+          loading: "Loading projects…",
+          title: "Community projects",
           description:
-            "Explore creative work where imagination and technical skill come together. From web development to mobile apps, AI and games, discover what our community is building.",
-          tags: ["Open Source", "Collaborative", "Learning Focused", "Innovative"],
+            "Web, mobile, AI and game projects built by community members. Each one has its own page with the team and comments.",
           emptyTitle: "No projects yet",
-          emptyDescription: "Community projects will appear here.",
-          collaborators: "Collaborators:",
+          emptyDescription: "Projects appear here once members add them.",
+          collaborators: "Team:",
           status: {
-            active: "Active",
+            active: "In progress",
             completed: "Completed",
             paused: "Paused"
           },
-          details: "View Details →"
+          likes: "likes",
+          comments: "comments",
+          views: "views",
+          details: "Details →"
         }
       : {
-          loading: "Projeler yükleniyor...",
-          title: "Topluluk Projeleri",
+          loading: "Projeler yükleniyor…",
+          title: "Topluluk projeleri",
           description:
-            "GDG on Campus Trakya topluluğu üyelerinin hayal gücü ve teknik becerilerinin buluştuğu yaratıcı projeler. Web geliştirmeden mobil uygulamalara, yapay zekadan oyun geliştirmeye kadar geniş bir yelpazede yer alan projelerimizi keşfedin.",
-          tags: ["Açık Kaynak", "İşbirlikçi", "Öğrenme Odaklı", "İnovatif"],
-          emptyTitle: "Henüz proje eklenmemiş",
-          emptyDescription: "Topluluk üyelerinin projeleri burada görüntülenecek.",
-          collaborators: "İşbirlikçiler:",
+            "Topluluk üyelerinin geliştirdiği web, mobil, yapay zekâ ve oyun projeleri. Her birinin ekibiyle ve yorumlarıyla kendi sayfası var.",
+          emptyTitle: "Henüz proje yok",
+          emptyDescription: "Üyeler proje ekledikçe burada görünecek.",
+          collaborators: "Ekip:",
           status: {
-            active: "Aktif",
-            completed: "Tamamlanmış",
+            active: "Sürüyor",
+            completed: "Tamamlandı",
             paused: "Beklemede"
           },
-          details: "Detayları Gör →"
+          likes: "beğeni",
+          comments: "yorum",
+          views: "görüntülenme",
+          details: "Ayrıntılar →"
         };
 
   useEffect(() => {
@@ -101,144 +103,129 @@ export default function ProjectsClient({ initialProjects = null }) {
   }
 
   return (
-    <>
-      <PageContainer>
-        <PageHeader title={copy.title} description={copy.description}>
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {copy.tags.map((tag) => (
-              <li key={tag}>
-                <Badge>{tag}</Badge>
-              </li>
-            ))}
-          </ul>
-        </PageHeader>
+    <PageContainer>
+      <PageHeader title={copy.title} description={copy.description} />
 
-        {projects.length === 0 ? (
-          <EmptyState title={copy.emptyTitle} description={copy.emptyDescription} />
-        ) : (
-          <ul className="border-t border-rule">
-            {projects.map((project) => {
-              const projectTitle = getLocalizedField(project, "title", locale);
-              const projectDescription = getLocalizedField(
-                project,
-                "description",
-                locale
-              );
+      {projects.length === 0 ? (
+        <EmptyState title={copy.emptyTitle} description={copy.emptyDescription} />
+      ) : (
+        <ul className="border-t border-rule">
+          {projects.map((project) => {
+            const projectTitle = getLocalizedField(project, "title", locale);
+            const projectDescription = getLocalizedField(
+              project,
+              "description",
+              locale
+            );
 
-              return (
-                <li key={project.docId ?? project.id}>
-                  <Link
-                    href={`/projects/${project.docId ?? project.id}`}
-                    className={`group grid gap-x-6 gap-y-4 border-b border-rule py-6 transition-colors duration-micro ease-out hover:bg-paper-2 ${
-                      project.imageUrl
-                        ? "sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]"
-                        : ""
-                    }`}
-                  >
-                    {project.imageUrl && (
-                      <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-paper-2">
-                        <img
-                          src={project.imageUrl}
-                          alt={projectTitle}
-                          className="absolute inset-0 h-full w-full object-cover"
-                        />
+            return (
+              <li key={project.docId ?? project.id}>
+                <Link
+                  href={`/projects/${project.docId ?? project.id}`}
+                  className={`group grid gap-x-6 gap-y-4 border-b border-rule py-6 transition-colors duration-micro ease-out hover:bg-paper-2 ${
+                    project.imageUrl
+                      ? "sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]"
+                      : ""
+                  }`}
+                >
+                  {project.imageUrl && (
+                    <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-paper-2">
+                      <img
+                        src={project.imageUrl}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      {project.status && (
+                        <Badge variant={statusVariant[project.status] || "success"}>
+                          {copy.status[project.status] || copy.status.active}
+                        </Badge>
+                      )}
+                      {project.createdAt && (
+                        <span className="font-outlier text-sm text-muted-foreground">
+                          {formatLocalizedDate(toDate(project.createdAt), locale, {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric"
+                          })}
+                        </span>
+                      )}
+                    </div>
+
+                    <h2 className="mt-2 font-display text-xl font-bold leading-tight group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
+                      {projectTitle}
+                    </h2>
+
+                    <p className="mt-2 line-clamp-3 max-w-measure text-ink-2">
+                      {projectDescription}
+                    </p>
+
+                    {project.collaborators && project.collaborators.length > 0 && (
+                      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                        <span className="text-muted-foreground">{copy.collaborators}</span>
+                        {project.collaborators.slice(0, 3).map((collab, collabIndex) => (
+                          <span
+                            key={collabIndex}
+                            className="flex min-w-0 items-center gap-2 text-ink-2"
+                          >
+                            {collab.photoURL && (
+                              <img
+                                src={collab.photoURL}
+                                alt=""
+                                loading="lazy"
+                                className="h-5 w-5 shrink-0 rounded-full object-cover"
+                              />
+                            )}
+                            <span className="max-w-32 truncate">
+                              {collab.name || collab.email?.split("@")[0]}
+                            </span>
+                          </span>
+                        ))}
+                        {project.collaborators.length > 3 && (
+                          <span className="font-outlier tabular-nums text-muted-foreground">
+                            +{project.collaborators.length - 3}
+                          </span>
+                        )}
                       </div>
                     )}
 
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                        {project.status && (
-                          <Badge variant={statusVariant[project.status] || "success"}>
-                            {copy.status[project.status] || copy.status.active}
-                          </Badge>
-                        )}
-                        {project.createdAt && (
-                          <span className="font-outlier text-sm text-muted-foreground">
-                            {formatLocalizedDate(toDate(project.createdAt), locale, {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric"
-                            })}
-                          </span>
-                        )}
-                      </div>
-
-                      <h2 className="mt-2 font-display text-xl font-bold leading-tight group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
-                        {projectTitle}
-                      </h2>
-
-                      <p className="mt-2 line-clamp-3 max-w-measure text-ink-2">
-                        {projectDescription}
-                      </p>
-
-                      {project.collaborators && project.collaborators.length > 0 && (
-                        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                          <span className="text-muted-foreground">{copy.collaborators}</span>
-                          {project.collaborators.slice(0, 3).map((collab, collabIndex) => (
-                            <span
-                              key={collabIndex}
-                              className="flex min-w-0 items-center gap-2 text-ink-2"
-                            >
-                              <img
-                                src={collab.photoURL || "/logo.svg"}
-                                alt={collab.name}
-                                className="h-5 w-5 shrink-0 rounded-full object-cover"
-                              />
-                              <span className="max-w-32 truncate">
-                                {collab.name || collab.email.split("@")[0]}
-                              </span>
-                            </span>
-                          ))}
-                          {project.collaborators.length > 3 && (
-                            <span className="font-outlier tabular-nums text-muted-foreground">
-                              +{project.collaborators.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1.5">
-                          <Heart className="h-4 w-4" aria-hidden="true" />
-                          <span className="font-outlier tabular-nums">
-                            {project.likes?.length || 0}
-                          </span>
+                    <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <Heart className="h-4 w-4" aria-hidden="true" />
+                        <span className="font-outlier tabular-nums">
+                          {project.likes?.length || 0}
                         </span>
-                        <span className="flex items-center gap-1.5">
-                          <MessageSquare className="h-4 w-4" aria-hidden="true" />
-                          <span className="font-outlier tabular-nums">
-                            {project.comments?.length || 0}
-                          </span>
+                        <span className="sr-only">{copy.likes}</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <MessageSquare className="h-4 w-4" aria-hidden="true" />
+                        <span className="font-outlier tabular-nums">
+                          {project.comments?.length || 0}
                         </span>
-                        <span className="flex items-center gap-1.5">
-                          <Eye className="h-4 w-4" aria-hidden="true" />
-                          <span className="font-outlier tabular-nums">{project.views || 0}</span>
-                        </span>
-                        <span className="whitespace-nowrap font-medium text-brand">
-                          {copy.details}
-                        </span>
-                      </div>
+                        <span className="sr-only">{copy.comments}</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Eye className="h-4 w-4" aria-hidden="true" />
+                        <span className="font-outlier tabular-nums">{project.views || 0}</span>
+                        <span className="sr-only">{copy.views}</span>
+                      </span>
+                      <span className="whitespace-nowrap font-medium text-brand">
+                        {copy.details}
+                      </span>
                     </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </PageContainer>
-
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-    </>
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </PageContainer>
   );
 }

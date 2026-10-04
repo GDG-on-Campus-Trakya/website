@@ -38,6 +38,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader, Section, EmptyState } from "@/components/ui/page";
 import { Stat } from "@/components/ui/stat";
 import { adminCopy } from "@/utils/adminCopy";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
@@ -235,6 +236,7 @@ const COPY = {
 };
 
 export default function TableAssignmentPage() {
+  const confirm = useConfirm();
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const a = adminCopy(locale);
@@ -361,7 +363,7 @@ export default function TableAssignmentPage() {
     const assignedToTable = participants.filter(p => p.assignedTableId === tableId);
 
     if (assignedToTable.length > 0) {
-      if (!confirm(copy.confirmRemoveTableWithParticipants)) {
+      if (!(await confirm(copy.confirmRemoveTableWithParticipants, { destructive: true }))) {
         return;
       }
     }
@@ -542,7 +544,7 @@ export default function TableAssignmentPage() {
 
   const handleRemoveParticipant = async (participantId) => {
     const participant = participants.find(p => p.id === participantId);
-    if (!confirm(copy.confirmRemoveParticipant(participant.name))) {
+    if (!(await confirm(copy.confirmRemoveParticipant(participant.name), { destructive: true }))) {
       return;
     }
 
@@ -556,7 +558,7 @@ export default function TableAssignmentPage() {
   };
 
   const handleReset = async () => {
-    if (!confirm(copy.confirmReset)) return;
+    if (!(await confirm(copy.confirmReset, { destructive: true }))) return;
 
     try {
       const batch = writeBatch(db);

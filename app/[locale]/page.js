@@ -4,7 +4,12 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { getHomeData } from "@/lib/home-data";
 import { pageMetadata } from "@/lib/page-meta";
-import { formatLocalizedDate, getLocalizedField } from "@/utils/localeUtils";
+import {
+  formatLocalizedDate,
+  getLocaleCode,
+  getLocalizedField,
+  withYearIfNotCurrent
+} from "@/utils/localeUtils";
 
 // Events and announcements come from Firestore; refresh the static page every 10 minutes.
 export const revalidate = 600;
@@ -39,31 +44,39 @@ export default async function LandingPage({ params }) {
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: "home" });
-  const { events, lastEvent, announcements } = await getHomeData();
+  const { events, lastEvent, announcements, stats: counts } = await getHomeData();
 
   const [upcomingEvent, ...laterEvents] = events;
   // With nothing scheduled, the panel shows the most recent event instead
   const featuredEvent = upcomingEvent || lastEvent;
   const shortDate = (value) =>
-    formatLocalizedDate(value, locale, {
-      timeZone: "Europe/Istanbul",
-      day: "numeric",
-      month: "short"
-    });
+    formatLocalizedDate(
+      value,
+      locale,
+      withYearIfNotCurrent(value, { timeZone: "Europe/Istanbul", day: "numeric", month: "short" })
+    );
   const longDate = (value) =>
-    formatLocalizedDate(value, locale, {
-      timeZone: "Europe/Istanbul",
-      weekday: "long",
-      day: "numeric",
-      month: "long"
-    });
+    formatLocalizedDate(
+      value,
+      locale,
+      withYearIfNotCurrent(value, {
+        timeZone: "Europe/Istanbul",
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+      })
+    );
+  // A date from another year is longer ("8 Eki 2025"); widen a list's date column only then.
+  const showsYear = (dates) =>
+    dates.some((value) => value && "year" in withYearIfNotCurrent(value, { timeZone: "Europe/Istanbul" }));
 
+  const numberFormat = new Intl.NumberFormat(getLocaleCode(locale));
   const stats = [
-    { value: "1000+", label: t("statMembers") },
-    { value: "20+", label: t("statEvents") },
-    { value: "10+", label: t("statPartners") },
-    { value: "50+", label: t("statHours") }
-  ];
+    { value: counts?.members, label: t("statMembers") },
+    { value: counts?.events, label: t("statEvents") },
+    { value: counts?.registrations, label: t("statRegistrations") },
+    { value: counts?.partners, label: t("statPartners") }
+  ].filter((stat) => Number.isFinite(stat.value) && stat.value > 0);
 
   const tryItems = [
     { href: "/personality-test", title: t("tryPersonality"), text: t("tryPersonalityText") },
@@ -129,17 +142,22 @@ export default async function LandingPage({ params }) {
         </aside>
       </section>
 
-      {/* Community numbers: one quiet line, one colour */}
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-6 border-y border-rule py-6 md:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="flex flex-col-reverse">
-            <dt className="mt-2 text-sm text-muted-foreground">{stat.label}</dt>
-            <dd className="font-display text-4xl font-extrabold tabular-nums leading-none tracking-tight">
-              {stat.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      {/* Community numbers counted from Firestore: one quiet line, one colour */}
+      {stats.length > 0 && (
+        <dl
+          aria-label={t("statsLabel")}
+          className="grid grid-cols-2 gap-x-6 gap-y-6 border-y border-rule py-6 md:grid-cols-4"
+        >
+          {stats.map((stat) => (
+            <div key={stat.label} className="flex flex-col-reverse">
+              <dt className="mt-2 text-sm text-muted-foreground">{stat.label}</dt>
+              <dd className="font-display text-4xl font-extrabold tabular-nums leading-none tracking-tight">
+                {numberFormat.format(stat.value)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
 
       {/* Rails: upcoming events and announcements */}
       <section className="grid gap-12 pb-4 pt-14 lg:grid-cols-12 lg:gap-10">
@@ -151,7 +169,11 @@ export default async function LandingPage({ params }) {
                 <li key={event.id}>
                   <Link
                     href="/events"
-                    className={`${rowLink} grid-cols-[4.5rem_1fr] sm:grid-cols-[5rem_1fr_auto]`}
+                    className={`${rowLink} ${
+                      showsYear(laterEvents.map((item) => item.start))
+                        ? "grid-cols-[6.5rem_1fr] sm:grid-cols-[6.5rem_1fr_auto]"
+                        : "grid-cols-[4.5rem_1fr] sm:grid-cols-[5rem_1fr_auto]"
+                    }`}
                   >
                     <time
                       dateTime={event.start}
@@ -185,7 +207,11 @@ export default async function LandingPage({ params }) {
                 <li key={announcement.id}>
                   <Link
                     href={`/announcements/${announcement.id}`}
-                    className={`${rowLink} grid-cols-[4.5rem_1fr]`}
+                    className={`${rowLink} ${
+                      showsYear(announcements.map((item) => item.createdAt))
+                        ? "grid-cols-[6.5rem_1fr]"
+                        : "grid-cols-[4.5rem_1fr]"
+                    }`}
                   >
                     <time
                       dateTime={announcement.createdAt || undefined}

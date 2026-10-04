@@ -12,9 +12,17 @@ export default function NotFound() {
         {t('title')}
       </h1>
       <p className="mt-4 max-w-measure text-ink-2">{t('description')}</p>
-      <Button asChild className="mt-8">
-        <Link href="/">{t('backHome')}</Link>
-      </Button>
+      <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
+        <Button asChild>
+          <Link href="/">{t('backHome')}</Link>
+        </Button>
+        <Link
+          href="/events"
+          className="inline-flex min-h-11 items-center rounded-sm font-medium text-brand underline underline-offset-4 decoration-1 transition-colors duration-micro ease-out hover:decoration-2"
+        >
+          {t('events')}
+        </Link>
+      </div>
     </div>
   );
 }

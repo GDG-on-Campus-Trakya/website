@@ -1,8 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import AnnouncementPostCard from "@/components/AnnouncementPostCard";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,37 +24,34 @@ export default function AnnouncementsClient({
     initialAnnouncements ? initialHasMore : true
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [loadFailed, setLoadFailed] = useState(false);
   const locale = useLocale();
 
   const copy =
     locale === "en"
       ? {
           title: "Announcements",
-          description:
-            "Find the latest updates about club events, announcements and news here.",
-          searchPlaceholder: "Search announcements...",
-          loading: "Loading announcements...",
+          description: "News from the club, calls for applications and offers for students.",
+          searchPlaceholder: "Search titles",
+          loading: "Loading announcements…",
           noAnnouncements: "No announcements yet",
-          noAnnouncementsDescription:
-            "New announcements will appear here once they are published.",
-          noResults: "No results found",
-          noResultsDescription: "No announcement matches your search.",
-          loadMore: "Load More",
-          loadError: "An error occurred while loading announcements."
+          noAnnouncementsDescription: "New announcements appear here once they are published.",
+          noResults: "Nothing matches",
+          noResultsDescription: "No announcement title contains that word.",
+          loadMore: "Show more",
+          loadError: "Announcements could not be loaded. Reload the page and try again."
         }
       : {
           title: "Duyurular",
-          description:
-            "Kulüp etkinlikleri, duyurular ve haberler hakkında en güncel bilgilere buradan ulaşabilirsiniz",
-          searchPlaceholder: "Duyurularda ara...",
-          loading: "Duyurular yükleniyor...",
+          description: "Kulüpten haberler, başvuru çağrıları ve öğrencilere yönelik fırsatlar.",
+          searchPlaceholder: "Başlıklarda ara",
+          loading: "Duyurular yükleniyor…",
           noAnnouncements: "Henüz duyuru yok",
-          noAnnouncementsDescription:
-            "Yeni duyurular eklendiğinde burada görüntülenecek",
-          noResults: "Sonuç bulunamadı",
-          noResultsDescription: "Aramanla eşleşen bir duyuru yok.",
-          loadMore: "Daha Fazla Yükle",
-          loadError: "Duyurular yüklenirken hata oluştu!"
+          noAnnouncementsDescription: "Yeni duyurular yayınlanınca burada görünecek.",
+          noResults: "Eşleşen duyuru yok",
+          noResultsDescription: "Başlığında bu kelime geçen bir duyuru bulunamadı.",
+          loadMore: "Daha fazla göster",
+          loadError: "Duyurular yüklenemedi. Sayfayı yenileyip yeniden dene."
         };
 
   useEffect(() => {
@@ -64,11 +59,12 @@ export default function AnnouncementsClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const searchKey = (value) => value.toLocaleLowerCase(locale === "en" ? "en" : "tr");
   const filteredAnnouncements = announcements.filter((announcement) =>
-    getLocalizedField(announcement, "title", locale)
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
+    searchKey(getLocalizedField(announcement, "title", locale)).includes(searchKey(searchQuery))
   );
+  // A search box over two or three items is noise; it appears once the list is long enough.
+  const showSearch = announcements.length > 6 || searchQuery;
 
   const loadAnnouncements = async (loadMore = false) => {
     if (!loadMore) setIsLoading(true);
@@ -81,6 +77,7 @@ export default function AnnouncementsClient({
       { limitCount: 12, startAfterDoc: loadMore ? lastDoc : null }
     );
 
+    setLoadFailed(!result.success);
     if (result.success) {
       if (loadMore) {
         setAnnouncements((prev) => [...prev, ...result.announcements]);
@@ -89,8 +86,6 @@ export default function AnnouncementsClient({
       }
       setLastDoc(result.lastDoc);
       setHasMore(result.hasMore);
-    } else {
-      toast.error(copy.loadError);
     }
 
     setIsLoading(false);
@@ -107,20 +102,28 @@ export default function AnnouncementsClient({
     <PageContainer>
       <PageHeader title={copy.title} description={copy.description} />
 
-      <div className="relative mb-10 max-w-md">
-        <Search
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-          aria-hidden="true"
-        />
-        <Input
-          type="text"
-          placeholder={copy.searchPlaceholder}
-          aria-label={copy.searchPlaceholder}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      {showSearch && (
+        <div className="relative mb-10 max-w-md">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            type="search"
+            placeholder={copy.searchPlaceholder}
+            aria-label={copy.searchPlaceholder}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      )}
+
+      {loadFailed && (
+        <p role="alert" className="mb-6 text-sm text-error">
+          {copy.loadError}
+        </p>
+      )}
 
       {isLoading ? (
         <div aria-busy="true">
@@ -138,7 +141,7 @@ export default function AnnouncementsClient({
         </div>
       ) : (
         <>
-          {announcements.length === 0 ? (
+          {announcements.length === 0 && !loadFailed ? (
             <EmptyState
               title={copy.noAnnouncements}
               description={copy.noAnnouncementsDescription}
@@ -188,19 +191,6 @@ export default function AnnouncementsClient({
           )}
         </>
       )}
-
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
     </PageContainer>
   );
 }

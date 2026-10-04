@@ -44,76 +44,67 @@ import { signOut } from "firebase/auth";
 
 const COPY = {
   tr: {
-    profileLoadError: "Profil verileri yüklenemedi. Lütfen daha sonra tekrar deneyin.",
-    registrationMissing: "Kayıt bulunamadı.",
-    registrationDeleteError:
-      "Kayıt silinirken bir hata oluştu. Lütfen tekrar deneyin.",
-    emailPrefSaved: "E-posta tercihi başarıyla güncellendi.",
-    emailPrefError: "E-posta tercihi güncellenemedi.",
-    registrationDeleted: "Etkinlik kaydı silindi",
-    genericError: "Bir hata oluştu",
-    termsAccepted: "Şartlar kabul edildi. Hoş geldiniz!",
-    termsAcceptError: "Bir hata oluştu. Lütfen tekrar deneyin.",
-    signedOut: "Çıkış yapıldı.",
-    signOutError: "Çıkış yapılırken bir hata oluştu.",
-    loading: "Yükleniyor...",
-    error: "Hata",
-    title: "Profiliniz",
-    emailPreferences: "Email Tercihleri",
-    emailNotifications: "Email Bildirimleri",
-    emailNotificationsHelp: "Etkinlikler ve güncellemeler hakkında email alın",
-    language: "Dil",
+    profileLoadError: "Profilin yüklenemedi. Sayfayı yenileyip yeniden dene.",
+    registrationMissing: "Bu kayıt zaten silinmiş.",
+    registrationDeleteError: "Kayıt iptal edilemedi. Bağlantını kontrol edip yeniden dene.",
+    emailPrefError: "E-posta tercihin kaydedilemedi. Yeniden dene.",
+    termsAcceptError: "Onayın kaydedilemedi. Yeniden dene.",
+    signOutError: "Çıkış yapılamadı. Yeniden dene.",
+    loading: "Yükleniyor…",
+    title: "Profilim",
+    tickets: "Biletlerin",
+    noEventsTitle: "Henüz bir etkinliğe kayıt olmadın",
+    noEventsBody: "Bir etkinliğe kayıt olduğunda QR biletin burada görünür.",
+    browseEvents: "Etkinliklere bak",
+    details: "Bilgilerin",
+    settings: "Ayarlar",
+    emailNotifications: "E-posta bildirimleri",
+    emailNotificationsHelp: "Yeni etkinlikler ve duyurular e-postana gelsin.",
     languageLabel: "Dil",
-    languageHelp: "Siteyi görüntülemek istediğiniz dili seçin",
-    updating: "Güncelleniyor...",
-    registeredEvents: "Kayıt Olunmuş Etkinlikler",
-    noEventsTitle: "Henüz kayıtlı etkinliğiniz yok",
-    noEventsBody: "Bir etkinliğe kayıt olduğunuzda QR biletiniz burada görünür.",
-    browseEvents: "Etkinliklere göz atın",
-    accountSettings: "Hesap Ayarları",
-    deleteAccount: "Hesabı Sil",
+    languageHelp: "Sitenin hangi dilde görüneceği.",
+    updating: "Kaydediliyor…",
+    account: "Hesap",
+    deleteAccount: "Hesabını sil",
     deleteAccountBody:
-      "Hesabınızı ve tüm verilerinizi kalıcı olarak silin. Bu işlem geri alınamaz.",
-    confirmTitle: "Emin misiniz?",
-    confirmBody: "Etkinlik kaydınızı silmek istediğinize emin misiniz?",
-    cancel: "İptal",
-    delete: "Sil",
+      "Hesabın, etkinlik kayıtların, gönderilerin ve destek taleplerin kalıcı olarak silinir.",
+    deleteAccountButton: "Hesabımı sil",
+    confirmTitle: "Kayıt iptal edilsin mi?",
+    confirmBody: (name) =>
+      `${name} kaydın ve QR biletin silinecek. Fikrini değiştirirsen etkinlik sayfasından yeniden kayıt olabilirsin.`,
+    cancel: "Vazgeç",
+    delete: "Kaydı iptal et",
   },
   en: {
-    profileLoadError: "Profile data could not be loaded. Please try again later.",
-    registrationMissing: "Registration not found.",
+    profileLoadError: "Your profile could not be loaded. Reload the page and try again.",
+    registrationMissing: "This registration has already been removed.",
     registrationDeleteError:
-      "An error occurred while deleting the registration. Please try again.",
-    emailPrefSaved: "Email preference updated successfully.",
-    emailPrefError: "Email preference could not be updated.",
-    registrationDeleted: "Event registration removed",
-    genericError: "An error occurred",
-    termsAccepted: "Terms accepted. Welcome!",
-    termsAcceptError: "An error occurred. Please try again.",
-    signedOut: "Signed out.",
-    signOutError: "An error occurred while signing out.",
-    loading: "Loading...",
-    error: "Error",
-    title: "Your Profile",
-    emailPreferences: "Email Preferences",
-    emailNotifications: "Email Notifications",
-    emailNotificationsHelp: "Receive emails about events and updates",
-    language: "Language",
-    languageLabel: "Language",
-    languageHelp: "Choose the language you want to view the site in",
-    updating: "Updating...",
-    registeredEvents: "Registered Events",
-    noEventsTitle: "No registered events yet",
+      "The registration was not cancelled. Check your connection and try again.",
+    emailPrefError: "Your e-mail preference was not saved. Try again.",
+    termsAcceptError: "Your consent was not saved. Try again.",
+    signOutError: "Could not sign out. Try again.",
+    loading: "Loading…",
+    title: "My profile",
+    tickets: "Your tickets",
+    noEventsTitle: "You have not registered for an event yet",
     noEventsBody: "When you register for an event, its QR ticket shows up here.",
-    browseEvents: "Browse events",
-    accountSettings: "Account Settings",
-    deleteAccount: "Delete Account",
+    browseEvents: "See events",
+    details: "Your details",
+    settings: "Settings",
+    emailNotifications: "E-mail notifications",
+    emailNotificationsHelp: "Get new events and announcements by e-mail.",
+    languageLabel: "Language",
+    languageHelp: "The language the site is shown in.",
+    updating: "Saving…",
+    account: "Account",
+    deleteAccount: "Delete your account",
     deleteAccountBody:
-      "Permanently delete your account and all of your data. This action cannot be undone.",
-    confirmTitle: "Are you sure?",
-    confirmBody: "Are you sure you want to delete your event registration?",
-    cancel: "Cancel",
-    delete: "Delete",
+      "Your account, event registrations, posts and support requests are deleted permanently.",
+    deleteAccountButton: "Delete my account",
+    confirmTitle: "Cancel this registration?",
+    confirmBody: (name) =>
+      `Your registration and QR ticket for ${name} will be deleted. If you change your mind, register again on the event page.`,
+    cancel: "Keep it",
+    delete: "Cancel registration",
   },
 };
 
@@ -172,7 +163,8 @@ const Profile = () => {
           idChunks.map((ids) => getDocs(query(collection(db, "events"), where("id", "in", ids))))
         );
         const eventsData = eventSnapshots.flatMap((snapshot) =>
-          snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }))
+          // `id` stays the events' own field (registrations point at it); `docId` builds URLs.
+          snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data(), docId: entry.id }))
         );
 
         setEvents(eventsData);
@@ -298,7 +290,7 @@ const Profile = () => {
   const downloadQRCode = (qrCodeDataURL, eventName) => {
     const link = document.createElement("a");
     link.href = qrCodeDataURL;
-    link.download = `${eventName}-registration-qr.png`;
+    link.download = `${eventName.replace(/[\\/:*?"<>|]+/g, "").trim() || "gdg"}-qr.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -312,8 +304,8 @@ const Profile = () => {
         { wantsToGetEmails: newPreference },
         { merge: true }
       );
+      // The switch staying where it was moved is the confirmation.
       setUserWantsEmails(newPreference);
-      toast.success(copy.emailPrefSaved);
     } catch (prefError) {
       logger.error("Error updating email preference:", prefError);
       toast.error(copy.emailPrefError);
@@ -324,12 +316,8 @@ const Profile = () => {
 
   const handleConfirmDelete = async () => {
     if (registrationToDelete) {
-      try {
-        await removeRegistration(registrationToDelete.id);
-        toast.success(copy.registrationDeleted);
-      } catch (_error) {
-        toast.error(copy.genericError);
-      }
+      // The ticket leaving the list is the confirmation; failures are reported inside.
+      await removeRegistration(registrationToDelete.id);
     }
     setIsDeleteDialogOpen(false);
     setRegistrationToDelete(null);
@@ -346,7 +334,6 @@ const Profile = () => {
         { merge: true }
       );
       setShowConsentModal(false);
-      toast.success(copy.termsAccepted);
     } catch (acceptError) {
       logger.error("Error accepting terms:", acceptError);
       toast.error(copy.termsAcceptError);
@@ -356,7 +343,6 @@ const Profile = () => {
   const handleDeclineTerms = async () => {
     try {
       await signOut(auth);
-      toast.info(copy.signedOut);
       router.push("/");
     } catch (declineError) {
       logger.error("Error signing out:", declineError);
@@ -387,7 +373,7 @@ const Profile = () => {
     return (
       <PageContainer>
         <p className="text-lg text-error" role="alert">
-          {copy.error}: {errorAuth.message}
+          {copy.profileLoadError}
         </p>
       </PageContainer>
     );
@@ -397,7 +383,7 @@ const Profile = () => {
     return (
       <PageContainer>
         <p className="text-lg text-error" role="alert">
-          {copy.error}: {errorData}
+          {errorData}
         </p>
       </PageContainer>
     );
@@ -408,13 +394,9 @@ const Profile = () => {
       <PageContainer>
         <PageHeader title={copy.title} />
 
-        {user && (
-          <div className="max-w-2xl">
-            <UserInfo user={user} />
-          </div>
-        )}
-
-        <Section title={copy.registeredEvents}>
+        {/* Tickets first: at the door this is the page people open, and the QR code has to be
+            the first thing on it. */}
+        <Section title={copy.tickets} className="mt-0 md:mt-0">
           {registrations.length === 0 ? (
             <EmptyState
               title={copy.noEventsTitle}
@@ -439,14 +421,22 @@ const Profile = () => {
           )}
         </Section>
 
-        <Section title={copy.emailPreferences}>
+        {user && (
+          <Section title={copy.details}>
+            <div className="max-w-2xl">
+              <UserInfo user={user} />
+            </div>
+          </Section>
+        )}
+
+        <Section title={copy.settings}>
           <div className="flex flex-col items-start justify-between gap-4 border-b border-rule py-4 sm:flex-row sm:items-center">
             <div className="min-w-0 flex-1 space-y-1">
               <Label htmlFor="email-notifications" className="text-base">
                 {copy.emailNotifications}
               </Label>
               <p className="break-words text-sm text-muted-foreground">
-                {copy.emailNotificationsHelp}
+                {isEmailUpdateLoading ? copy.updating : copy.emailNotificationsHelp}
               </p>
             </div>
             <Switch
@@ -457,12 +447,6 @@ const Profile = () => {
               className="shrink-0"
             />
           </div>
-          {isEmailUpdateLoading && (
-            <p className="mt-2 text-sm text-muted-foreground">{copy.updating}</p>
-          )}
-        </Section>
-
-        <Section title={copy.language}>
           <div className="flex flex-col items-start justify-between gap-4 border-b border-rule py-4 sm:flex-row sm:items-center">
             <div className="min-w-0 flex-1 space-y-1">
               <p className="text-base font-medium">{copy.languageLabel}</p>
@@ -474,21 +458,21 @@ const Profile = () => {
           </div>
         </Section>
 
-        <Section title={copy.accountSettings}>
+        <Section title={copy.account}>
           <div className="flex flex-col items-start justify-between gap-4 border-b border-rule py-4 sm:flex-row sm:items-center">
             <div className="min-w-0 flex-1 space-y-1">
-              <h3 className="text-lg font-semibold text-error">{copy.deleteAccount}</h3>
+              <h3 className="text-base font-semibold text-ink">{copy.deleteAccount}</h3>
               <p className="break-words text-sm text-muted-foreground">
                 {copy.deleteAccountBody}
               </p>
             </div>
             <Button
-              variant="destructive"
+              variant="outline"
               onClick={() => setIsDeleteAccountModalOpen(true)}
-              className="shrink-0"
+              className="shrink-0 border-error text-error"
             >
-              <Trash2 />
-              {copy.deleteAccount}
+              <Trash2 aria-hidden="true" />
+              {copy.deleteAccountButton}
             </Button>
           </div>
         </Section>
@@ -498,7 +482,9 @@ const Profile = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{copy.confirmTitle}</AlertDialogTitle>
-            <AlertDialogDescription>{copy.confirmBody}</AlertDialogDescription>
+            <AlertDialogDescription>
+              {copy.confirmBody(registrationToDelete?.eventName || "")}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
