@@ -4,8 +4,6 @@ import { auth } from "@/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter } from "@/i18n/navigation";
 import { loginHref } from "@/utils/redirect";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { logger } from "@/utils/logger";
 import { useLocale } from "next-intl";
 import { formatLocalizedDate, withYearIfNotCurrent } from "@/utils/localeUtils";
@@ -27,6 +25,14 @@ import { Badge } from "@/components/ui/badge";
 import { Field } from "@/components/ui/field";
 import { Input, fieldClasses } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   PageContainer,
   PageHeader,
@@ -58,7 +64,6 @@ export default function TicketsPage() {
           },
           success: {
             reopened: "Request reopened.",
-            replySent: "Reply sent.",
             submitted: (ticketNumber) => `Request received. Number: ${ticketNumber}`,
           },
           system: {
@@ -121,14 +126,13 @@ export default function TicketsPage() {
             "Why are you reopening it? Say briefly whether the problem is back or you have more to add.",
           reopenPlaceholder: "For example: it still happens when I…",
           cancel: "Cancel",
-          reopening: "Reopening…",
           ticketPrefix: "Request",
           you: "You",
           systemLabel: "System",
           admin: "Team",
           replyPlaceholder: "Write a reply",
           send: "Send",
-          sending: "Sending…",
+          removeFile: (name) => `Remove ${name}`,
         }
       : {
           errors: {
@@ -149,7 +153,6 @@ export default function TicketsPage() {
           },
           success: {
             reopened: "Talep yeniden açıldı.",
-            replySent: "Yanıtın gönderildi.",
             submitted: (ticketNumber) => `Talebin alındı. Talep no: ${ticketNumber}`,
           },
           system: {
@@ -212,14 +215,13 @@ export default function TicketsPage() {
             "Neden yeniden açıyorsun? Sorun sürüyorsa ya da ekleyeceğin bir şey varsa kısaca yaz.",
           reopenPlaceholder: "Ör. Sorun hâlâ sürüyor; şu adımda takılıyorum…",
           cancel: "Vazgeç",
-          reopening: "Açılıyor…",
           ticketPrefix: "Talep",
           you: "Sen",
           systemLabel: "Sistem",
           admin: "Ekip",
           replyPlaceholder: "Yanıt yaz",
           send: "Gönder",
-          sending: "Gönderiliyor…",
+          removeFile: (name) => `${name} dosyasını kaldır`,
         };
   const [user, loading] = useAuthState(auth);
   const [tickets, setTickets] = useState([]);
@@ -241,6 +243,13 @@ export default function TicketsPage() {
   const [selectedTicketForReply, setSelectedTicketForReply] = useState(null);
   const [replyMessage, setReplyMessage] = useState("");
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  // Shown where they happen instead of as toasts
+  const [listError, setListError] = useState(null);
+  const [notice, setNotice] = useState(null);
+  const [formError, setFormError] = useState(null);
+  const [fileError, setFileError] = useState(null);
+  const [reopenError, setReopenError] = useState(null);
+  const [replyError, setReplyError] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -285,26 +294,10 @@ export default function TicketsPage() {
     };
   }, [showReplyModal, selectedTicketForReply?.id]);
 
-  // Prevent body scroll when any modal is open
-  useEffect(() => {
-    if (showReopenModal || showReplyModal || showForm) {
-      document.body.classList.add('modal-open');
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = 'unset';
-    }
-
-    // Cleanup on unmount
-    return () => {
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = 'unset';
-    };
-  }, [showReopenModal, showReplyModal, showForm]);
-
   const fetchUserTickets = async () => {
     try {
       setIsLoading(true);
+      setListError(null);
       const { collection, getDocs, query, where, orderBy } = await import(
         "firebase/firestore"
       );
@@ -329,7 +322,7 @@ export default function TicketsPage() {
       setTickets(ticketsData);
     } catch (error) {
       logger.error("Error fetching tickets:", error);
-      toast.error(copy.errors.fetchTickets);
+      setListError(copy.errors.fetchTickets);
     } finally {
       setIsLoading(false);
     }
@@ -420,7 +413,7 @@ export default function TicketsPage() {
     try {
       const canReopen = await checkReopenRateLimit(user.email);
       if (!canReopen) {
-        toast.error(copy.errors.reopenLimit);
+        setReopenError(copy.errors.reopenLimit);
         return false;
       }
 
@@ -456,12 +449,12 @@ export default function TicketsPage() {
         });
       }
 
-      toast.success(copy.success.reopened);
+      setNotice(copy.success.reopened);
       fetchUserTickets(); // Refresh the tickets
       return true;
     } catch (error) {
       logger.error("Error reopening ticket:", error);
-      toast.error(copy.errors.reopenFailed);
+      setReopenError(copy.errors.reopenFailed);
       return false;
     }
   };
@@ -494,6 +487,7 @@ export default function TicketsPage() {
   };
 
   const handleFileSelect = (e) => {
+    setFileError(null);
     const files = Array.from(e.target.files);
     const maxSize = 5 * 1024 * 1024; // 5MB
     const allowedTypes = [
@@ -506,18 +500,18 @@ export default function TicketsPage() {
 
     const validFiles = files.filter((file) => {
       if (file.size > maxSize) {
-        toast.error(copy.errors.fileTooLarge(file.name));
+        setFileError(copy.errors.fileTooLarge(file.name));
         return false;
       }
       if (!allowedTypes.includes(file.type)) {
-        toast.error(copy.errors.fileType(file.name));
+        setFileError(copy.errors.fileType(file.name));
         return false;
       }
       return true;
     });
 
     if (selectedFiles.length + validFiles.length > 3) {
-      toast.error(copy.errors.fileCount);
+      setFileError(copy.errors.fileCount);
       return;
     }
 
@@ -531,25 +525,25 @@ export default function TicketsPage() {
   const handleReopenClick = (ticketId) => {
     setSelectedTicketId(ticketId);
     setReopenReason("");
+    setReopenError(null);
+    setNotice(null);
     setShowReopenModal(true);
   };
 
   const handleReopenSubmit = async () => {
     if (!reopenReason.trim()) {
-      toast.error(copy.errors.reopenReasonRequired);
+      setReopenError(copy.errors.reopenReasonRequired);
       return;
     }
 
     setIsReopening(true);
+    setReopenError(null);
     const success = await reopenTicket(selectedTicketId, reopenReason);
 
     if (success) {
-      // Toast'ın görünmesi için modal'ı kapatmadan önce kısa bir gecikme ekle
-      setTimeout(() => {
-        setShowReopenModal(false);
-        setSelectedTicketId(null);
-        setReopenReason("");
-      }, 100);
+      setShowReopenModal(false);
+      setSelectedTicketId(null);
+      setReopenReason("");
     }
     setIsReopening(false);
   };
@@ -563,16 +557,18 @@ export default function TicketsPage() {
   const handleReplyClick = (ticket) => {
     setSelectedTicketForReply(ticket);
     setReplyMessage("");
+    setReplyError(null);
     setShowReplyModal(true);
   };
 
   const handleReplySubmit = async () => {
     if (!replyMessage.trim()) {
-      toast.error(copy.errors.replyRequired);
+      setReplyError(copy.errors.replyRequired);
       return;
     }
 
     setIsSubmittingReply(true);
+    setReplyError(null);
     try {
       const { doc, updateDoc, serverTimestamp } = await import(
         "firebase/firestore"
@@ -593,12 +589,11 @@ export default function TicketsPage() {
         updatedAt: serverTimestamp(),
       });
 
-      toast.success(copy.success.replySent);
+      // The reply appears in the thread through the live subscription; that is the confirmation.
       setReplyMessage("");
-      // fetchUserTickets(); // Modal açık kalacak, ticket güncellenmesi live olacak
     } catch (error) {
       logger.error("Error sending reply:", error);
-      toast.error(copy.errors.replyFailed);
+      setReplyError(copy.errors.replyFailed);
     } finally {
       setIsSubmittingReply(false);
     }
@@ -613,12 +608,14 @@ export default function TicketsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setFormError(null);
+    setNotice(null);
 
     try {
       // Rate limiting check
       const canSubmit = await checkRateLimit(user.email);
       if (!canSubmit) {
-        toast.error(copy.errors.dailyLimit);
+        setFormError(copy.errors.dailyLimit);
         setIsSubmitting(false);
         return;
       }
@@ -637,7 +634,7 @@ export default function TicketsPage() {
 
       // Validate sanitized inputs
       if (!sanitizedData.subject || !sanitizedData.message) {
-        toast.error(copy.errors.invalidContent);
+        setFormError(copy.errors.invalidContent);
         setIsSubmitting(false);
         return;
       }
@@ -666,14 +663,14 @@ export default function TicketsPage() {
 
       await addDoc(collection(db, "tickets"), ticketData);
 
-      toast.success(copy.success.submitted(ticketNumber));
+      setNotice(copy.success.submitted(ticketNumber));
       setFormData({ subject: "", message: "", category: "complaint" });
       setSelectedFiles([]);
       setShowForm(false);
       fetchUserTickets();
     } catch (error) {
       logger.error("Error submitting ticket:", error);
-      toast.error(copy.errors.submitFailed);
+      setFormError(copy.errors.submitFailed);
     } finally {
       setIsSubmitting(false);
       setUploadingFiles(false);
@@ -795,6 +792,7 @@ export default function TicketsPage() {
               id="ticket-files"
               label={copy.attachments}
               help={copy.attachmentHint}
+              error={fileError}
             >
               <Input
                 type="file"
@@ -839,7 +837,7 @@ export default function TicketsPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => removeFile(index)}
-                        aria-label={`${copy.cancel}: ${file.name}`}
+                        aria-label={copy.removeFile(file.name)}
                       >
                         <X aria-hidden="true" />
                       </Button>
@@ -867,6 +865,9 @@ export default function TicketsPage() {
                 </>
               )}
             </Button>
+            <p role="alert" className="mt-2 min-h-[1lh] text-sm text-error">
+              {formError}
+            </p>
           </form>
         </Section>
       )}
@@ -882,7 +883,15 @@ export default function TicketsPage() {
           ) : null
         }
       >
-        {tickets.length === 0 ? (
+        <p role="status" className={notice ? "mb-4 text-sm text-ink-2" : "sr-only"}>
+          {notice}
+        </p>
+        {listError && (
+          <p role="alert" className="mb-4 text-sm text-error">
+            {listError}
+          </p>
+        )}
+        {tickets.length === 0 && !listError ? (
           <EmptyState
             title={copy.emptyTitle}
             description={copy.emptyDescription}
@@ -1040,199 +1049,158 @@ export default function TicketsPage() {
         )}
       </Section>
 
-      {/* Reopen Modal */}
-      {showReopenModal && (
-        <div className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-4 animate-in fade-in-0 duration-short">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="reopen-title"
-            className="w-full max-w-md rounded-lg border border-rule bg-background p-6 text-foreground"
-          >
-            <h2 id="reopen-title" className="font-display text-xl font-bold">
-              {copy.reopenTitle}
-            </h2>
+      {/* Reopen dialog */}
+      <Dialog open={showReopenModal} onOpenChange={(open) => !open && !isReopening && closeReopenModal()}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="pr-10">{copy.reopenTitle}</DialogTitle>
+            <DialogDescription id="reopen-description">{copy.reopenDescription}</DialogDescription>
+          </DialogHeader>
 
-            <p id="reopen-description" className="mt-3 text-sm text-ink-2">
-              {copy.reopenDescription}
-            </p>
+          <Textarea
+            value={reopenReason}
+            onChange={(e) => {
+              setReopenReason(e.target.value);
+              setReopenError(null);
+            }}
+            placeholder={copy.reopenPlaceholder}
+            rows={4}
+            aria-labelledby="reopen-description"
+            aria-invalid={reopenError ? true : undefined}
+            required
+          />
+          <p role="alert" className="min-h-[1lh] text-sm text-error">
+            {reopenError}
+          </p>
 
-            <Textarea
-              value={reopenReason}
-              onChange={(e) => setReopenReason(e.target.value)}
-              placeholder={copy.reopenPlaceholder}
-              rows={4}
-              aria-labelledby="reopen-description"
-              className="mt-3"
-              required
-            />
+          <DialogFooter className="gap-3 sm:space-x-0">
+            <Button variant="outline" onClick={closeReopenModal} disabled={isReopening}>
+              {copy.cancel}
+            </Button>
+            <Button
+              onClick={handleReopenSubmit}
+              loading={isReopening}
+              disabled={!reopenReason.trim()}
+            >
+              {copy.reopen}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={closeReopenModal}
-                disabled={isReopening}
-              >
-                {copy.cancel}
-              </Button>
-              <Button
-                onClick={handleReopenSubmit}
-                disabled={isReopening || !reopenReason.trim()}
-              >
-                {isReopening ? (
-                  <>
-                    <Loader2 className="animate-spin" aria-hidden="true" />
-                    {copy.reopening}
-                  </>
-                ) : (
-                  copy.reopen
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Chat Modal */}
-      {showReplyModal && selectedTicketForReply && (
-        <div
-          className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60 p-2 animate-in fade-in-0 duration-short sm:p-4"
-          style={{ overscrollBehavior: "contain" }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="thread-title"
-            className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-lg border border-rule bg-background text-foreground sm:max-h-[85vh]"
-            style={{ overscrollBehavior: "contain" }}
-          >
-            {/* Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-rule px-4 py-3 md:px-6">
-              <div className="min-w-0 flex-1">
-                <h2
-                  id="thread-title"
-                  className="truncate font-display text-lg font-bold"
-                >
+      {/* Conversation dialog */}
+      <Dialog open={showReplyModal && Boolean(selectedTicketForReply)} onOpenChange={(open) => !open && closeReplyModal()}>
+        <DialogContent className="max-w-3xl gap-0 overflow-hidden p-0">
+          {selectedTicketForReply && (
+            <>
+              {/* Header */}
+              <div className="border-b border-rule py-3 pl-4 pr-14 md:pl-6">
+                <DialogTitle className="truncate font-display text-lg font-bold">
                   {copy.ticketPrefix}{" "}
                   <span className="font-outlier text-base font-medium">
-                    #
-                    {selectedTicketForReply.ticketNumber ||
-                      selectedTicketForReply.id}
+                    #{selectedTicketForReply.ticketNumber || selectedTicketForReply.id}
                   </span>
-                </h2>
-                <p className="truncate text-sm text-muted-foreground">
+                </DialogTitle>
+                <DialogDescription className="truncate text-sm text-muted-foreground">
                   {selectedTicketForReply.subject}
-                </p>
+                </DialogDescription>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={closeReplyModal}
-                aria-label={copy.cancel}
-              >
-                <X aria-hidden="true" />
-              </Button>
-            </div>
 
-            {/* Conversation */}
-            <div className="flex h-[65vh] flex-col sm:h-[60vh]">
-              <div
-                className="flex-1 overflow-y-auto px-4 md:px-6"
-                style={{
-                  overscrollBehavior: "contain",
-                  WebkitOverflowScrolling: "touch",
-                }}
-              >
-                {/* Original ticket message (user) */}
-                <ThreadEntry
-                  tone="user"
-                  label={copy.you}
-                  date={
-                    selectedTicketForReply.createdAt
-                      ? formatLocalizedDate(
-                          selectedTicketForReply.createdAt,
+              {/* Conversation */}
+              <div className="flex h-[65vh] flex-col sm:h-[60vh]">
+                <div
+                  className="flex-1 overflow-y-auto px-4 md:px-6"
+                  style={{
+                    overscrollBehavior: "contain",
+                    WebkitOverflowScrolling: "touch",
+                  }}
+                >
+                  {/* Original ticket message (user) */}
+                  <ThreadEntry
+                    tone="user"
+                    label={copy.you}
+                    date={
+                      selectedTicketForReply.createdAt
+                        ? formatLocalizedDate(
+                            selectedTicketForReply.createdAt,
+                            locale,
+                            withYearIfNotCurrent(selectedTicketForReply.createdAt, {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          )
+                        : null
+                    }
+                    message={selectedTicketForReply.message}
+                  />
+                  {/* Replies */}
+                  {selectedTicketForReply.responses?.map((response, idx) => {
+                    const isSystem = response.isSystemMessage;
+                    const isUserR = response.isUserResponse === true;
+                    // On user panel: user's messages are labelled "You", admin replies "Admin"
+                    const alignRight = isUserR && !isSystem;
+                    return (
+                      <ThreadEntry
+                        key={idx}
+                        tone={isSystem ? "system" : alignRight ? "user" : "admin"}
+                        label={
+                          isSystem
+                            ? copy.systemLabel
+                            : alignRight
+                            ? copy.you
+                            : copy.admin
+                        }
+                        date={formatLocalizedDate(
+                          response.createdAt,
                           locale,
-                          withYearIfNotCurrent(selectedTicketForReply.createdAt, {
+                          withYearIfNotCurrent(response.createdAt, {
                             month: "short",
                             day: "numeric",
                             hour: "2-digit",
                             minute: "2-digit",
                           })
-                        )
-                      : null
-                  }
-                  message={selectedTicketForReply.message}
-                />
-                {/* Replies */}
-                {selectedTicketForReply.responses?.map((response, idx) => {
-                  const isSystem = response.isSystemMessage;
-                  const isUserR = response.isUserResponse === true;
-                  // On user panel: user's messages are labelled "You", admin replies "Admin"
-                  const alignRight = isUserR && !isSystem;
-                  return (
-                    <ThreadEntry
-                      key={idx}
-                      tone={isSystem ? "system" : alignRight ? "user" : "admin"}
-                      label={
-                        isSystem
-                          ? copy.systemLabel
-                          : alignRight
-                          ? copy.you
-                          : copy.admin
-                      }
-                      date={formatLocalizedDate(
-                        response.createdAt,
-                        locale,
-                        withYearIfNotCurrent(response.createdAt, {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      )}
-                      message={response.message}
+                        )}
+                        message={response.message}
+                      />
+                    );
+                  })}
+                </div>
+                {/* Composer */}
+                <div className="border-t border-rule p-3 md:p-4">
+                  <div className="flex items-end gap-3">
+                    <Textarea
+                      value={replyMessage}
+                      onChange={(e) => {
+                        setReplyMessage(e.target.value);
+                        setReplyError(null);
+                      }}
+                      rows={2}
+                      className="min-h-16 min-w-0 flex-1 text-sm"
+                      placeholder={copy.replyPlaceholder}
+                      aria-label={copy.replyPlaceholder}
+                      required
                     />
-                  );
-                })}
-              </div>
-              {/* Composer */}
-              <div className="border-t border-rule p-3 md:p-4">
-                <div className="flex items-end gap-3">
-                  <Textarea
-                    value={replyMessage}
-                    onChange={(e) => setReplyMessage(e.target.value)}
-                    rows={2}
-                    className="min-h-16 min-w-0 flex-1 text-sm"
-                    placeholder={copy.replyPlaceholder}
-                    aria-label={copy.replyPlaceholder}
-                    required
-                  />
-                  <Button
-                    onClick={handleReplySubmit}
-                    disabled={isSubmittingReply || !replyMessage.trim()}
-                  >
-                    {isSubmittingReply ? copy.sending : copy.send}
-                  </Button>
+                    <Button
+                      onClick={handleReplySubmit}
+                      loading={isSubmittingReply}
+                      disabled={!replyMessage.trim()}
+                    >
+                      {copy.send}
+                    </Button>
+                  </div>
+                  {replyError && (
+                    <p role="alert" className="mt-2 text-sm text-error">
+                      {replyError}
+                    </p>
+                  )}
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-        className="mt-16"
-      />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 }
