@@ -157,3 +157,17 @@ select {
 .Toastify__progress-bar--wrp {
   display: none;
 }
+
+/* Home page: the poster and event-name strips drift sideways (duration set per strip), pause on
+   hover or focus, and stay still (scrollable by hand) when the visitor prefers reduced motion. */
+@keyframes landing-strip {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .landing-strip-track { animation: landing-strip var(--strip-duration, 90s) linear infinite; }
+  .landing-strip-reverse { animation-direction: reverse; }
+  .landing-strip:hover .landing-strip-track,
+  .landing-strip:focus-within .landing-strip-track { animation-play-state: paused; }
+}

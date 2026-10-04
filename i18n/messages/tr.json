@@ -71,31 +71,8 @@
     "events": "Etkinliklere bak"
   },
   "home": {
-    "title": "GDG on Campus Trakya: yazılım yapan öğrenciler",
-    "lede": "Trakya Üniversitesi'nde etkinlik, atölye ve hackathon düzenliyoruz. Sıradaki buluşma ve son duyurular aşağıda.",
-    "ctaEvents": "Etkinlikleri gör",
-    "ctaAbout": "Bizi tanı",
-    "nextEvent": "Sıradaki etkinlik",
-    "noEvent": "Yeni etkinlik yakında duyurulacak.",
-    "viewEvent": "Ayrıntı ve kayıt",
-    "upcoming": "Yaklaşan etkinlikler",
-    "announcements": "Son duyurular",
-    "seeAll": "Tümü",
-    "try": "Dene",
-    "tryPersonality": "Kişilik testleri",
-    "tryPersonalityText": "Sonucu paylaşabileceğin kısa testler.",
-    "tryTyping": "Yazma hızı testi",
-    "tryTypingText": "Kod parçalarıyla hızını ölç.",
-    "tryGame": "Oyuna katıl",
-    "tryGameText": "Etkinlikte verilen kodla canlı quiz'e gir.",
-    "statsLabel": "Sitedeki kayıtlara göre topluluk",
-    "statMembers": "Kayıtlı üye",
-    "statEvents": "Yapılan etkinlik",
-    "statRegistrations": "Etkinlik kaydı",
-    "statPartners": "Sponsor ve partner",
     "seoTitle": "GDG on Campus Trakya nedir?",
     "seoP1": "Google Developer Groups on Campus, Google'ın üniversitelerdeki geliştirici topluluklarına verdiği isim. GDG on Campus Trakya Üniversitesi (gdgoncampustu) bu programın Trakya Üniversitesi'ndeki topluluğu; öğrenciler yürütüyor.",
-    "seoP2": "Kampüste atölye, konuşma ve hackathon düzenliyoruz. Her bölümden öğrenci katılabilir: etkinliğe bu siteden kayıt olursun, QR biletin profiline düşer, girişte onu gösterirsin.",
-    "lastEvent": "Son etkinlik"
+    "seoP2": "Kampüste atölye, konuşma ve hackathon düzenliyoruz. Her bölümden öğrenci katılabilir: etkinliğe bu siteden kayıt olursun, QR biletin profiline düşer, girişte onu gösterirsin."
   }
 }

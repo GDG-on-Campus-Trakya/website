@@ -2,6 +2,17 @@
   {
     "date": "2026-10-04",
     "scope": "page",
+    "page": "/",
+    "macrostructure": "Marquee Hero (poster strip, colour stat tiles, next event, kinds, event-name band, blue join band)",
+    "theme": "custom",
+    "theme_axes": "light / geometric-sans / cool",
+    "vibe": "campus notice board turned up: Google mark colours as blocks",
+    "enrichment": "event posters (no member photos)",
+    "brief": "GDG on Campus Trakya · home page for new students, bold variant chosen from three; single-row header site-wide"
+  },
+  {
+    "date": "2026-10-04",
+    "scope": "page",
     "page": "/events, /events/[id]",
     "macrostructure": "Catalogue (next event, then one poster wall with term label tiles); event page: poster + ticket",
     "theme": "custom",
