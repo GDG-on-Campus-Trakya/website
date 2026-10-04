@@ -15,7 +15,8 @@ import {
   setDoc,
   writeBatch,
 } from "firebase/firestore";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { loginHref } from "@/utils/redirect";
 import UserInfo from "@/components/UserInfo";
 import EventList from "@/components/EventList";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -25,7 +26,7 @@ import QRCode from "qrcode";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { EmptyState, PageContainer, PageHeader, Section } from "@/components/ui/page";
+import { EmptyState, PageContainer, PageHeader, Section, Skeleton } from "@/components/ui/page";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,8 +67,9 @@ const COPY = {
     languageHelp: "Siteyi görüntülemek istediğiniz dili seçin",
     updating: "Güncelleniyor...",
     registeredEvents: "Kayıt Olunmuş Etkinlikler",
-    noEventsTitle: "Henüz Kayıtlı Etkinlik Yok",
-    noEventsBody: "Yakın zamanda bir etkinliğe başvurmadınız",
+    noEventsTitle: "Henüz kayıtlı etkinliğiniz yok",
+    noEventsBody: "Bir etkinliğe kayıt olduğunuzda QR biletiniz burada görünür.",
+    browseEvents: "Etkinliklere göz atın",
     accountSettings: "Hesap Ayarları",
     deleteAccount: "Hesabı Sil",
     deleteAccountBody:
@@ -101,8 +103,9 @@ const COPY = {
     languageHelp: "Choose the language you want to view the site in",
     updating: "Updating...",
     registeredEvents: "Registered Events",
-    noEventsTitle: "No Registered Events Yet",
-    noEventsBody: "You have not applied to an event recently",
+    noEventsTitle: "No registered events yet",
+    noEventsBody: "When you register for an event, its QR ticket shows up here.",
+    browseEvents: "Browse events",
     accountSettings: "Account Settings",
     deleteAccount: "Delete Account",
     deleteAccountBody:
@@ -181,7 +184,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (!loadingAuth && !user) {
-      router.push("/");
+      router.replace(loginHref("/profile"));
     }
   }, [loadingAuth, user, router]);
 
@@ -370,10 +373,21 @@ const Profile = () => {
     }
   };
 
-  if (loadingAuth || loadingData) {
+  // Also covers the moment before a signed-out visitor is sent to the login page.
+  if (!errorAuth && (loadingAuth || loadingData || !user)) {
     return (
-      <PageContainer>
-        <p className="text-lg text-muted-foreground">{copy.loading}</p>
+      <PageContainer aria-busy="true">
+        <p className="sr-only">{copy.loading}</p>
+        <Skeleton className="h-12 w-48 md:h-14" />
+        <div className="mt-8 flex max-w-2xl items-center gap-4 border-t border-rule pt-8">
+          <Skeleton className="size-20 rounded-full" />
+          <div className="flex-1 space-y-3">
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+        </div>
+        <Skeleton className="mt-14 h-7 w-56" />
+        <Skeleton className="mt-4 h-24 w-full" />
       </PageContainer>
     );
   }
@@ -409,6 +423,31 @@ const Profile = () => {
           </div>
         )}
 
+        <Section title={copy.registeredEvents}>
+          {registrations.length === 0 ? (
+            <EmptyState
+              title={copy.noEventsTitle}
+              description={copy.noEventsBody}
+              action={
+                <Button asChild variant="outline">
+                  <Link href="/events">{copy.browseEvents}</Link>
+                </Button>
+              }
+            />
+          ) : (
+            <EventList
+              registrations={registrations}
+              events={events}
+              removeRegistration={(registration) => {
+                setRegistrationToDelete(registration);
+                setIsDeleteDialogOpen(true);
+              }}
+              qrCodes={qrCodes}
+              downloadQRCode={downloadQRCode}
+            />
+          )}
+        </Section>
+
         <Section title={copy.emailPreferences}>
           <div className="flex flex-col items-start justify-between gap-4 border-b border-rule py-4 sm:flex-row sm:items-center">
             <div className="min-w-0 flex-1 space-y-1">
@@ -442,23 +481,6 @@ const Profile = () => {
               <LanguageSwitcher />
             </div>
           </div>
-        </Section>
-
-        <Section title={copy.registeredEvents}>
-          {registrations.length === 0 ? (
-            <EmptyState title={copy.noEventsTitle} description={copy.noEventsBody} />
-          ) : (
-            <EventList
-              registrations={registrations}
-              events={events}
-              removeRegistration={(registration) => {
-                setRegistrationToDelete(registration);
-                setIsDeleteDialogOpen(true);
-              }}
-              qrCodes={qrCodes}
-              downloadQRCode={downloadQRCode}
-            />
-          )}
         </Section>
 
         <Section title={copy.accountSettings}>

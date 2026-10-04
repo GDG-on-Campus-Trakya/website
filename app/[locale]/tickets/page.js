@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { auth } from "@/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter } from "@/i18n/navigation";
+import { loginHref } from "@/utils/redirect";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { logger } from "@/utils/logger";
@@ -252,7 +253,7 @@ export default function TicketsPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/");
+      router.replace(loginHref("/tickets"));
       return;
     }
 

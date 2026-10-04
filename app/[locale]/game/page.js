@@ -1,18 +1,18 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { logger } from "@/utils/logger";
 import { findGameByCode, addPlayerToGame } from "@/utils/quizUtils";
 import { findPollByCode, addPlayerToPoll } from "@/utils/pollUtils";
 import { withTimeout, isSafari } from "@/utils/debounce";
-import { ArrowLeft } from "lucide-react";
+import { loginHref } from "@/utils/redirect";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,6 @@ import { PageContainer, Skeleton } from "@/components/ui/page";
 
 const COPY = {
   tr: {
-    loginRequired: "Oyuna katılmak için giriş yapmalısınız!",
     codeLength: "Oyun kodu 6 haneli olmalıdır!",
     timeout: "İşlem çok uzun sürdü. Lütfen tekrar deneyin.",
     profileMissing:
@@ -31,18 +30,15 @@ const COPY = {
     gameNotFound: "Oyun bulunamadı! Kodu kontrol edin.",
     joinError: "Oyuna katılırken hata oluştu!",
     loading: "Yükleniyor...",
-    title: "Oyun!",
-    subtitle: "Oyuna katılmak için kodu girin",
+    title: "Oyuna katıl",
+    subtitle: "Etkinlikte ekrana gelen 6 haneli kodu girin.",
     codeLabel: "Oyun Kodu",
-    loginHint: "Oyuna katılmak için önce giriş yapmalısınız",
-    joining: "Katılınıyor...",
+    loginHint: "Katılmak için giriş yapmanız gerekiyor. Giriş yaptıktan sonra bu sayfaya, kodunuzla birlikte geri dönersiniz.",
     join: "Oyuna Katıl",
-    signIn: "Giriş Yap",
-    backHome: "Ana Sayfaya Dön",
+    signIn: "Giriş yap ve katıl",
     anonymous: "Anonim",
   },
   en: {
-    loginRequired: "You need to sign in before joining the game!",
     codeLength: "The game code must be 6 digits long!",
     timeout: "The operation took too long. Please try again.",
     profileMissing:
@@ -53,14 +49,12 @@ const COPY = {
     gameNotFound: "Game not found. Please check the code.",
     joinError: "An error occurred while joining the game!",
     loading: "Loading...",
-    title: "Game!",
-    subtitle: "Enter the code to join the game",
+    title: "Join a game",
+    subtitle: "Enter the 6-digit code shown on screen at the event.",
     codeLabel: "Game Code",
-    loginHint: "You need to sign in before joining the game",
-    joining: "Joining...",
+    loginHint: "You need to sign in to join. You will come back to this page, code included.",
     join: "Join Game",
-    signIn: "Sign In",
-    backHome: "Back to Home",
+    signIn: "Sign in and join",
     anonymous: "Anonymous",
   },
 };
@@ -72,14 +66,20 @@ export default function GameJoinPage() {
   const [gameCode, setGameCode] = useState("");
   const [joining, setJoining] = useState(false);
   const router = useRouter();
+  const returnPath = gameCode ? `/game?code=${gameCode}` : "/game";
+
+  // /game?code=123456 (e.g. after signing in) arrives with the code filled in
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("code");
+    if (code) setGameCode(code.replace(/\D/g, "").slice(0, 6));
+  }, []);
 
   const handleJoinGame = useCallback(
     async (event) => {
       event.preventDefault();
 
       if (!user) {
-        toast.error(copy.loginRequired);
-        router.push("/");
+        router.push(loginHref(returnPath));
         return;
       }
 
@@ -175,7 +175,7 @@ export default function GameJoinPage() {
         setJoining(false);
       }
     },
-    [user, gameCode, router, copy]
+    [user, gameCode, returnPath, router, copy]
   );
 
   const handleCodeInput = useCallback((event) => {
@@ -219,37 +219,25 @@ export default function GameJoinPage() {
           />
         </Field>
 
-        {!user && (
-          <p className="rounded border border-ink bg-warning px-3 py-2 text-sm text-ink">
-            {copy.loginHint}
-          </p>
-        )}
-
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full"
-          disabled={!user || gameCode.length !== 6 || joining}
-          loading={joining}
-        >
-          {joining ? copy.joining : copy.join}
-        </Button>
-
-        {!user && (
-          <div className="text-center">
-            <Button type="button" variant="link" onClick={() => router.push("/")}>
-              {copy.signIn}
+        {user ? (
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={gameCode.length !== 6 || joining}
+            loading={joining}
+          >
+            {copy.join}
+          </Button>
+        ) : (
+          <>
+            <Button asChild size="lg" className="w-full">
+              <Link href={loginHref(returnPath)}>{copy.signIn}</Link>
             </Button>
-          </div>
+            <p className="text-sm text-muted-foreground">{copy.loginHint}</p>
+          </>
         )}
       </form>
-
-      <div className="mt-8">
-        <Button variant="link" onClick={() => router.push("/")}>
-          <ArrowLeft aria-hidden="true" />
-          {copy.backHome}
-        </Button>
-      </div>
 
       <ToastContainer
         position="top-right"

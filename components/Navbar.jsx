@@ -222,6 +222,8 @@ function NavbarContent() {
   );
 
   const showAuth = isMounted && !loading;
+  // The sign-in page is the form itself; a second "Sign in" button there is noise.
+  const showLoginButton = pathname !== "/login";
 
   return (
     <header
@@ -318,9 +320,11 @@ function NavbarContent() {
                 )}
               </div>
             ) : (
-              <Button asChild size="sm">
-                <Link href="/login">{t("login")}</Link>
-              </Button>
+              showLoginButton && (
+                <Button asChild size="sm">
+                  <Link href="/login">{t("login")}</Link>
+                </Button>
+              )
             )}
           </div>
         </div>
@@ -398,9 +402,11 @@ function NavbarContent() {
                     </Button>
                   </div>
                 ) : (
-                  <Button asChild>
-                    <Link href="/login">{t("login")}</Link>
-                  </Button>
+                  showLoginButton && (
+                    <Button asChild>
+                      <Link href="/login">{t("login")}</Link>
+                    </Button>
+                  )
                 )}
               </div>
             </div>

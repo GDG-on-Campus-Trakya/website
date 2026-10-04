@@ -27,6 +27,7 @@ function setup(popup, profile = Promise.resolve({ exists: () => true })) {
     setLoading: value => loading.push(value),
     setError: value => errors.push(value),
     router: { push: value => navigation.push(value) },
+    getRedirectPath: () => '/',
     copy: { errors: { popupBlocked: 'blocked', googleFailed: 'failed' } },
     process: { env: { NODE_ENV: 'test' } }
   };
