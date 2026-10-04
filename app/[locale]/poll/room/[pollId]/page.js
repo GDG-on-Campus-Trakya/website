@@ -22,38 +22,36 @@ import {
 
 const COPY = {
   tr: {
-    pollNotFound: "Poll bulunamadı!",
-    voteSaved: "Oyunuz kaydedildi!",
-    voteError: "Oy gönderilirken hata oluştu!",
-    loading: "Yükleniyor...",
+    pollNotFound: "Oylama bulunamadı.",
+    voteError: "Oy gönderilemedi. Yeniden dene.",
+    loading: "Yükleniyor…",
     loginRequired: "Oylamaya katılmak için giriş yap.",
     signIn: "Giriş yap",
     playersSuffix: "oyuncu",
-    waitingTitle: "Oylama Başlamayı Bekliyor...",
-    waitingSubtitle: "Host oylamayı başlattığında eşleşmeler görünecek",
+    waitingTitle: "Oylamanın başlaması bekleniyor",
+    waitingSubtitle: "Oylamayı yöneten kişi başlatınca eşleşmeler burada görünecek.",
     votesSuffix: "oy",
-    voteSavedTitle: "Oyunuz Kaydedildi!",
-    voteSavedSubtitle: "Diğer oyuncuları bekleyin",
+    voteSavedTitle: "Oy verdin",
+    voteSavedSubtitle: "Diğer oyuncuları bekle.",
     winner: "Kazanan",
-    winnerExclaim: "Kazanan!",
-    waitNextMatch: "Sonraki eşleşmeyi bekleyin...",
+    winnerExclaim: "Kazanan",
+    waitNextMatch: "Sonraki eşleşmeyi bekle…",
   },
   en: {
-    pollNotFound: "Poll not found!",
-    voteSaved: "Your vote has been saved!",
-    voteError: "An error occurred while submitting your vote!",
-    loading: "Loading...",
+    pollNotFound: "Poll not found.",
+    voteError: "Your vote was not sent. Try again.",
+    loading: "Loading…",
     loginRequired: "Sign in to vote.",
     signIn: "Sign in",
     playersSuffix: "players",
-    waitingTitle: "Waiting for the voting to start...",
-    waitingSubtitle: "Matchups will appear once the host starts the voting",
+    waitingTitle: "Waiting for the voting to start",
+    waitingSubtitle: "Matchups appear here when the host starts the voting.",
     votesSuffix: "votes",
-    voteSavedTitle: "Your Vote Has Been Saved!",
-    voteSavedSubtitle: "Wait for the other players",
+    voteSavedTitle: "Vote saved",
+    voteSavedSubtitle: "Wait for the other players.",
     winner: "Winner",
-    winnerExclaim: "Winner!",
-    waitNextMatch: "Wait for the next matchup...",
+    winnerExclaim: "Winner",
+    waitNextMatch: "Wait for the next matchup…",
   },
 };
 
@@ -136,8 +134,8 @@ export default function PollRoomPage() {
     setHasVoted(true);
 
     try {
+      // The stage switches to "Oy verdin"; no toast on top of it.
       await submitVote(pollId, playerId, poll.currentMatchIndex, choice);
-      toast.success(copy.voteSaved);
     } catch (error) {
       logger.error("Error submitting vote:", error);
       toast.error(copy.voteError);
