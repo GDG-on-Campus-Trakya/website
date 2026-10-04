@@ -11,6 +11,7 @@ import Image from "next/image";
 import { Check, Info, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logger } from "@/utils/logger";
+import { loginHref } from "@/utils/redirect";
 import {
   subscribeToGame,
   subscribeToLeaderboard,
@@ -25,7 +26,8 @@ const COPY = {
     wrongToast: "Yanlış cevap!",
     submitError: "Cevap gönderilirken hata oluştu!",
     loading: "Yükleniyor...",
-    loginRequired: "Giriş yapmalısınız!",
+    loginRequired: "Oyunu oynamak için giriş yap.",
+    signIn: "Giriş yap",
     resultCorrect: "Doğru Cevap!",
     resultWrong: "Yanlış Cevap",
     resultReceived: "Cevabınız alındı",
@@ -60,7 +62,8 @@ const COPY = {
     wrongToast: "Wrong answer!",
     submitError: "An error occurred while submitting your answer!",
     loading: "Loading...",
-    loginRequired: "You need to sign in!",
+    loginRequired: "Sign in to play.",
+    signIn: "Sign in",
     resultCorrect: "Correct Answer!",
     resultWrong: "Wrong Answer",
     resultReceived: "Answer received",
@@ -344,18 +347,23 @@ export default function PlayGamePage() {
     }
   };
 
-  if (loading || !game) {
+  // Signed-out visitors never receive the game (the database needs a signed-in user), so check
+  // the account before waiting for it.
+  if (!loading && !user) {
     return (
-      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
-        <p className="text-lg">{copy.loading}</p>
+      <div className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center gap-6 bg-stage px-4 text-center text-stage-ink">
+        <p className="text-lg font-semibold">{copy.loginRequired}</p>
+        <Button asChild size="lg">
+          <Link href={loginHref(`/quiz/play/${gameId}`)}>{copy.signIn}</Link>
+        </Button>
       </div>
     );
   }
 
-  if (!user) {
+  if (loading || !game) {
     return (
       <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
-        <p className="text-lg font-semibold">{copy.loginRequired}</p>
+        <p className="text-lg">{copy.loading}</p>
       </div>
     );
   }

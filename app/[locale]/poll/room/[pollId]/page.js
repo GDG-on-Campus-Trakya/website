@@ -4,7 +4,9 @@ import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { useParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
+import { loginHref } from "@/utils/redirect";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Check, Trophy, Users } from "lucide-react";
@@ -24,7 +26,8 @@ const COPY = {
     voteSaved: "Oyunuz kaydedildi!",
     voteError: "Oy gönderilirken hata oluştu!",
     loading: "Yükleniyor...",
-    loginRequired: "Giriş yapmalısınız!",
+    loginRequired: "Oylamaya katılmak için giriş yap.",
+    signIn: "Giriş yap",
     playersSuffix: "oyuncu",
     waitingTitle: "Oylama Başlamayı Bekliyor...",
     waitingSubtitle: "Host oylamayı başlattığında eşleşmeler görünecek",
@@ -40,7 +43,8 @@ const COPY = {
     voteSaved: "Your vote has been saved!",
     voteError: "An error occurred while submitting your vote!",
     loading: "Loading...",
-    loginRequired: "You need to sign in!",
+    loginRequired: "Sign in to vote.",
+    signIn: "Sign in",
     playersSuffix: "players",
     waitingTitle: "Waiting for the voting to start...",
     waitingSubtitle: "Matchups will appear once the host starts the voting",
@@ -142,18 +146,23 @@ export default function PollRoomPage() {
     }
   };
 
-  if (loading || !poll) {
+  // Signed-out visitors never receive the poll (the database needs a signed-in user), so check
+  // the account before waiting for it.
+  if (!loading && !user) {
     return (
-      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
-        <p className="text-lg">{copy.loading}</p>
+      <div className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center gap-6 bg-stage px-4 text-center text-stage-ink">
+        <p className="text-lg font-semibold">{copy.loginRequired}</p>
+        <Button asChild size="lg">
+          <Link href={loginHref(`/poll/room/${pollId}`)}>{copy.signIn}</Link>
+        </Button>
       </div>
     );
   }
 
-  if (!user) {
+  if (loading || !poll) {
     return (
       <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-stage px-4 text-stage-ink">
-        <p className="text-lg font-semibold">{copy.loginRequired}</p>
+        <p className="text-lg">{copy.loading}</p>
       </div>
     );
   }
