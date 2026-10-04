@@ -1,6 +1,7 @@
 "use client";
-import { forwardRef, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { auth, db, googleProvider } from "@/firebase";
+import { popupResolver, preparePopupSignIn } from "@/lib/firebase/auth";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -300,6 +301,11 @@ export default function LoginPage() {
   const intro = copy.intro[mode];
   const isLogin = mode === "login";
 
+  // Google's auth iframe is no longer loaded on every page; have it ready before the click.
+  useEffect(() => {
+    preparePopupSignIn();
+  }, []);
+
   // Pages that need an account send people here with ?next=/path; go back there afterwards.
   const getRedirectPath = () =>
     safeRedirectPath(new URLSearchParams(window.location.search).get("next"));
@@ -418,7 +424,7 @@ export default function LoginPage() {
         prompt: "select_account"
       });
 
-      const result = await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider, popupResolver());
 
       if (result?.user) {
         // Closing a popup can take time to reach Firebase. Keep the form usable

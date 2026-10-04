@@ -23,6 +23,7 @@ function setup(popup, profile = Promise.resolve({ exists: () => true })) {
     auth: {}, db: {}, locale: 'en',
     googleProvider: { setCustomParameters() {} },
     signInWithPopup: () => popup.promise,
+    popupResolver: () => function PopupResolver() {},
     doc: () => ({}), getDoc: () => profile, setDoc: async () => {},
     setLoading: value => loading.push(value),
     setError: value => errors.push(value),

@@ -1,9 +1,9 @@
 "use client";
 
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, googleProvider, db } from "../firebase";
-import { signInWithPopup, signOut } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { auth, db } from "../firebase";
+import { signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 import Image from "next/image";
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -83,52 +83,6 @@ function NavbarContent() {
     setMenuOpen(false);
     setProfileMenuOpen(false);
   }, [pathname]);
-
-  const loginWithGoogle = async () => {
-    try {
-      googleProvider.setCustomParameters({
-        prompt: "select_account"
-      });
-
-      const result = await signInWithPopup(auth, googleProvider);
-
-      if (result?.user) {
-        const { uid, email, displayName } = result.user;
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            email,
-            createdAt: new Date().toISOString(),
-            name: displayName,
-            wantsToGetEmails: true,
-            language: locale
-          });
-        }
-      }
-    } catch (error) {
-      logger.error("Error during sign-in:", error);
-
-      if (error.code === "auth/popup-blocked") {
-        alert(
-          locale === "en"
-            ? "Popup was blocked. Please allow popups in your browser and try again."
-            : "Popup engellendi! Lütfen tarayıcınızda popup engellemesini kapatın ve tekrar deneyin."
-        );
-      } else if (error.code === "auth/popup-closed-by-user") {
-        logger.log("User closed the sign-in popup");
-      } else if (error.code === "auth/cancelled-popup-request") {
-        logger.log("Another sign-in process is already active");
-      } else {
-        alert(
-          locale === "en"
-            ? "An error occurred during sign-in. Please try again."
-            : "Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin."
-        );
-      }
-    }
-  };
 
   const handleSignOut = async () => {
     try {
