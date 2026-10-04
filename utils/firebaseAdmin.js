@@ -101,6 +101,13 @@ export const getFirestore = () => {
   return app ? admin.firestore(app) : null;
 };
 
+/** The project's default Storage bucket, or null without Admin credentials or a bucket name. */
+export const getStorageBucket = () => {
+  const app = getFirebaseAdmin();
+  const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+  return app && bucketName ? admin.storage(app).bucket(bucketName) : null;
+};
+
 export const getDatabase = () => {
   const app = getFirebaseAdmin();
   return app ? admin.database(app) : null;
