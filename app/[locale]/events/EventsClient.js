@@ -1,25 +1,14 @@
 "use client";
 
-import { useAccount } from "@/app/AuthProvider";
 import { db } from "@/firebase";
 import { logger } from "@/utils/logger";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  getDoc,
-  doc,
-  setDoc,
-  writeBatch,
-} from "firebase/firestore";
+import { collection, getDocs, getDoc, doc } from "firebase/firestore";
 import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
-import { loginHref } from "@/utils/redirect";
+import { Link } from "@/i18n/navigation";
 import Calendar from "@/components/Calendar";
 import {
   Drawer,
@@ -32,11 +21,9 @@ import {
 } from "@/components/ui/drawer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Check, ChevronLeft, ChevronRight, Clock, Download } from "lucide-react";
-import AcademicFields from "@/components/AcademicFields";
+import { ChevronLeft, ChevronRight, Clock, Download } from "lucide-react";
+import EventSignup from "@/components/EventSignup";
 import { Button } from "@/components/ui/button";
-import { Field } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, PageContainer, PageHeader, Skeleton } from "@/components/ui/page";
 import { canOptimizeImage } from "@/lib/images";
@@ -67,24 +54,10 @@ const COPY = {
     location: "Yer",
     sponsors: "Sponsorlar",
     documents: "Etkinlik belgeleri",
-    signedUp: "Kayıtlısın",
-    signUp: "Kayıt ol",
-    signInToSignUp: "Kayıt olmak için giriş yap",
     eventEnded: "Bu etkinlik sona erdi.",
     close: "Kapat",
     previous: "Önceki etkinlik",
     next: "Sonraki etkinlik",
-    completeTitle: "Kayıttan önce birkaç bilgi",
-    completeBody:
-      "Katılımcıları tanımak için adını, fakülteni ve bölümünü bir kez soruyoruz. Profiline kaydedilir.",
-    fullName: "Ad soyad",
-    nameRequired: "Adını yaz.",
-    facultyRequired: "Fakülteni seç.",
-    departmentRequired: "Bölümünü seç ya da yaz.",
-    saveAndSignUp: "Kaydet ve kayıt ol",
-    ticketReady: "Kaydın alındı. QR biletin profilinde; girişte onu göster.",
-    viewTicket: "Biletime git",
-    signupError: "Kayıt tamamlanamadı. Bağlantını kontrol edip yeniden dene.",
     qrEventMissing: "Bu QR koduna ait etkinlik artık listede yok.",
     invalidQr: "Bu QR kodu tanınmadı.",
     qrError: "QR kodu açılamadı. Sayfayı yenileyip yeniden dene.",
@@ -107,24 +80,10 @@ const COPY = {
     location: "Location",
     sponsors: "Sponsors",
     documents: "Event documents",
-    signedUp: "You are registered",
-    signUp: "Register",
-    signInToSignUp: "Sign in to register",
     eventEnded: "This event has ended.",
     close: "Close",
     previous: "Previous event",
     next: "Next event",
-    completeTitle: "A few details before you register",
-    completeBody:
-      "We ask once for your name, faculty and department so we know who is coming. They are saved to your profile.",
-    fullName: "Full name",
-    nameRequired: "Enter your name.",
-    facultyRequired: "Choose your faculty.",
-    departmentRequired: "Choose or type your department.",
-    saveAndSignUp: "Save and register",
-    ticketReady: "You are registered. Your QR ticket is on your profile; show it at the door.",
-    viewTicket: "Go to my ticket",
-    signupError: "Registration did not go through. Check your connection and try again.",
     qrEventMissing: "The event for this QR code is no longer listed.",
     invalidQr: "This QR code was not recognised.",
     qrError: "The QR code could not be opened. Reload the page and try again.",
@@ -174,7 +133,6 @@ function SearchParamsHandler({ onQRCodeRedirect, onEventParam, events }) {
 function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
-  const router = useRouter();
   const [events, setEvents] = useState(initialEvents);
   const [sponsors, setSponsors] = useState(initialSponsors);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -183,13 +141,7 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(null);
   const [filterStatus, setFilterStatus] = useState("upcoming");
-  const { user, profile, mergeProfile } = useAccount();
-  const [signingUp, setSigningUp] = useState(false);
-  const [justSignedUp, setJustSignedUp] = useState(false);
-  const [details, setDetails] = useState({ name: "", faculty: "", department: "" });
-  const [detailErrors, setDetailErrors] = useState({});
   const [isClient, setIsClient] = useState(false);
-  const [hasSignedUp, setHasSignedUp] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [imageCache, setImageCache] = useState(new Map());
 
@@ -262,124 +214,6 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
   const isExpired = (event) => {
     const start = getEventStart(event);
     return start ? getNow() > start : false;
-  };
-
-  useEffect(() => {
-    const checkSignupStatus = async () => {
-      if (!user || !selectedEvent) {
-        setHasSignedUp(false);
-        return;
-      }
-
-      try {
-        const registrationsRef = collection(db, "registrations");
-        const signupQuery = query(
-          registrationsRef,
-          where("eventId", "==", selectedEvent.id),
-          where("userId", "==", user.uid)
-        );
-
-        const querySnapshot = await getDocs(signupQuery);
-        setHasSignedUp(!querySnapshot.empty);
-      } catch (signupStatusError) {
-        logger.error("Error checking signup status:", signupStatusError);
-      }
-    };
-
-    checkSignupStatus();
-  }, [user, selectedEvent]);
-
-  // Registration needs name, faculty and department. Accounts made with Google have none of
-  // the last two, so the drawer asks for whatever is missing instead of sending people away.
-  const missingDetails = user
-    ? ["name", "faculty", "department"].filter((field) => !profile?.[field]?.trim())
-    : [];
-
-  useEffect(() => {
-    setDetails({
-      name: profile?.name || user?.displayName || "",
-      faculty: profile?.faculty || "",
-      department: profile?.department || "",
-    });
-    setDetailErrors({});
-  }, [profile, user]);
-
-  useEffect(() => {
-    setJustSignedUp(false);
-  }, [selectedEvent]);
-
-  const handleSignup = async () => {
-    if (!user || !selectedEvent || signingUp) return;
-
-    setSigningUp(true);
-
-    if (missingDetails.length > 0) {
-      const fields = {
-        name: details.name.trim(),
-        faculty: details.faculty.trim(),
-        department: details.department.trim(),
-      };
-      const errors = {
-        name: fields.name ? undefined : copy.nameRequired,
-        faculty: fields.faculty ? undefined : copy.facultyRequired,
-        department: fields.department ? undefined : copy.departmentRequired,
-      };
-      setDetailErrors(errors);
-      if (errors.name || errors.faculty || errors.department) {
-        setSigningUp(false);
-        return;
-      }
-
-      try {
-        await setDoc(doc(db, "users", user.uid), { ...fields, email: user.email }, { merge: true });
-        mergeProfile(fields);
-      } catch (saveError) {
-        logger.error("Error saving profile details:", saveError);
-        toast.error(copy.signupError);
-        setSigningUp(false);
-        return;
-      }
-    }
-
-    try {
-      const registrationsRef = collection(db, "registrations");
-      const existing = await getDocs(
-        query(
-          registrationsRef,
-          where("eventId", "==", selectedEvent.id),
-          where("userId", "==", user.uid)
-        )
-      );
-
-      if (existing.empty) {
-        // The registration and its QR code are written together, so a failure never leaves a
-        // registration without a ticket.
-        const registrationRef = doc(registrationsRef);
-        const qrCodeRef = doc(collection(db, "qrCodes"));
-        const batch = writeBatch(db);
-        batch.set(registrationRef, {
-          eventId: selectedEvent.id,
-          userId: user.uid,
-          signedUpAt: new Date(),
-          didJoinEvent: false,
-          qrCodeId: qrCodeRef.id,
-        });
-        batch.set(qrCodeRef, {
-          registrationId: registrationRef.id,
-          createdAt: new Date(),
-          code: `qrCode=${qrCodeRef.id}`,
-        });
-        await batch.commit();
-      }
-
-      setHasSignedUp(true);
-      setJustSignedUp(true);
-    } catch (signupError) {
-      logger.error("Error signing up for event:", signupError);
-      toast.error(copy.signupError);
-    } finally {
-      setSigningUp(false);
-    }
   };
 
   const handleEventParam = (eventId) => {
@@ -943,88 +777,10 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
 
             <DrawerFooter className="mt-6 p-0">
               {selectedEvent && !isExpired(selectedEvent) ? (
-                user ? (
-                  hasSignedUp ? (
-                    <div className="space-y-3">
-                      <Button type="button" variant="secondary" className="w-full" disabled>
-                        <Check aria-hidden="true" />
-                        {copy.signedUp}
-                      </Button>
-                      {justSignedUp && (
-                        <p role="status" className="text-sm text-ink-2">
-                          {copy.ticketReady}{" "}
-                          <Link
-                            href="/profile"
-                            className="font-medium text-brand underline underline-offset-4 decoration-1 hover:decoration-2"
-                          >
-                            {copy.viewTicket}
-                          </Link>
-                        </p>
-                      )}
-                    </div>
-                  ) : missingDetails.length > 0 ? (
-                    <div className="border-t border-rule pt-4">
-                      <p className="font-display text-lg font-bold">{copy.completeTitle}</p>
-                      <p className="mt-1 text-sm text-ink-2">{copy.completeBody}</p>
-                      <div className="mt-4 flex flex-col gap-2">
-                        {missingDetails.includes("name") && (
-                          <Field id="event-signup-name" label={copy.fullName} error={detailErrors.name}>
-                            <Input
-                              value={details.name}
-                              onChange={(event) => {
-                                setDetails((prev) => ({ ...prev, name: event.target.value }));
-                                setDetailErrors((prev) => ({ ...prev, name: undefined }));
-                              }}
-                              autoComplete="name"
-                            />
-                          </Field>
-                        )}
-                        <AcademicFields
-                          faculty={details.faculty}
-                          department={details.department}
-                          errors={detailErrors}
-                          onChange={({ faculty, department }) => {
-                            setDetails((prev) => ({ ...prev, faculty, department }));
-                            setDetailErrors((prev) => ({
-                              ...prev,
-                              faculty: undefined,
-                              department: undefined,
-                            }));
-                          }}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        className="mt-2 w-full"
-                        loading={signingUp}
-                        onClick={handleSignup}
-                      >
-                        {copy.saveAndSignUp}
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      type="button"
-                      className="w-full"
-                      loading={signingUp}
-                      onClick={handleSignup}
-                    >
-                      {copy.signUp}
-                    </Button>
-                  )
-                ) : (
-                  <Button
-                    type="button"
-                    className="w-full"
-                    onClick={() =>
-                      router.push(
-                        loginHref(`/events?event=${selectedEvent.docId ?? selectedEvent.id}`)
-                      )
-                    }
-                  >
-                    {copy.signInToSignUp}
-                  </Button>
-                )
+                <EventSignup
+                  event={selectedEvent}
+                  returnPath={`/events?event=${selectedEvent.docId ?? selectedEvent.id}`}
+                />
               ) : (
                 selectedEvent && (
                   <p className="flex items-center gap-2 border border-rule px-4 py-3 text-sm font-medium text-ink-2">

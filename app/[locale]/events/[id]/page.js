@@ -27,7 +27,6 @@ const COPY = {
     location: "Yer",
     sponsors: "Sponsorlar",
     documents: "Etkinlik belgeleri",
-    register: "Kayıt ol",
     ended: "Bu etkinlik sona erdi.",
     upcoming: "Yaklaşan",
     past: "Geçmiş",
@@ -41,7 +40,6 @@ const COPY = {
     location: "Location",
     sponsors: "Sponsors",
     documents: "Event documents",
-    register: "Register",
     ended: "This event has ended.",
     upcoming: "Upcoming",
     past: "Past",
@@ -202,9 +200,8 @@ export default async function EventPage({ params }) {
                 {copy.ended}
               </p>
             ) : (
-              <Button asChild size="lg" className="w-full">
-                <Link href={`/events?event=${id}`}>{copy.register}</Link>
-              </Button>
+              // Register right here; this page is the link people share.
+              <EventSignup event={{ id: event.id }} returnPath={`/events/${id}`} />
             )}
 
             {event.file_url && (
