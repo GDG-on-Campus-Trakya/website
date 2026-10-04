@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { socialUtils } from "../utils/socialUtils";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { auth } from "../firebase";
 import { toast } from "react-toastify";
 import { logger } from "@/utils/logger";
 import { useLocale } from "next-intl";
@@ -69,9 +68,9 @@ export default function PostCard({
         (!post.userPhoto || post.userPhoto.includes("googleusercontent.com"))
       ) {
         try {
-          const userDoc = await getDoc(doc(db, "users", post.userId));
-          if (userDoc.exists()) {
-            setPostUserProfile(userDoc.data());
+          const profile = await socialUtils.getUserProfile(post.userId);
+          if (profile) {
+            setPostUserProfile(profile);
           }
         } catch (error) {
           logger.error("Error loading post user profile:", error);

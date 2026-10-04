@@ -14,8 +14,7 @@ import {
 } from "lucide-react";
 import { socialUtils } from "../utils/socialUtils";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { auth } from "../firebase";
 import { toast } from "react-toastify";
 import { useLocale } from "next-intl";
 import { formatLocalizedDate, getLocalizedField } from "@/utils/localeUtils";
@@ -143,9 +142,9 @@ export default function PostModal({
     if (!user) return;
 
     try {
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (userDoc.exists()) {
-        setUserProfileData(userDoc.data());
+      const profile = await socialUtils.getUserProfile(user.uid);
+      if (profile) {
+        setUserProfileData(profile);
       }
     } catch (error) {
       logger.error("Error loading user profile:", error);
@@ -156,9 +155,10 @@ export default function PostModal({
     if (!post?.userId) return;
 
     try {
-      const userDoc = await getDoc(doc(db, "users", post.userId));
-      if (userDoc.exists()) {
-        setPostAuthorProfile(userDoc.data());
+      // Usually already read for the feed card
+      const profile = await socialUtils.getUserProfile(post.userId);
+      if (profile) {
+        setPostAuthorProfile(profile);
       } else {
         setPostAuthorProfile(null);
       }
