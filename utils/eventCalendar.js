@@ -16,24 +16,20 @@ export function istanbulParts(date) {
 }
 
 /**
- * The academic term a date falls in: autumn runs September to January, spring February to
- * June, and July and August are summer. Terms sort newest first by `order`.
+ * The academic term a date falls in. The club has two: autumn (July to January, so the stand
+ * week and other summer events count towards the term they prepare for) and spring (February
+ * to June). Terms sort newest first by `order`.
  */
 export function academicTerm(date) {
   const { year, month } = istanbulParts(date);
-  if (month >= 9) return { key: `${year}-fall`, season: "fall", start: year, order: year * 10 + 3 };
+  if (month >= 7) return { key: `${year}-fall`, season: "fall", start: year, order: year * 10 + 3 };
   if (month === 1) return { key: `${year - 1}-fall`, season: "fall", start: year - 1, order: (year - 1) * 10 + 3 };
-  if (month <= 6) return { key: `${year - 1}-spring`, season: "spring", start: year - 1, order: year * 10 + 1 };
-  return { key: `${year}-summer`, season: "summer", start: year, order: year * 10 + 2 };
+  return { key: `${year - 1}-spring`, season: "spring", start: year - 1, order: year * 10 + 1 };
 }
 
 export function termLabel(term, locale) {
   const span = `${term.start}–${String(term.start + 1).slice(2)}`;
-  if (locale === "en") {
-    if (term.season === "summer") return `Summer ${term.start}`;
-    return `${term.season === "fall" ? "Autumn" : "Spring"} term ${span}`;
-  }
-  if (term.season === "summer") return `${term.start} yazı`;
+  if (locale === "en") return `${term.season === "fall" ? "Autumn" : "Spring"} term ${span}`;
   return `${span} ${term.season === "fall" ? "güz" : "bahar"} dönemi`;
 }
 
@@ -62,9 +58,7 @@ export function relativeDay(date, locale, now = new Date()) {
 export function termLabelParts(term, locale) {
   const span = `${term.start}–${String(term.start + 1).slice(2)}`;
   if (locale === "en") {
-    if (term.season === "summer") return { big: String(term.start), small: "Summer" };
     return { big: span, small: term.season === "fall" ? "Autumn term" : "Spring term" };
   }
-  if (term.season === "summer") return { big: String(term.start), small: "yaz" };
   return { big: span, small: term.season === "fall" ? "güz dönemi" : "bahar dönemi" };
 }
