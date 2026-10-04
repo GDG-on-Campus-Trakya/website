@@ -153,22 +153,27 @@ const Profile = () => {
         }));
         setRegistrations(registrationsData);
 
-        const uniqueEventIds = [...new Set(registrationsData.map((reg) => reg.eventId))];
+        const uniqueEventIds = [
+          ...new Set(registrationsData.map((reg) => reg.eventId).filter(Boolean)),
+        ];
         if (uniqueEventIds.length === 0) {
           setEvents([]);
           setLoadingData(false);
           return;
         }
 
-        const eventsData = [];
-        for (const id of uniqueEventIds) {
-          const eventSnapshot = await getDocs(
-            query(collection(db, "events"), where("id", "==", id))
-          );
-          eventSnapshot.forEach((entry) => {
-            eventsData.push({ id: entry.id, ...entry.data() });
-          });
+        // Registrations point at the events' own `id` field. One `in` query per 30 ids (the
+        // Firestore limit) instead of one query per registration, one after another.
+        const idChunks = [];
+        for (let i = 0; i < uniqueEventIds.length; i += 30) {
+          idChunks.push(uniqueEventIds.slice(i, i + 30));
         }
+        const eventSnapshots = await Promise.all(
+          idChunks.map((ids) => getDocs(query(collection(db, "events"), where("id", "in", ids))))
+        );
+        const eventsData = eventSnapshots.flatMap((snapshot) =>
+          snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }))
+        );
 
         setEvents(eventsData);
         setLoadingData(false);
@@ -192,29 +197,31 @@ const Profile = () => {
     const fetchQRCodes = async () => {
       if (registrations.length > 0 && user) {
         const qrCodesData = {};
-        for (const registration of registrations) {
-          if (registration.qrCodeId) {
-            try {
-              const qrCodeSnap = await getDoc(doc(db, "qrCodes", registration.qrCodeId));
+        await Promise.all(
+          registrations
+            .filter((registration) => registration.qrCodeId)
+            .map(async (registration) => {
+              try {
+                const qrCodeSnap = await getDoc(doc(db, "qrCodes", registration.qrCodeId));
 
-              if (qrCodeSnap.exists()) {
-                const qrCodeDataURL = await QRCode.toDataURL(qrCodeSnap.data().code, {
-                  errorCorrectionLevel: "H",
-                  margin: 2,
-                  width: 400,
-                  color: {
-                    dark: "#000000",
-                    light: "#ffffff",
-                  },
-                });
+                if (qrCodeSnap.exists()) {
+                  const qrCodeDataURL = await QRCode.toDataURL(qrCodeSnap.data().code, {
+                    errorCorrectionLevel: "H",
+                    margin: 2,
+                    width: 400,
+                    color: {
+                      dark: "#000000",
+                      light: "#ffffff",
+                    },
+                  });
 
-                qrCodesData[registration.qrCodeId] = qrCodeDataURL;
+                  qrCodesData[registration.qrCodeId] = qrCodeDataURL;
+                }
+              } catch (qrError) {
+                logger.error("Error fetching QR code:", qrError);
               }
-            } catch (qrError) {
-              logger.error("Error fetching QR code:", qrError);
-            }
-          }
-        }
+            })
+        );
         setQRCodes(qrCodesData);
       }
     };
@@ -225,44 +232,28 @@ const Profile = () => {
   }, [registrations, user]);
 
   useEffect(() => {
-    const fetchUserEmailPreference = async () => {
+    // Email preference and terms consent come from the same document; read it once.
+    const fetchUserSettings = async () => {
       if (user) {
         try {
           const userSnap = await getDoc(doc(db, "users", user.uid));
+
           if (userSnap.exists()) {
             setUserWantsEmails(userSnap.data().wantsToGetEmails || false);
-          }
-        } catch (prefError) {
-          logger.error("Error fetching user email preference:", prefError);
-        }
-      }
-    };
 
-    fetchUserEmailPreference();
-  }, [user]);
-
-  useEffect(() => {
-    const checkConsentStatus = async () => {
-      if (user) {
-        try {
-          const userSnap = await getDoc(doc(db, "users", user.uid));
-
-          if (userSnap.exists()) {
-            const hasAccepted = userSnap.data().termsAccepted || false;
-
-            if (!hasAccepted) {
+            if (!userSnap.data().termsAccepted) {
               setShowConsentModal(true);
             }
           } else {
             setShowConsentModal(true);
           }
-        } catch (consentError) {
-          logger.error("Error checking consent status:", consentError);
+        } catch (settingsError) {
+          logger.error("Error fetching user settings:", settingsError);
         }
       }
     };
 
-    checkConsentStatus();
+    fetchUserSettings();
   }, [user]);
 
   const removeRegistration = async (registrationId) => {
