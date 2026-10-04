@@ -73,7 +73,8 @@
   "notFound": {
     "title": "Page not found.",
     "description": "That address does not exist, or it has moved.",
-    "backHome": "Back to the home page"
+    "backHome": "Back to the home page",
+    "events": "See events"
   },
   "home": {
     "title": "GDG on Campus Trakya: students who build software",

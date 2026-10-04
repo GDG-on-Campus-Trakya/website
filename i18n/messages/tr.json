@@ -73,7 +73,8 @@
   "notFound": {
     "title": "Sayfa bulunamadı.",
     "description": "Aradığın adres yok ya da taşınmış olabilir.",
-    "backHome": "Ana sayfaya dön"
+    "backHome": "Ana sayfaya dön",
+    "events": "Etkinliklere bak"
   },
   "home": {
     "title": "GDG on Campus Trakya: yazılım yapan öğrenciler",
