@@ -56,7 +56,7 @@ export default function Footer() {
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div className="max-w-md">
             <Link href="/" className="inline-flex items-center gap-3 rounded-sm">
-              <Image src="/logo.svg" alt="" width={40} height={40} className="h-10 w-10" />
+              <Image src="/logo.svg" alt="" width={40} height={40} className="h-10 w-10" unoptimized />
               <span className="font-display text-2xl font-extrabold leading-none tracking-tight">
                 GDG on Campus
               </span>

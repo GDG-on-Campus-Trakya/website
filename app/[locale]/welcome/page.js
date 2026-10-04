@@ -72,6 +72,7 @@ export default function WelcomePage() {
           width={96}
           height={96}
           className="h-16 w-auto"
+          unoptimized
         />
         <h1 className="mt-8 font-display text-display-s font-extrabold">{copy.title}</h1>
         <p className="mt-3 text-md text-ink-2">{copy.subtitle}</p>

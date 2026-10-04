@@ -133,6 +133,8 @@ function NavbarContent() {
         height={48}
         className="h-9 w-9 md:h-12 md:w-12"
         priority
+        // An SVG gains nothing from the image optimizer; serve the file as it is.
+        unoptimized
       />
       <span className="flex flex-col text-left">
         <span className="font-display text-xl font-extrabold leading-none tracking-tight md:text-4xl">
