@@ -17,7 +17,8 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
-import { db, storage } from "../firebase";
+import { db } from "../firebase";
+import { storage } from "../lib/firebase/storage";
 import { logger } from "./logger";
 import { sortByTimestamp } from "./dateHelpers";
 

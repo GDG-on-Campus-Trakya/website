@@ -1,6 +1,7 @@
 import { collection, addDoc, getDocs, doc, deleteDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { db, storage } from "../firebase";
+import { db } from "../firebase";
+import { storage } from "../lib/firebase/storage";
 import { logger } from "./logger";
 
 /**

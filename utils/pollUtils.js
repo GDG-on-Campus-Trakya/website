@@ -1,6 +1,7 @@
 import { ref, set, get, update, remove, onValue, off } from "firebase/database";
 import { collection, addDoc, Timestamp, query, orderBy, limit, getDocs } from "firebase/firestore";
-import { realtimeDb, db } from "../firebase";
+import { db } from "../firebase";
+import { realtimeDb } from "../lib/firebase/database";
 import { logger } from "./logger";
 
 /**

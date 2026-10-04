@@ -479,7 +479,7 @@ export default function TicketsPage() {
     const { ref, uploadBytes, getDownloadURL } = await import(
       "firebase/storage"
     );
-    const { storage } = await import("@/firebase");
+    const { storage } = await import("@/lib/firebase/storage");
 
     for (const file of files) {
       const fileRef = ref(

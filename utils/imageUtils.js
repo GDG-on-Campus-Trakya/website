@@ -115,7 +115,7 @@ export const generateFileName = (originalName, prefix = '') => {
 // Alias for imageCompression.js compatibility
 export const uploadCompressedImage = async (blob, path) => {
   const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
-  const { storage } = await import('../firebase');
+  const { storage } = await import('../lib/firebase/storage');
 
   const storageRef = ref(storage, path);
   const snapshot = await uploadBytes(storageRef, blob);

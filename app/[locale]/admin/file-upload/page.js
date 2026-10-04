@@ -2,7 +2,8 @@
 import { useState, useRef } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter } from "@/i18n/navigation";
-import { auth, storage } from "@/firebase";
+import { auth } from "@/firebase";
+import { storage } from "@/lib/firebase/storage";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { checkUserRole, ROLES } from "@/utils/roleUtils";
 import { toast, ToastContainer } from "react-toastify";
