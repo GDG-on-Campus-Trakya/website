@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Plus } from "lucide-react";
 import AnnouncementCard from "@/components/AnnouncementCard";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -161,6 +162,13 @@ export default function SocialBoard({
   const copy = BOARD_COPY[locale];
   const canShare = activeEvents?.length > 0;
 
+  // An event page links here as /social#event-<id>. The bands render after the posts load,
+  // later than the browser's own jump to the anchor, so jump once they are there.
+  useEffect(() => {
+    if (status !== "ready" || !window.location.hash.startsWith("#event-")) return;
+    document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: "start" });
+  }, [status]);
+
   const eventDate = (startsAt) =>
     startsAt
       ? formatLocalizedDate(startsAt, locale, {
@@ -222,8 +230,9 @@ export default function SocialBoard({
             return (
               <section
                 key={group.key}
+                id={group.eventId ? `event-${group.eventId}` : undefined}
                 aria-labelledby={headingId}
-                className="border-t-2 border-ink pt-3 lg:grid lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:gap-x-10"
+                className="scroll-mt-6 border-t-2 border-ink pt-3 lg:grid lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:gap-x-10"
               >
                 <div className="lg:sticky lg:top-6 lg:self-start">
                   <h2

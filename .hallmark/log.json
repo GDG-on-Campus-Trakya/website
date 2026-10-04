@@ -2,6 +2,17 @@
   {
     "date": "2026-10-04",
     "scope": "page",
+    "page": "/events, /events/[id]",
+    "macrostructure": "Catalogue (next event, then one poster wall with term label tiles); event page: poster + ticket",
+    "theme": "custom",
+    "theme_axes": "light / geometric-sans / cool",
+    "vibe": "campus notice board, paper and blue ink",
+    "enrichment": "none (event posters are the imagery)",
+    "brief": "GDG on Campus Trakya · events redesign inside design.md: no calendar or drawer, register on the list and the event page, add-to-calendar, map, share"
+  },
+  {
+    "date": "2026-10-04",
+    "scope": "page",
     "page": "/social",
     "macrostructure": "Catalogue (photos banded by event)",
     "theme": "custom",
