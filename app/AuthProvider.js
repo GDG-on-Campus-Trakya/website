@@ -9,15 +9,20 @@ const AccountContext = createContext({ user: null, loading: true, profile: null,
 
 const SIGNED_OUT = { uid: null, profile: null, role: null }
 
+// Switching language remounts the layout. Starting from the last account read in this tab shows
+// the photo and admin link at once instead of blinking while Firestore answers again.
+let lastAccount = SIGNED_OUT
+
 // The signed-in user with their profile document and admin role, read once for the whole
 // layout instead of separately by the navbar and each page.
 export default function AuthProvider({ children }) {
   const [user, loading] = useAuthState(auth)
   const locale = useLocale()
-  const [account, setAccount] = useState(SIGNED_OUT)
+  const [account, setAccount] = useState(lastAccount)
 
   useEffect(() => {
     if (!user) {
+      lastAccount = SIGNED_OUT
       setAccount(SIGNED_OUT)
       return undefined
     }
@@ -26,14 +31,15 @@ export default function AuthProvider({ children }) {
     import('@/utils/account')
       .then(({ loadAccount }) => loadAccount(user, locale))
       .then((next) => {
-        if (active) setAccount({ uid: user.uid, ...next })
+        lastAccount = { uid: user.uid, ...next }
+        if (active) setAccount(lastAccount)
       })
       .catch((error) => logger.warn("Failed to load the account:", error))
 
     return () => {
       active = false
     }
-    // The locale only fills in a new profile document; switching it must not reload the account.
+    // The locale only fills in a new profile document; it is not a reason to read the account again.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
