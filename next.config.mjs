@@ -23,7 +23,7 @@ const nextConfig = {
   
   // Experimental features for better performance
   experimental: {
-    optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion'],
+    optimizePackageImports: ['lucide-react', 'date-fns'],
     serverMinification: true,
     optimisticClientCache: true, // Reduce edge requests
     scrollRestoration: true,
