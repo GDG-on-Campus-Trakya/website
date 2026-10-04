@@ -9,6 +9,7 @@ import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { auth } from "@/lib/firebase/auth";
 import { useAccount } from "@/app/AuthProvider";
 import { logger } from "@/utils/logger";
+import IntentLink from "@/components/IntentLink";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 
@@ -17,15 +18,14 @@ const linkBase =
 
 function NavLink({ href, active, className = "", children, onClick }) {
   return (
-    <Link
+    <IntentLink
       href={href}
-      prefetch={false}
       aria-current={active ? "page" : undefined}
       onClick={onClick}
       className={`${linkBase} ${className}`}
     >
       {children}
-    </Link>
+    </IntentLink>
   );
 }
 
@@ -148,6 +148,13 @@ function NavbarContent() {
   const showAuth = isMounted && !loading;
   // The sign-in page is the form itself; a second "Sign in" button there is noise.
   const showLoginButton = pathname !== "/login";
+  const mobileItems = [...navItems, ...(showAuth && user ? authenticatedItems : [])];
+
+  const toggleMenu = () => {
+    // Opening the menu is the intent: have its pages ready by the time a link is tapped.
+    if (!menuOpen) mobileItems.forEach((item) => router.prefetch(item.href));
+    setMenuOpen((prev) => !prev);
+  };
 
   return (
     <header
@@ -278,7 +285,7 @@ function NavbarContent() {
           {wordmark}
           <button
             type="button"
-            onClick={() => setMenuOpen((prev) => !prev)}
+            onClick={toggleMenu}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             aria-label={menuOpen ? t("closeMenu") : t("menu")}
@@ -293,7 +300,7 @@ function NavbarContent() {
               className="absolute inset-x-0 top-full z-dropdown max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-b border-rule bg-paper px-gutter pb-6 animate-in fade-in-0 slide-in-from-top-2 duration-short"
             >
               <nav aria-label={t("primaryNavigation")} className="flex flex-col">
-                {[...navItems, ...(showAuth && user ? authenticatedItems : [])].map((item) => (
+                {mobileItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}

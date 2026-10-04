@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import IntentLink from "@/components/IntentLink";
 
 const linkClass =
   "inline-flex min-h-11 items-center whitespace-nowrap rounded-sm text-sm text-ink-2 underline-offset-4 decoration-brand decoration-2 transition-colors duration-micro ease-out hover:text-ink hover:underline";
@@ -89,9 +90,9 @@ export default function Footer() {
           <ul className="flex flex-wrap gap-x-6">
             {pageLinks.map((link) => (
               <li key={link.href}>
-                <Link href={link.href} prefetch={false} className={linkClass}>
+                <IntentLink href={link.href} className={linkClass}>
                   {link.label}
-                </Link>
+                </IntentLink>
               </li>
             ))}
           </ul>
@@ -101,9 +102,9 @@ export default function Footer() {
           <ul className="flex flex-wrap gap-x-6">
             {legalLinks.map((link) => (
               <li key={link.href}>
-                <Link href={link.href} prefetch={false} className={linkClass}>
+                <IntentLink href={link.href} className={linkClass}>
                   {link.label}
-                </Link>
+                </IntentLink>
               </li>
             ))}
           </ul>
