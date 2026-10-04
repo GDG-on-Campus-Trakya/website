@@ -8,7 +8,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { logger } from "@/utils/logger";
 import { useLocale } from "next-intl";
-import { formatLocalizedDate } from "@/utils/localeUtils";
+import { formatLocalizedDate, withYearIfNotCurrent } from "@/utils/localeUtils";
 import {
   Download,
   FileText,
@@ -36,198 +36,190 @@ import {
 
 export default function TicketsPage() {
   const locale = useLocale();
+  // Support requests are "talep" in Turkish: "bilet" is the QR ticket for an event.
   const copy =
     locale === "en"
       ? {
           errors: {
-            fetchTickets: "An error occurred while loading your tickets",
+            fetchTickets: "Your requests could not be loaded. Reload the page and try again.",
             reopenLimit:
-              "You have reached your daily ticket reopen limit (5 reopens). Please try again tomorrow.",
-            reopenFailed: "An error occurred while reopening the ticket",
-            reopenReasonRequired:
-              "Please explain why you want to reopen this ticket.",
-            replyRequired: "Please write a message.",
-            replyFailed: "An error occurred while sending your reply",
+              "You have reopened 5 requests today, which is the daily limit. You can try again tomorrow.",
+            reopenFailed: "The request could not be reopened. Check your connection and try again.",
+            reopenReasonRequired: "Write why you are reopening it.",
+            replyRequired: "Write a message.",
+            replyFailed: "Your reply was not sent. Check your connection and try again.",
             dailyLimit:
-              "You have reached your daily ticket limit (5 tickets). Please try again tomorrow.",
-            invalidContent:
-              "Invalid content was detected. Please try again.",
-            submitFailed: "An error occurred while submitting your ticket",
-            fileTooLarge: (name) => `${name} is too large (max 5MB)`,
-            fileType: (name) => `${name} uses an unsupported file format`,
-            fileCount: "You can attach up to 3 files",
+              "You have opened 5 requests today, which is the daily limit. You can try again tomorrow.",
+            invalidContent: "Write the subject and the message as plain text.",
+            submitFailed: "Your request was not sent. Check your connection and try again.",
+            fileTooLarge: (name) => `${name} is larger than 5 MB.`,
+            fileType: (name) => `${name} cannot be attached; use JPG, PNG, GIF, PDF or TXT.`,
+            fileCount: "You can attach up to 3 files.",
           },
           success: {
-            reopened: "Ticket reopened successfully!",
-            replySent: "Your reply was sent successfully!",
-            submitted: (ticketNumber) =>
-              `Your ticket was submitted successfully. Ticket No: ${ticketNumber}`,
+            reopened: "Request reopened.",
+            replySent: "Reply sent.",
+            submitted: (ticketNumber) => `Request received. Number: ${ticketNumber}`,
           },
           system: {
             reopened: (reason) =>
-              `Ticket reopened by the user.\nReason: ${reason}`,
+              `Request reopened by the user.\nReason: ${reason}`,
           },
           statuses: {
             open: "Open",
             closed: "Closed",
-            in_progress: "Reviewing",
+            in_progress: "Being reviewed",
             unknown: "Unknown",
           },
           categories: {
             complaint: "Complaint",
             suggestion: "Suggestion",
-            technical: "Technical Support",
+            technical: "Technical problem",
             other: "Other",
             unknown: "Unknown",
           },
-          loading: "Loading...",
-          authRequired: "You need to sign in to access this page",
+          loading: "Loading…",
+          authRequired: "Taking you to the sign-in page…",
           title: "Support",
           subtitle:
-            "Share your feedback with us and help us improve your experience",
-          hideForm: "Hide Form",
-          showForm: "Create New Ticket",
-          formTitle: "Create New Ticket",
+            "Open a request for a problem, a suggestion or a complaint; our replies appear here.",
+          hideForm: "Close the form",
+          showForm: "New request",
+          formTitle: "New request",
           category: "Category",
           categoryOptions: {
             complaint: "Complaint",
             suggestion: "Suggestion",
-            technical: "Technical Support",
+            technical: "Technical problem",
             other: "Other",
           },
           subject: "Subject",
-          subjectPlaceholder: "Enter the ticket subject...",
+          subjectPlaceholder: "For example: my event registration is missing",
           message: "Message",
-          messagePlaceholder: "Write a detailed explanation...",
-          attachments: "Attach Files (Optional)",
-          attachmentHint:
-            "Up to 3 files, max 5MB each. JPG, PNG, GIF, PDF, TXT",
-          selectedFiles: "Selected Files",
-          filesUploading: "Uploading Files...",
-          submitting: "Submitting...",
-          submit: "Submit Ticket",
-          yourTickets: "Your Tickets",
-          totalTickets: (count) => `${count} tickets found`,
-          emptyTitle: "No tickets yet",
+          messagePlaceholder: "What happened, and what did you expect? Attach a screenshot if you have one.",
+          attachments: "Attach files (optional)",
+          attachmentHint: "Up to 3 files, each up to 5 MB. JPG, PNG, GIF, PDF, TXT.",
+          selectedFiles: "Selected files",
+          filesUploading: "Uploading files…",
+          submitting: "Sending…",
+          submit: "Send request",
+          yourTickets: "Your requests",
+          totalTickets: (count) => (count === 1 ? "1 request" : `${count} requests`),
+          emptyTitle: "No requests yet",
           emptyDescription:
-            "Use the button above to create your first ticket.",
-          createFirst: "Create New Ticket",
-          assignedAdmin: "Admin Assigned",
+            "When you have a problem or a suggestion, open a request from the button above.",
+          createFirst: "New request",
+          assignedAdmin: "Someone is on it",
           reopen: "Reopen",
-          responseCount: (count) => `${count} replies`,
-          attachmentCount: (count) => `${count} attachments`,
-          messageContent: "Message Content",
-          attachedFiles: "Attached Files",
+          responseCount: (count) => (count === 1 ? "1 reply" : `${count} replies`),
+          attachmentCount: (count) => (count === 1 ? "1 attachment" : `${count} attachments`),
+          messageContent: "Your message",
+          attachedFiles: "Attachments",
           download: "Download",
-          reopenTitle: "Reopen Ticket",
+          reopenTitle: "Reopen the request",
           reopenDescription:
-            "Why do you want to reopen this ticket? Please explain your reason:",
-          reopenPlaceholder:
-            "Example: The issue is still not resolved, or I want to share more details...",
+            "Why are you reopening it? Say briefly whether the problem is back or you have more to add.",
+          reopenPlaceholder: "For example: it still happens when I…",
           cancel: "Cancel",
-          reopening: "Reopening...",
-          ticketPrefix: "Ticket",
+          reopening: "Reopening…",
+          ticketPrefix: "Request",
           you: "You",
           systemLabel: "System",
-          admin: "Admin",
-          replyPlaceholder: "Write a reply...",
+          admin: "Team",
+          replyPlaceholder: "Write a reply",
           send: "Send",
-          sending: "Sending...",
+          sending: "Sending…",
         }
       : {
           errors: {
-            fetchTickets: "Biletler yüklenirken bir hata oluştu",
+            fetchTickets: "Taleplerin yüklenemedi. Sayfayı yenileyip yeniden dene.",
             reopenLimit:
-              "Günlük bilet yeniden açma limitinize ulaştınız (5 açma). Lütfen yarın tekrar deneyin.",
-            reopenFailed: "Bilet yeniden açılırken bir hata oluştu",
-            reopenReasonRequired:
-              "Lütfen bileti neden yeniden açmak istediğinizi belirtin.",
-            replyRequired: "Lütfen bir mesaj yazın.",
-            replyFailed: "Yanıt gönderilirken bir hata oluştu",
+              "Bugün 5 talebi yeniden açtın; bu günlük sınır. Yarın yeniden deneyebilirsin.",
+            reopenFailed: "Talep yeniden açılamadı. Bağlantını kontrol edip yeniden dene.",
+            reopenReasonRequired: "Neden yeniden açtığını yaz.",
+            replyRequired: "Bir mesaj yaz.",
+            replyFailed: "Yanıtın gönderilemedi. Bağlantını kontrol edip yeniden dene.",
             dailyLimit:
-              "Günlük bilet limitinize ulaştınız (5 bilet). Lütfen yarın tekrar deneyin.",
-            invalidContent:
-              "Geçersiz içerik tespit edildi. Lütfen tekrar deneyin.",
-            submitFailed: "Bilet gönderilirken bir hata oluştu",
-            fileTooLarge: (name) => `${name} çok büyük (max 5MB)`,
-            fileType: (name) => `${name} desteklenmeyen dosya formatı`,
-            fileCount: "En fazla 3 dosya ekleyebilirsiniz",
+              "Bugün 5 talep açtın; bu günlük sınır. Yarın yeniden deneyebilirsin.",
+            invalidContent: "Konuyu ve mesajı düz metin olarak yaz.",
+            submitFailed: "Talebin gönderilemedi. Bağlantını kontrol edip yeniden dene.",
+            fileTooLarge: (name) => `${name} 5 MB'tan büyük.`,
+            fileType: (name) => `${name} eklenemez; JPG, PNG, GIF, PDF ya da TXT olmalı.`,
+            fileCount: "En fazla 3 dosya ekleyebilirsin.",
           },
           success: {
-            reopened: "Bilet başarıyla yeniden açıldı!",
-            replySent: "Yanıtınız başarıyla gönderildi!",
-            submitted: (ticketNumber) =>
-              `Biletiniz başarıyla gönderildi! Bilet No: ${ticketNumber}`,
+            reopened: "Talep yeniden açıldı.",
+            replySent: "Yanıtın gönderildi.",
+            submitted: (ticketNumber) => `Talebin alındı. Talep no: ${ticketNumber}`,
           },
           system: {
             reopened: (reason) =>
-              `Bilet kullanıcı tarafından yeniden açıldı.\nGerekçe: ${reason}`,
+              `Talep kullanıcı tarafından yeniden açıldı.\nGerekçe: ${reason}`,
           },
           statuses: {
             open: "Açık",
-            closed: "Kapalı",
+            closed: "Kapandı",
             in_progress: "İnceleniyor",
             unknown: "Bilinmiyor",
           },
           categories: {
-            complaint: "Şikayet",
+            complaint: "Şikâyet",
             suggestion: "Öneri",
-            technical: "Teknik Destek",
+            technical: "Teknik sorun",
             other: "Diğer",
             unknown: "Bilinmiyor",
           },
-          loading: "Yükleniyor...",
-          authRequired: "Bu sayfaya erişim için giriş yapmanız gerekiyor",
+          loading: "Yükleniyor…",
+          authRequired: "Giriş sayfasına yönlendiriliyorsun…",
           title: "Destek",
           subtitle:
-            "Görüşlerinizi bizimle paylaşın ve deneyiminizi geliştirmemize yardımcı olun",
-          hideForm: "Formu Gizle",
-          showForm: "Yeni Bilet Oluştur",
-          formTitle: "Yeni Bilet Oluştur",
+            "Bir sorun, öneri ya da şikâyetin varsa talep aç; yanıtlarımızı burada görürsün.",
+          hideForm: "Formu kapat",
+          showForm: "Yeni talep",
+          formTitle: "Yeni talep",
           category: "Kategori",
           categoryOptions: {
-            complaint: "Şikayet",
+            complaint: "Şikâyet",
             suggestion: "Öneri",
-            technical: "Teknik Destek",
+            technical: "Teknik sorun",
             other: "Diğer",
           },
           subject: "Konu",
-          subjectPlaceholder: "Bilet konusunu girin...",
+          subjectPlaceholder: "Ör. Etkinlik kaydım profilimde görünmüyor",
           message: "Mesaj",
-          messagePlaceholder: "Detaylı açıklama yazın...",
-          attachments: "Dosya Ekle (Opsiyonel)",
-          attachmentHint: "En fazla 3 dosya, 5MB'a kadar. JPG, PNG, GIF, PDF, TXT",
-          selectedFiles: "Seçilen Dosyalar",
-          filesUploading: "Dosyalar Yükleniyor...",
-          submitting: "Gönderiliyor...",
-          submit: "Bilet Gönder",
-          yourTickets: "Biletleriniz",
-          totalTickets: (count) => `Toplam ${count} bilet bulundu`,
-          emptyTitle: "Henüz bilet bulunmuyor",
+          messagePlaceholder: "Ne oldu, ne bekliyordun? Ekran görüntüsü varsa ekle.",
+          attachments: "Dosya ekle (isteğe bağlı)",
+          attachmentHint: "En fazla 3 dosya, her biri en fazla 5 MB. JPG, PNG, GIF, PDF, TXT.",
+          selectedFiles: "Seçilen dosyalar",
+          filesUploading: "Dosyalar yükleniyor…",
+          submitting: "Gönderiliyor…",
+          submit: "Talebi gönder",
+          yourTickets: "Taleplerin",
+          totalTickets: (count) => `${count} talep`,
+          emptyTitle: "Henüz talebin yok",
           emptyDescription:
-            "İlk biletinizi oluşturmak için yukarıdaki butonu kullanın.",
-          createFirst: "Yeni Bilet Oluştur",
-          assignedAdmin: "Admin Atandı",
-          reopen: "Yeniden Aç",
+            "Bir sorunun ya da önerin olduğunda yukarıdaki düğmeyle talep açabilirsin.",
+          createFirst: "Yeni talep",
+          assignedAdmin: "Ekipten biri ilgileniyor",
+          reopen: "Yeniden aç",
           responseCount: (count) => `${count} yanıt`,
           attachmentCount: (count) => `${count} ek`,
-          messageContent: "Mesaj İçeriği",
-          attachedFiles: "Ekli Dosyalar",
+          messageContent: "Mesajın",
+          attachedFiles: "Ekler",
           download: "İndir",
-          reopenTitle: "Bileti Yeniden Aç",
+          reopenTitle: "Talebi yeniden aç",
           reopenDescription:
-            "Bu bileti neden yeniden açmak istiyorsunuz? Gerekçenizi belirtin:",
-          reopenPlaceholder:
-            "Örn: Sorun henüz çözülmedi, ek bilgi paylaşmak istiyorum...",
-          cancel: "İptal",
-          reopening: "Açılıyor...",
-          ticketPrefix: "Bilet",
-          you: "Siz",
+            "Neden yeniden açıyorsun? Sorun sürüyorsa ya da ekleyeceğin bir şey varsa kısaca yaz.",
+          reopenPlaceholder: "Ör. Sorun hâlâ sürüyor; şu adımda takılıyorum…",
+          cancel: "Vazgeç",
+          reopening: "Açılıyor…",
+          ticketPrefix: "Talep",
+          you: "Sen",
           systemLabel: "Sistem",
-          admin: "Admin",
-          replyPlaceholder: "Yanıt yazın...",
+          admin: "Ekip",
+          replyPlaceholder: "Yanıt yaz",
           send: "Gönder",
-          sending: "Gönderiliyor...",
+          sending: "Gönderiliyor…",
         };
   const [user, loading] = useAuthState(auth);
   const [tickets, setTickets] = useState([]);
@@ -722,7 +714,7 @@ export default function TicketsPage() {
   if (!user) {
     return (
       <PageContainer>
-        <p role="alert" className="py-16 text-md text-error">
+        <p role="status" className="py-16 text-md text-muted-foreground">
           {copy.authRequired}
         </p>
       </PageContainer>
@@ -1160,12 +1152,12 @@ export default function TicketsPage() {
                       ? formatLocalizedDate(
                           selectedTicketForReply.createdAt,
                           locale,
-                          {
+                          withYearIfNotCurrent(selectedTicketForReply.createdAt, {
                             month: "short",
                             day: "numeric",
                             hour: "2-digit",
                             minute: "2-digit",
-                          }
+                          })
                         )
                       : null
                   }
@@ -1188,12 +1180,16 @@ export default function TicketsPage() {
                           ? copy.you
                           : copy.admin
                       }
-                      date={formatLocalizedDate(response.createdAt, locale, {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      date={formatLocalizedDate(
+                        response.createdAt,
+                        locale,
+                        withYearIfNotCurrent(response.createdAt, {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      )}
                       message={response.message}
                     />
                   );
