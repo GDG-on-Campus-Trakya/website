@@ -1,28 +1,33 @@
 "use client";
+import { useEffect } from "react";
 import { useLocale } from "next-intl";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/firebase";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useAccount } from "@/app/AuthProvider";
 import PostUpload from "@/components/PostUpload";
 import { useRouter } from "@/i18n/navigation";
 import { loginHref } from "@/utils/redirect";
-import { useEffect } from "react";
-import { PageContainer } from "@/components/ui/page";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 const COPY = {
   tr: {
     loading: "Yükleniyor...",
     loginRequired: "Giriş yapmanız gerekiyor...",
+    title: "Fotoğraf paylaş",
+    description: "Paylaştığın fotoğraf herkese açık sosyal sayfada görünür.",
   },
   en: {
     loading: "Loading...",
     loginRequired: "You need to sign in...",
+    title: "Share a photo",
+    description: "The photo you share appears on the public social page.",
   },
 };
 
 export default function UploadPage() {
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
-  const [user, loading] = useAuthState(auth);
+  const { user, loading } = useAccount();
   const router = useRouter();
 
   useEffect(() => {
@@ -31,38 +36,26 @@ export default function UploadPage() {
     }
   }, [user, loading, router]);
 
-  const handleUploadComplete = () => {
-    router.push("/social");
-  };
-
-  const handleCancel = () => {
-    router.push("/social");
-  };
-
-  if (loading) {
+  if (loading || !user) {
     return (
       <PageContainer>
-        <p role="status" className="text-ink-2">{copy.loading}</p>
-      </PageContainer>
-    );
-  }
-
-  if (!user) {
-    return (
-      <PageContainer>
-        <p role="status" className="text-ink-2">{copy.loginRequired}</p>
+        <p role="status" className="text-ink-2">
+          {loading ? copy.loading : copy.loginRequired}
+        </p>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer>
-      <div className="max-w-2xl">
+      <PageHeader title={copy.title} description={copy.description} />
+      <div className="max-w-lg">
         <PostUpload
-          onUploadComplete={handleUploadComplete}
-          onCancel={handleCancel}
+          onUploadComplete={() => router.push("/social")}
+          onCancel={() => router.push("/social")}
         />
       </div>
+      <ToastContainer position="top-right" autoClose={4000} newestOnTop closeOnClick pauseOnHover theme="light" />
     </PageContainer>
   );
 }

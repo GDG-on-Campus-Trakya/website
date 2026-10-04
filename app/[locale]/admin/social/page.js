@@ -306,7 +306,7 @@ export default function AdminSocialPage() {
           <Loader2 className="h-6 w-6 animate-spin" aria-hidden="true" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">
           {filteredPosts.length > 0 ? (
             filteredPosts.map((post) => (
               <PostCard

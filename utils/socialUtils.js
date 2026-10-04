@@ -98,7 +98,13 @@ export const socialUtils = {
         posts = posts.filter(post => post.isHidden === filters.isHidden);
       }
 
-      return { success: true, posts, lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] };
+      return {
+        success: true,
+        posts,
+        lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1],
+        // Filters run after the query, so a short page can still have more behind it.
+        hasMore: Boolean(pagination.limit) && querySnapshot.docs.length === pagination.limit,
+      };
     } catch (error) {
       logger.error("Error fetching posts:", error);
       return { success: false, error: error.message };
