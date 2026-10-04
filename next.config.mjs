@@ -88,56 +88,65 @@ const nextConfig = {
     ];
   },
   async headers() {
+    // Long-lived caching only in production. Dev chunks keep the same URL between
+    // edits, so a one-year immutable header makes the browser keep running old code.
+    const longCache =
+      process.env.NODE_ENV === "production"
+        ? [
+          // Font dosyaları - 1 yıl cache
+          {
+            source: "/_next/static/media/:path*.woff2",
+            headers: [
+              {
+                key: "Cache-Control",
+                value: "public, max-age=31536000, s-maxage=31536000, immutable",
+              },
+            ],
+          },
+          {
+            source: "/_next/static/media/:path*.woff",
+            headers: [
+              {
+                key: "Cache-Control",
+                value: "public, max-age=31536000, s-maxage=31536000, immutable",
+              },
+            ],
+          },
+          // Tüm statik medya - 1 yıl cache
+          {
+            source: "/_next/static/:path*",
+            headers: [
+              {
+                key: "Cache-Control",
+                value: "public, max-age=31536000, s-maxage=31536000, immutable",
+              },
+            ],
+          },
+          // Public klasöründeki görseller - 1 yıl cache
+          {
+            source: "/:all*.{png,jpg,jpeg,gif,webp,avif,svg,ico}",
+            headers: [
+              {
+                key: "Cache-Control",
+                value: "public, max-age=31536000, s-maxage=31536000, immutable",
+              },
+            ],
+          },
+          // Next.js optimized images - 1 yıl cache
+          {
+            source: "/_next/image",
+            headers: [
+              {
+                key: "Cache-Control",
+                value: "public, max-age=31536000, s-maxage=31536000, immutable",
+              },
+            ],
+          },
+        ]
+        : [];
+
     return [
-      // Font dosyaları - 1 yıl cache
-      {
-        source: "/_next/static/media/:path*.woff2",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, s-maxage=31536000, immutable",
-          },
-        ],
-      },
-      {
-        source: "/_next/static/media/:path*.woff",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, s-maxage=31536000, immutable",
-          },
-        ],
-      },
-      // Tüm statik medya - 1 yıl cache
-      {
-        source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, s-maxage=31536000, immutable",
-          },
-        ],
-      },
-      // Public klasöründeki görseller - 1 yıl cache
-      {
-        source: "/:all*.{png,jpg,jpeg,gif,webp,avif,svg,ico}",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, s-maxage=31536000, immutable",
-          },
-        ],
-      },
-      // Next.js optimized images - 1 yıl cache
-      {
-        source: "/_next/image",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, s-maxage=31536000, immutable",
-          },
-        ],
-      },
+      ...longCache,
       // Genel güvenlik ve CSP
       {
         source: "/(.*)",
