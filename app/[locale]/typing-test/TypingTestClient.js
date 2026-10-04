@@ -108,44 +108,46 @@ const CODE_SNIPPETS = [
 
 const COPY = {
   tr: {
-    title: "Yazma Hızı Testi",
+    title: "Yazma hızı testi",
     subtitle: "Yazma hızını ve doğruluğunu ölç",
-    normalMode: "Normal Mod",
-    codeMode: "Kod Modu",
+    modeLabel: "Metin türü",
+    normalMode: "Metin",
+    codeMode: "Kod",
     reset: "Sıfırla",
-    endlessMode: "Sınırsız Mod",
-    endlessHelp: "(Yazdıkça yeni metin gelir)",
+    endlessMode: "Sınırsız",
+    endlessHelp: "Yazdıkça yeni metin gelir",
     wpm: "Kelime/dk",
     accuracy: "Doğruluk",
     time: "Süre",
     rawWpm: "Ham kelime/dk",
     wordsPerMinute: "Kelime/dk",
-    correctChars: "Doğru Karakter",
+    correctChars: "Doğru karakter",
     errors: "Hata",
     clickToStart: "Metne dokun ya da tıkla, sonra yazmaya başla.",
     inputLabel: "Metni buraya yaz",
-    results: "Test Sonuçları",
-    tryAgain: "Tekrar Dene",
+    results: "Sonuçların",
+    tryAgain: "Yeniden dene",
   },
   en: {
-    title: "Typing Speed Test",
+    title: "Typing speed test",
     subtitle: "Measure your typing speed and accuracy",
-    normalMode: "Normal Mode",
-    codeMode: "Code Mode",
+    modeLabel: "Text type",
+    normalMode: "Text",
+    codeMode: "Code",
     reset: "Reset",
-    endlessMode: "Endless Mode",
-    endlessHelp: "(A new text appears as you keep typing)",
+    endlessMode: "Endless",
+    endlessHelp: "New text keeps coming as you type",
     wpm: "WPM",
     accuracy: "Accuracy",
     time: "Time",
     rawWpm: "Raw WPM",
-    wordsPerMinute: "WPM (Words/Min)",
-    correctChars: "Correct Characters",
+    wordsPerMinute: "Words per minute",
+    correctChars: "Correct characters",
     errors: "Errors",
     clickToStart: "Tap or click the text, then start typing.",
     inputLabel: "Type the text here",
-    results: "Test Results",
-    tryAgain: "Try Again",
+    results: "Your results",
+    tryAgain: "Try again",
   },
 };
 
@@ -350,9 +352,10 @@ export default function TypingTest() {
       {!stats ? (
         <div>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex gap-2">
+            <div role="group" aria-label={copy.modeLabel} className="flex gap-2">
               <Button
                 variant={mode === "normal" ? "default" : "outline"}
+                aria-pressed={mode === "normal"}
                 onClick={() => setMode("normal")}
                 disabled={isActive}
               >
@@ -360,6 +363,7 @@ export default function TypingTest() {
               </Button>
               <Button
                 variant={mode === "code" ? "default" : "outline"}
+                aria-pressed={mode === "code"}
                 onClick={() => setMode("code")}
                 disabled={isActive}
               >
