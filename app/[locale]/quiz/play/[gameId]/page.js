@@ -4,7 +4,7 @@ import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { useParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Image from "next/image";
@@ -667,12 +667,8 @@ export default function PlayGamePage() {
                 </div>
               )}
 
-              <Button
-                onClick={() => router.push("/quiz/join")}
-                size="lg"
-                className="w-full"
-              >
-                {copy.joinNewGame}
+              <Button asChild size="lg" className="w-full">
+                <Link href="/game">{copy.joinNewGame}</Link>
               </Button>
             </div>
           )}
