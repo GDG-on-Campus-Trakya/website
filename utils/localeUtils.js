@@ -181,3 +181,15 @@ export function formatLocalizedDate(date, locale, options) {
     new Date(date)
   );
 }
+
+/**
+ * Adds the year to date options when the date falls in another year than today, so an item
+ * from last year never reads as this year's. Pass the same timeZone the date is shown in.
+ */
+export function withYearIfNotCurrent(date, options = {}) {
+  const yearOf = (value) =>
+    new Intl.DateTimeFormat("en", { timeZone: options.timeZone, year: "numeric" }).format(
+      new Date(value)
+    );
+  return yearOf(date) === yearOf(Date.now()) ? options : { ...options, year: "numeric" };
+}
