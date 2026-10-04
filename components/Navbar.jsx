@@ -1,16 +1,15 @@
 "use client";
 
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, googleProvider, db } from "../firebase";
-import { signInWithPopup, signOut } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
 import Image from "next/image";
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Menu, X } from "lucide-react";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { auth } from "@/lib/firebase/auth";
+import { useAccount } from "@/app/AuthProvider";
 import { logger } from "@/utils/logger";
-import { checkUserRole } from "../utils/roleUtils";
+import IntentLink from "@/components/IntentLink";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 
@@ -19,25 +18,22 @@ const linkBase =
 
 function NavLink({ href, active, className = "", children, onClick }) {
   return (
-    <Link
+    <IntentLink
       href={href}
-      prefetch={false}
       aria-current={active ? "page" : undefined}
       onClick={onClick}
       className={`${linkBase} ${className}`}
     >
       {children}
-    </Link>
+    </IntentLink>
   );
 }
 
 function NavbarContent() {
-  const [user, loading] = useAuthState(auth);
+  const { user, loading, profile, role: userRole } = useAccount();
   const [isMounted, setIsMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [userProfilePhoto, setUserProfilePhoto] = useState(null);
-  const [userRole, setUserRole] = useState(null);
   const [today, setToday] = useState("");
   const menuRef = useRef(null);
   const profileMenuRef = useRef(null);
@@ -45,6 +41,8 @@ function NavbarContent() {
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("nav");
+
+  const userProfilePhoto = profile?.photoURL || user?.photoURL || "/logo.svg";
 
   const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -84,52 +82,6 @@ function NavbarContent() {
     setProfileMenuOpen(false);
   }, [pathname]);
 
-  const loginWithGoogle = async () => {
-    try {
-      googleProvider.setCustomParameters({
-        prompt: "select_account"
-      });
-
-      const result = await signInWithPopup(auth, googleProvider);
-
-      if (result?.user) {
-        const { uid, email, displayName } = result.user;
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            email,
-            createdAt: new Date().toISOString(),
-            name: displayName,
-            wantsToGetEmails: true,
-            language: locale
-          });
-        }
-      }
-    } catch (error) {
-      logger.error("Error during sign-in:", error);
-
-      if (error.code === "auth/popup-blocked") {
-        alert(
-          locale === "en"
-            ? "Popup was blocked. Please allow popups in your browser and try again."
-            : "Popup engellendi! Lütfen tarayıcınızda popup engellemesini kapatın ve tekrar deneyin."
-        );
-      } else if (error.code === "auth/popup-closed-by-user") {
-        logger.log("User closed the sign-in popup");
-      } else if (error.code === "auth/cancelled-popup-request") {
-        logger.log("Another sign-in process is already active");
-      } else {
-        alert(
-          locale === "en"
-            ? "An error occurred during sign-in. Please try again."
-            : "Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin."
-        );
-      }
-    }
-  };
-
   const handleSignOut = async () => {
     try {
       await signOut(auth);
@@ -141,34 +93,6 @@ function NavbarContent() {
       logger.error("Error during sign-out:", error);
     }
   };
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (user?.uid) {
-        try {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setUserProfilePhoto(userData.photoURL || user.photoURL || "/logo.svg");
-          } else {
-            setUserProfilePhoto(user.photoURL || "/logo.svg");
-          }
-
-          const role = await checkUserRole(user.email);
-          setUserRole(role);
-        } catch (error) {
-          logger.error("Error fetching user data:", error);
-          setUserProfilePhoto(user.photoURL || "/logo.svg");
-          setUserRole(null);
-        }
-      } else {
-        setUserProfilePhoto(null);
-        setUserRole(null);
-      }
-    };
-
-    fetchUserData();
-  }, [user, locale]);
 
   useEffect(() => {
     if (!menuOpen && !profileMenuOpen) return undefined;
@@ -209,6 +133,8 @@ function NavbarContent() {
         height={48}
         className="h-9 w-9 md:h-12 md:w-12"
         priority
+        // An SVG gains nothing from the image optimizer; serve the file as it is.
+        unoptimized
       />
       <span className="flex flex-col text-left">
         <span className="font-display text-xl font-extrabold leading-none tracking-tight md:text-4xl">
@@ -224,6 +150,13 @@ function NavbarContent() {
   const showAuth = isMounted && !loading;
   // The sign-in page is the form itself; a second "Sign in" button there is noise.
   const showLoginButton = pathname !== "/login";
+  const mobileItems = [...navItems, ...(showAuth && user ? authenticatedItems : [])];
+
+  const toggleMenu = () => {
+    // Opening the menu is the intent: have its pages ready by the time a link is tapped.
+    if (!menuOpen) mobileItems.forEach((item) => router.prefetch(item.href));
+    setMenuOpen((prev) => !prev);
+  };
 
   return (
     <header
@@ -276,7 +209,7 @@ function NavbarContent() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={userProfilePhoto || "/logo.svg"}
+                    src={userProfilePhoto}
                     alt=""
                     className="h-9 w-9 rounded-full border border-edge object-cover"
                   />
@@ -354,7 +287,7 @@ function NavbarContent() {
           {wordmark}
           <button
             type="button"
-            onClick={() => setMenuOpen((prev) => !prev)}
+            onClick={toggleMenu}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             aria-label={menuOpen ? t("closeMenu") : t("menu")}
@@ -369,7 +302,7 @@ function NavbarContent() {
               className="absolute inset-x-0 top-full z-dropdown max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-b border-rule bg-paper px-gutter pb-6 animate-in fade-in-0 slide-in-from-top-2 duration-short"
             >
               <nav aria-label={t("primaryNavigation")} className="flex flex-col">
-                {[...navItems, ...(showAuth && user ? authenticatedItems : [])].map((item) => (
+                {mobileItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}

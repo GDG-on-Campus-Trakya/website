@@ -23,7 +23,7 @@ const nextConfig = {
   
   // Experimental features for better performance
   experimental: {
-    optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion'],
+    optimizePackageImports: ['lucide-react', 'date-fns'],
     serverMinification: true,
     optimisticClientCache: true, // Reduce edge requests
     scrollRestoration: true,
@@ -53,7 +53,9 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
+    // Firebase Storage answers with max-age=0, so this decides how long an optimized copy is
+    // kept: 60 s meant re-encoding the same image every minute. Uploads get new URLs.
+    minimumCacheTTL: 2678400, // 31 days
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
@@ -74,6 +76,19 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "storage.googleapis.com",
+        port: "",
+        pathname: "/**",
+      },
+      // Older events link their posters here; some are several megabytes.
+      {
+        protocol: "https",
+        hostname: "i.ibb.co",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "pbs.twimg.com",
         port: "",
         pathname: "/**",
       },

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../firebase";
+import { popupResolver, preparePopupSignIn } from "@/lib/firebase/auth";
 import { logger } from "@/utils/logger";
 import {
   collection,
@@ -103,6 +104,11 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
+  // Deleting may ask for a fresh Google sign-in; load the popup's iframe while the dialog is open.
+  useEffect(() => {
+    if (isOpen) preparePopupSignIn();
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen) {
       document.body.classList.add("modal-open");
@@ -180,7 +186,7 @@ const DeleteAccountModal = ({ isOpen, onClose }) => {
           try {
             toast.info(copy.reauthInfo);
             const provider = new GoogleAuthProvider();
-            await reauthenticateWithPopup(user, provider);
+            await reauthenticateWithPopup(user, provider, popupResolver());
             await deleteUser(user);
             toast.success(copy.success);
             router.push("/");

@@ -5,7 +5,7 @@ import {
   deleteObject,
   uploadBytesResumable,
 } from "firebase/storage";
-import { storage } from "../firebase";
+import { storage } from "../lib/firebase/storage";
 import {
   compressImage,
   validateImageFile,

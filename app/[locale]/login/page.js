@@ -1,14 +1,16 @@
 "use client";
-import { forwardRef, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { auth, db, googleProvider } from "@/firebase";
+import { popupResolver, preparePopupSignIn } from "@/lib/firebase/auth";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   sendPasswordResetEmail,
-  sendEmailVerification
+  sendEmailVerification,
+  getAdditionalUserInfo
 } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -300,6 +302,11 @@ export default function LoginPage() {
   const intro = copy.intro[mode];
   const isLogin = mode === "login";
 
+  // Google's auth iframe is no longer loaded on every page; have it ready before the click.
+  useEffect(() => {
+    preparePopupSignIn();
+  }, []);
+
   // Pages that need an account send people here with ?next=/path; go back there afterwards.
   const getRedirectPath = () =>
     safeRedirectPath(new URLSearchParams(window.location.search).get("next"));
@@ -358,16 +365,18 @@ export default function LoginPage() {
       }
 
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      await sendEmailVerification(result.user);
 
-      const userRef = doc(db, "users", result.user.uid);
-      await setDoc(userRef, {
-        name: name.trim(),
-        email,
-        createdAt: new Date().toISOString(),
-        wantsToGetEmails: true,
-        language: locale
-      });
+      // The verification email and the profile document do not depend on each other.
+      await Promise.all([
+        sendEmailVerification(result.user),
+        setDoc(doc(db, "users", result.user.uid), {
+          name: name.trim(),
+          email,
+          createdAt: new Date().toISOString(),
+          wantsToGetEmails: true,
+          language: locale
+        })
+      ]);
 
       await auth.signOut();
       setPassword("");
@@ -418,19 +427,19 @@ export default function LoginPage() {
         prompt: "select_account"
       });
 
-      const result = await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider, popupResolver());
 
       if (result?.user) {
         // Closing a popup can take time to reach Firebase. Keep the form usable
-        // until sign-in succeeds and we actually start saving the user profile.
+        // until sign-in succeeds.
         processingSignIn = true;
         setLoading(true);
-        const { uid, email, displayName } = result.user;
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
 
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
+        // A new account gets its profile document before the next page reads it. Returning
+        // users go straight on; AuthProvider checks their document in the background.
+        if (getAdditionalUserInfo(result)?.isNewUser) {
+          const { uid, email, displayName } = result.user;
+          await setDoc(doc(db, "users", uid), {
             email,
             createdAt: new Date().toISOString(),
             name: displayName || "New User",

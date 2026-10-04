@@ -1,7 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { db } from "@/firebase";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { ToastContainer } from "react-toastify";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -57,6 +55,10 @@ export default function ProjectsClient({ initialProjects = null }) {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
+        // Only without server data, so Firestore is not part of the page's bundle. Destructure
+        // each import directly: webpack can then drop the Firestore exports nobody uses.
+        const { db } = await import("@/firebase");
+        const { collection, getDocs, orderBy, query } = await import("firebase/firestore");
         const projectsQuery = query(
           collection(db, "projects"),
           orderBy("createdAt", "desc")

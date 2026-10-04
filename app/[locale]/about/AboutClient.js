@@ -1,8 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -77,6 +76,9 @@ export default function AboutPage() {
   const copy = COPY[locale];
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  // Swipe between photos: the image follows a fifth of the drag, then snaps back.
+  const [dragOffset, setDragOffset] = useState(0);
+  const dragStartX = useRef(null);
 
   useEffect(() => {
     if (selectedImage) {
@@ -172,14 +174,33 @@ export default function AboutPage() {
     setSelectedImage(allImages[previousIndex]);
   };
 
-  const handleDragEnd = (_event, info) => {
-    const swipeThreshold = 50;
+  const handlePointerDown = (event) => {
+    dragStartX.current = event.clientX;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
 
-    if (info.offset.x > swipeThreshold) {
+  const handlePointerMove = (event) => {
+    if (dragStartX.current === null) return;
+    setDragOffset((event.clientX - dragStartX.current) * 0.2);
+  };
+
+  const handlePointerUp = (event) => {
+    if (dragStartX.current === null) return;
+    const swipeThreshold = 50;
+    const offset = event.clientX - dragStartX.current;
+    dragStartX.current = null;
+    setDragOffset(0);
+
+    if (offset > swipeThreshold) {
       goToPrevious();
-    } else if (info.offset.x < -swipeThreshold) {
+    } else if (offset < -swipeThreshold) {
       goToNext();
     }
+  };
+
+  const handlePointerCancel = () => {
+    dragStartX.current = null;
+    setDragOffset(0);
   };
 
   return (
@@ -305,13 +326,16 @@ export default function AboutPage() {
 
           <div className="relative h-[60dvh] overflow-hidden bg-paper-2">
             {selectedImage && (
-              <motion.div
+              <div
                 key={selectedIndex}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.2}
-                onDragEnd={handleDragEnd}
-                className="relative h-full w-full cursor-grab touch-pan-y active:cursor-grabbing"
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
+                style={{ transform: `translateX(${dragOffset}px)` }}
+                className={`relative h-full w-full cursor-grab touch-pan-y select-none active:cursor-grabbing ${
+                  dragOffset === 0 ? "transition-transform duration-short ease-out" : ""
+                }`}
               >
                 <Image
                   src={selectedImage.src}
@@ -320,7 +344,7 @@ export default function AboutPage() {
                   sizes="(min-width: 768px) 768px, 100vw"
                   className="pointer-events-none object-contain"
                 />
-              </motion.div>
+              </div>
             )}
           </div>
 

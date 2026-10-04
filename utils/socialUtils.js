@@ -17,11 +17,31 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
-import { db, storage } from "../firebase";
+import { db } from "../firebase";
+import { storage } from "../lib/firebase/storage";
 import { logger } from "./logger";
 import { sortByTimestamp } from "./dateHelpers";
 
+// Posts and comments show the same few authors many times. Each profile is read once and
+// reused for a minute, so a feed page reads one document per author instead of per card.
+const PROFILE_TTL_MS = 60 * 1000;
+const userProfiles = new Map();
+
+function getUserProfile(userId) {
+  const cached = userProfiles.get(userId);
+  if (cached && Date.now() - cached.at < PROFILE_TTL_MS) return cached.profile;
+
+  const profile = getDoc(doc(db, "users", userId)).then((snapshot) =>
+    snapshot.exists() ? snapshot.data() : null
+  );
+  userProfiles.set(userId, { profile, at: Date.now() });
+  profile.catch(() => userProfiles.delete(userId));
+  return profile;
+}
+
 export const socialUtils = {
+  getUserProfile,
+
   // Post Operations
   async createPost(postData) {
     try {
@@ -347,9 +367,8 @@ export const socialUtils = {
         comments.map(async (comment) => {
           if (comment.userId) {
             try {
-              const userDoc = await getDoc(doc(db, "users", comment.userId));
-              if (userDoc.exists()) {
-                const userData = userDoc.data();
+              const userData = await getUserProfile(comment.userId);
+              if (userData) {
                 return {
                   ...comment,
                   userName: userData.name || comment.userName,
