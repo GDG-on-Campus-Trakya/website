@@ -95,11 +95,10 @@ export default function PersonalityTestClient({ slug, initialTestData = null }) 
 
     const fetchTest = async () => {
       try {
-        // Only without server data, so Firestore is not part of the page's bundle.
-        const [{ db }, { collection, getDocs }] = await Promise.all([
-          import("@/firebase"),
-          import("firebase/firestore"),
-        ]);
+        // Only without server data, so Firestore is not part of the page's bundle. Destructure
+        // each import directly: webpack can then drop the Firestore exports nobody uses.
+        const { db } = await import("@/firebase");
+        const { collection, getDocs } = await import("firebase/firestore");
         const snapshot = await getDocs(collection(db, "personality_tests"));
         const matchingDoc = snapshot.docs.find(
           (doc) => generateSlug(doc.data().title || "") === slug
