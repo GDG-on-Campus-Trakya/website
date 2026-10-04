@@ -325,32 +325,55 @@ export default function TypingTest() {
     }
   };
 
-  const renderedText = useMemo(
-    () =>
-      text.split("").map((char, index) => {
-        let className = "";
+  // Characters are grouped into unbreakable words with real spaces between them,
+  // so lines wrap between words instead of in the middle of one.
+  const renderedText = useMemo(() => {
+    const nodes = [];
+    let word = [];
 
-        if (index < input.length) {
-          if (input[index] === char) {
-            className = "text-success";
-          } else {
-            className = "text-error underline";
-          }
-        } else if (index === input.length) {
-          className = "bg-warning text-ink";
+    const flushWord = (key) => {
+      if (word.length === 0) return;
+      nodes.push(
+        <span key={`w${key}`} className="whitespace-nowrap">
+          {word}
+        </span>
+      );
+      word = [];
+    };
+
+    text.split("").forEach((char, index) => {
+      let className = "";
+
+      if (index < input.length) {
+        if (input[index] === char) {
+          className = "text-success";
         } else {
-          className = "text-muted-foreground";
+          className = "text-error underline";
         }
+      } else if (index === input.length) {
+        className = "bg-warning text-ink";
+      } else {
+        className = "text-muted-foreground";
+      }
 
-        return (
-          <span key={index} className={className}>
-            {char === " " ? " " : char}
-            {char === "\n" ? <br /> : ""}
-          </span>
-        );
-      }),
-    [text, input]
-  );
+      const span = (
+        <span key={index} className={className}>
+          {char}
+          {char === "\n" ? <br /> : null}
+        </span>
+      );
+
+      if (char === " " || char === "\n") {
+        flushWord(index);
+        nodes.push(span);
+      } else {
+        word.push(span);
+      }
+    });
+
+    flushWord("end");
+    return nodes;
+  }, [text, input]);
 
   return (
     <PageContainer>

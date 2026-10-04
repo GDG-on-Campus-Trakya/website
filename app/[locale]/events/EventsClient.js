@@ -17,6 +17,7 @@ import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import { loginHref } from "@/utils/redirect";
 import Calendar from "@/components/Calendar";
 import {
   Drawer,
@@ -50,6 +51,8 @@ const COPY = {
     today: "Bugün",
     tomorrow: "Yarın",
     noEvents: "Yaklaşan bir etkinlik yok. Takipte kalın!",
+    noEventsOnDate: "Bu günde etkinlik yok.",
+    clearDate: "Tüm etkinlikler",
     loading: "Yükleniyor...",
     error: "Hata",
     category: "Kategori",
@@ -85,6 +88,8 @@ const COPY = {
     today: "Today",
     tomorrow: "Tomorrow",
     noEvents: "There are no upcoming events right now. Check back soon.",
+    noEventsOnDate: "No events on this day.",
+    clearDate: "All events",
     loading: "Loading...",
     error: "Error",
     category: "Category",
@@ -158,10 +163,12 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
   const [events, setEvents] = useState(initialEvents);
   const [sponsors, setSponsors] = useState(initialSponsors);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  // Below lg the calendar sits under the list; picking a day scrolls back up to the results.
+  const listRef = useRef(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(null);
   const [filterStatus, setFilterStatus] = useState("upcoming");
-  const [user, loading, error] = useAuthState(auth);
+  const [user, , authError] = useAuthState(auth);
   const [isClient, setIsClient] = useState(false);
   const [hasSignedUp, setHasSignedUp] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
@@ -521,6 +528,16 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
     } else {
       setSelectedDate(clickedDate);
       setFilterStatus(null);
+
+      if (window.matchMedia("(max-width: 1023px)").matches) {
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        requestAnimationFrame(() =>
+          listRef.current?.scrollIntoView({
+            behavior: reduceMotion ? "auto" : "smooth",
+            block: "start"
+          })
+        );
+      }
     }
   };
 
@@ -571,6 +588,13 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
     <PageContainer>
       <PageHeader title={copy.title} description={copy.subtitle} />
 
+      {/* The list is server-rendered and does not wait for the auth check; only a failure is shown. */}
+      {authError && (
+        <p role="alert" className="mb-8 rounded border border-error px-4 py-3 text-sm text-error">
+          {copy.error}: {authError.message}
+        </p>
+      )}
+
       <Suspense fallback={null}>
         <SearchParamsHandler
           onQRCodeRedirect={handleQRCodeRedirect}
@@ -580,7 +604,7 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
       </Suspense>
 
       <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
-        <aside className="min-w-0 lg:order-2 lg:sticky lg:top-6 lg:col-span-4 lg:self-start">
+        <aside className="order-2 min-w-0 lg:sticky lg:top-6 lg:col-span-4 lg:self-start">
           {currentMonth && (
             <Calendar
               currentMonth={currentMonth}
@@ -592,7 +616,7 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
           )}
         </aside>
 
-        <section className="min-w-0 lg:order-1 lg:col-span-8">
+        <section ref={listRef} className="order-1 min-w-0 scroll-mt-20 lg:col-span-8">
           {!selectedDate && (
             <div role="group" className="flex gap-6 border-b border-rule">
               <button
@@ -624,6 +648,29 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
                 }}
               >
                 {copy.past}
+              </button>
+            </div>
+          )}
+
+          {selectedDate && (
+            <div className="flex flex-wrap items-center justify-between gap-x-4 border-b border-rule">
+              <p className="font-outlier text-sm capitalize text-ink">
+                {formatLocalizedDate(selectedDate, locale, {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDate(null);
+                  setFilterStatus("upcoming");
+                }}
+                className="min-h-11 rounded-sm text-sm font-medium text-brand underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                {copy.clearDate}
               </button>
             </div>
           )}
@@ -681,7 +728,10 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
               })}
             </ul>
           ) : (
-            <EmptyState title={copy.noEvents} className="mt-6" />
+            <EmptyState
+              title={selectedDate ? copy.noEventsOnDate : copy.noEvents}
+              className="mt-6"
+            />
           )}
 
           {filterStatus === "upcoming" && !selectedDate && archiveEvents.length > 0 && (
@@ -861,7 +911,11 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
                   <Button
                     type="button"
                     className="w-full"
-                    onClick={() => router.push("/login")}
+                    onClick={() =>
+                      router.push(
+                        loginHref(`/events?event=${selectedEvent.docId ?? selectedEvent.id}`)
+                      )
+                    }
                   >
                     {copy.signInToSignUp}
                   </Button>
@@ -883,21 +937,6 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
           </div>
         </DrawerContent>
       </Drawer>
-
-      {loading && (
-        <div className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60">
-          <div className="rounded-lg border border-rule bg-background px-6 py-4 text-lg text-foreground">
-            {copy.loading}
-          </div>
-        </div>
-      )}
-      {error && (
-        <div className="fixed inset-0 z-modal flex items-center justify-center bg-ink/60">
-          <div className="rounded-lg border border-error bg-background px-6 py-4 text-lg text-error">
-            {copy.error}: {error.message}
-          </div>
-        </div>
-      )}
 
       <ToastContainer
         position="top-right"

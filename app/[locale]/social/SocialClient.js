@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { fieldClasses } from "@/components/ui/input";
 import { PageContainer, PageHeader, EmptyState } from "@/components/ui/page";
 import { useRouter } from "@/i18n/navigation";
+import { loginHref } from "@/utils/redirect";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLocale } from "next-intl";
@@ -100,7 +101,7 @@ export default function SocialClient() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/");
+      router.replace(loginHref("/social"));
     }
   }, [user, loading, router]);
 

@@ -4,6 +4,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import PostUpload from "@/components/PostUpload";
 import { useRouter } from "@/i18n/navigation";
+import { loginHref } from "@/utils/redirect";
 import { useEffect } from "react";
 import { PageContainer } from "@/components/ui/page";
 
@@ -26,7 +27,7 @@ export default function UploadPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/");
+      router.replace(loginHref("/social/upload"));
     }
   }, [user, loading, router]);
 

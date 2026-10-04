@@ -2,10 +2,9 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Calendar, User, Trash2, ArrowRight } from 'lucide-react';
-import { format } from 'date-fns';
 import { useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
-import { getLocalizedField } from '@/utils/localeUtils';
+import { formatLocalizedDate, getLocalizedField } from '@/utils/localeUtils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -13,7 +12,8 @@ export default function AnnouncementPostCard({
   announcement,
   onEdit,
   onDelete,
-  showAdminActions = false
+  showAdminActions = false,
+  featured = false
 }) {
   const [imageError, setImageError] = useState(false);
   const router = useRouter();
@@ -44,8 +44,15 @@ export default function AnnouncementPostCard({
   const formatDate = (dateString) => {
     if (!dateString) return copy.noDate;
     try {
-      const date = new Date(dateString);
-      return format(date, 'dd MMMM yyyy, HH:mm');
+      // In the page language and Turkish time, like every other date on the site
+      return formatLocalizedDate(dateString, locale, {
+        timeZone: 'Europe/Istanbul',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     } catch (error) {
       return copy.noDate;
     }
@@ -63,14 +70,25 @@ export default function AnnouncementPostCard({
   return (
     <article
       onClick={handleCardClick}
-      className="group flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-lg border border-rule bg-background transition-colors duration-micro ease-out hover:border-ink"
+      className={`group flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-lg border border-rule bg-background transition-colors duration-micro ease-out hover:border-ink ${
+        featured ? "md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" : ""
+      }`}
     >
       {announcement.imageUrl && !imageError && (
-        <div className="relative aspect-[16/9] w-full overflow-hidden bg-paper-2">
+        <div
+          className={`relative aspect-[16/9] w-full overflow-hidden bg-paper-2 ${
+            featured ? "md:aspect-auto md:h-full md:min-h-[18rem]" : ""
+          }`}
+        >
           <Image
             src={announcement.imageUrl}
             alt={title}
             fill
+            sizes={
+              featured
+                ? "(min-width: 1152px) 560px, (min-width: 768px) 50vw, 100vw"
+                : "(min-width: 1152px) 360px, (min-width: 768px) 50vw, 100vw"
+            }
             className="object-cover"
             onError={() => setImageError(true)}
           />
@@ -82,7 +100,7 @@ export default function AnnouncementPostCard({
         </div>
       )}
 
-      <div className="flex flex-grow flex-col p-5">
+      <div className={`flex flex-grow flex-col p-5 ${featured ? "md:p-8" : ""}`}>
         <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4" aria-hidden="true" />
@@ -96,11 +114,21 @@ export default function AnnouncementPostCard({
           )}
         </div>
 
-        <h3 className="mb-3 line-clamp-2 break-words font-display text-lg font-bold group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
+        <h3
+          className={`mb-3 line-clamp-2 break-words font-display font-bold group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4 ${
+            featured ? "text-2xl lg:text-3xl" : "text-lg"
+          }`}
+        >
           {title}
         </h3>
 
-        <p className="mb-4 line-clamp-3 flex-grow text-sm text-ink-2">{description}</p>
+        <p
+          className={`mb-4 flex-grow text-ink-2 ${
+            featured ? "line-clamp-5 text-base" : "line-clamp-3 text-sm"
+          }`}
+        >
+          {description}
+        </p>
 
         <div className="mt-auto border-t border-rule pt-4">
           <div className="flex flex-wrap items-center justify-between gap-2">

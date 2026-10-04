@@ -88,9 +88,11 @@ body.modal-open {
   overscroll-behavior: contain;
 }
 
-/* Touch devices get the 44px hit target. Pointer devices keep the design size. */
+/* Touch devices get the 44px hit target. Pointer devices keep the design size.
+   Checkboxes and switches are buttons too, but stretching them distorts the control;
+   they get an invisible 44px hit area in their own components instead. */
 @media (pointer: coarse) {
-  button,
+  button:not([role="checkbox"]):not([role="switch"]):not([role="radio"]),
   [role="button"],
   select,
   input:not([type="checkbox"]):not([type="radio"]) {
