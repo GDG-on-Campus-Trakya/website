@@ -22,54 +22,50 @@ import { useConfirm } from "@/components/ConfirmProvider";
 
 const COPY = {
   tr: {
-    title: "Sosyal Platform Yönetimi",
-    subtitle: "Kullanıcı postlarını yönetin ve moderasyon yapın",
-    adminPanel: "Admin Panel",
-    totalPosts: "Toplam Post",
-    eventPosts: "Etkinlik Postları",
-    generalPosts: "Genel Postlar",
-    activeUsers: "Aktif Kullanıcı",
-    searchPlaceholder: "Post, kullanıcı veya etkinlik ara...",
-    filterAll: (n) => `Tüm Postlar (${n})`,
-    filterVisible: (n) => `Görünür Postlar (${n})`,
-    filterHidden: (n) => `Gizli Postlar (${n})`,
-    filterEvents: (n) => `Etkinlik Postları (${n})`,
-    filterGeneral: (n) => `Genel Postlar (${n})`,
-    hideAll: "Tümünü Gizle",
-    showAll: "Tümünü Göster",
+    title: "Sosyal",
+    subtitle: "Etkinliklerde paylaşılan fotoğrafları gizle, göster ya da sil.",
+    adminPanel: "Yönetim paneli",
+    totalPosts: "Gönderi",
+    hiddenPosts: "Gizli",
+    eventsWithPosts: "Fotoğraf paylaşılan etkinlik",
+    activeUsers: "Paylaşan kişi",
+    searchPlaceholder: "Açıklama, kişi ya da etkinlik ara",
+    filterAll: (n) => `Tümü (${n})`,
+    filterVisible: (n) => `Görünenler (${n})`,
+    filterHidden: (n) => `Gizliler (${n})`,
+    hideAll: (n) => `Görünen ${n} gönderiyi gizle`,
+    showAll: (n) => `Gizli ${n} gönderiyi göster`,
     refresh: "Yenile",
-    noPostsFound: "Post bulunamadı",
-    noPostsHint: "Arama kriterlerinizi değiştirmeyi deneyin.",
-    loadPostsError: "Postlar yüklenirken hata oluştu!",
-    confirmHideAll: "Tüm görünür postları gizlemek istediğinizden emin misiniz?",
-    confirmShowAll: "Tüm gizli postları göstermek istediğinizden emin misiniz?",
-    postsHidden: (n) => `${n} post gizlendi!`,
-    postsShown: (n) => `${n} post gösterildi!`,
+    noPostsFound: "Gönderi bulunamadı",
+    noPostsHint: "Aramayı ya da filtreyi değiştir.",
+    loadPostsError: "Gönderiler yüklenemedi. Yeniden dene.",
+    confirmHideAll: (n) => `Görünen ${n} gönderinin hepsi gizlensin mi?`,
+    confirmShowAll: (n) => `Gizli ${n} gönderinin hepsi gösterilsin mi?`,
+    postsHidden: (n) => `${n} gönderi gizlendi.`,
+    postsShown: (n) => `${n} gönderi gösterildi.`,
   },
   en: {
-    title: "Social Platform Management",
-    subtitle: "Manage and moderate user posts",
-    adminPanel: "Admin Panel",
-    totalPosts: "Total Posts",
-    eventPosts: "Event Posts",
-    generalPosts: "General Posts",
-    activeUsers: "Active Users",
-    searchPlaceholder: "Search posts, users or events...",
-    filterAll: (n) => `All Posts (${n})`,
-    filterVisible: (n) => `Visible Posts (${n})`,
-    filterHidden: (n) => `Hidden Posts (${n})`,
-    filterEvents: (n) => `Event Posts (${n})`,
-    filterGeneral: (n) => `General Posts (${n})`,
-    hideAll: "Hide All",
-    showAll: "Show All",
+    title: "Social",
+    subtitle: "Hide, show or delete the photos shared at events.",
+    adminPanel: "Admin panel",
+    totalPosts: "Posts",
+    hiddenPosts: "Hidden",
+    eventsWithPosts: "Events with photos",
+    activeUsers: "People who posted",
+    searchPlaceholder: "Search captions, people or events",
+    filterAll: (n) => `All (${n})`,
+    filterVisible: (n) => `Visible (${n})`,
+    filterHidden: (n) => `Hidden (${n})`,
+    hideAll: (n) => `Hide the ${n} visible posts`,
+    showAll: (n) => `Show the ${n} hidden posts`,
     refresh: "Refresh",
     noPostsFound: "No posts found",
-    noPostsHint: "Try changing your search criteria.",
-    loadPostsError: "An error occurred while loading posts!",
-    confirmHideAll: "Are you sure you want to hide all visible posts?",
-    confirmShowAll: "Are you sure you want to show all hidden posts?",
-    postsHidden: (n) => `${n} posts hidden!`,
-    postsShown: (n) => `${n} posts shown!`,
+    noPostsHint: "Change the search or the filter.",
+    loadPostsError: "The posts could not be loaded. Try again.",
+    confirmHideAll: (n) => `Hide all ${n} visible posts?`,
+    confirmShowAll: (n) => `Show all ${n} hidden posts?`,
+    postsHidden: (n) => `${n} posts hidden.`,
+    postsShown: (n) => `${n} posts shown.`,
   },
 };
 
@@ -153,12 +149,6 @@ export default function AdminSocialPage() {
 
     // Apply filter
     switch (filter) {
-      case "events":
-        filtered = filtered.filter(post => post.isEventPost);
-        break;
-      case "general":
-        filtered = filtered.filter(post => !post.isEventPost);
-        break;
       case "hidden":
         filtered = filtered.filter(post => post.isHidden);
         break;
@@ -194,9 +184,9 @@ export default function AdminSocialPage() {
   };
 
   const bulkHideVisible = async () => {
-    if (!(await confirm(copy.confirmHideAll))) return;
-
     const visiblePosts = posts.filter(post => !post.isHidden);
+    if (!(await confirm(copy.confirmHideAll(visiblePosts.length)))) return;
+
     let successCount = 0;
 
     for (const post of visiblePosts) {
@@ -209,9 +199,9 @@ export default function AdminSocialPage() {
   };
 
   const bulkShowHidden = async () => {
-    if (!(await confirm(copy.confirmShowAll))) return;
-
     const hiddenPosts = posts.filter(post => post.isHidden);
+    if (!(await confirm(copy.confirmShowAll(hiddenPosts.length)))) return;
+
     let successCount = 0;
 
     for (const post of hiddenPosts) {
@@ -246,8 +236,11 @@ export default function AdminSocialPage() {
       {stats && (
         <dl className="mb-10 grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-4">
           <Stat label={copy.totalPosts} value={stats.totalPosts} />
-          <Stat label={copy.eventPosts} value={stats.eventPosts} />
-          <Stat label={copy.generalPosts} value={stats.generalPosts} />
+          <Stat label={copy.hiddenPosts} value={posts.filter((post) => post.isHidden).length} />
+          <Stat
+            label={copy.eventsWithPosts}
+            value={new Set(posts.map((post) => post.eventId).filter(Boolean)).size}
+          />
           <Stat label={copy.activeUsers} value={stats.uniqueUsers} />
         </dl>
       )}
@@ -262,7 +255,8 @@ export default function AdminSocialPage() {
               aria-hidden="true"
             />
             <Input
-              type="text"
+              type="search"
+              aria-label={copy.searchPlaceholder}
               placeholder={copy.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -279,26 +273,26 @@ export default function AdminSocialPage() {
             <option value="all">{copy.filterAll(posts.length)}</option>
             <option value="visible">{copy.filterVisible(posts.filter(p => !p.isHidden).length)}</option>
             <option value="hidden">{copy.filterHidden(posts.filter(p => p.isHidden).length)}</option>
-            <option value="events">{copy.filterEvents(posts.filter(p => p.isEventPost).length)}</option>
-            <option value="general">{copy.filterGeneral(posts.filter(p => !p.isEventPost).length)}</option>
           </select>
         </div>
 
-        {/* Bulk Actions */}
+        {/* Bulk actions act on the filtered set, so they appear only with that filter */}
         <div className="flex flex-wrap items-center gap-3">
-          <Button variant="outline" onClick={bulkHideVisible}>
-            <EyeOff aria-hidden="true" />
-            <span>{copy.hideAll}</span>
-          </Button>
-
-          <Button variant="outline" onClick={bulkShowHidden}>
-            <Eye aria-hidden="true" />
-            <span>{copy.showAll}</span>
-          </Button>
-
           <Button variant="secondary" onClick={loadAllPosts}>
             {copy.refresh}
           </Button>
+          {filter === "visible" && posts.some((post) => !post.isHidden) && (
+            <Button variant="outline" onClick={bulkHideVisible}>
+              <EyeOff aria-hidden="true" />
+              <span>{copy.hideAll(posts.filter((post) => !post.isHidden).length)}</span>
+            </Button>
+          )}
+          {filter === "hidden" && posts.some((post) => post.isHidden) && (
+            <Button variant="outline" onClick={bulkShowHidden}>
+              <Eye aria-hidden="true" />
+              <span>{copy.showAll(posts.filter((post) => post.isHidden).length)}</span>
+            </Button>
+          )}
         </div>
       </div>
 

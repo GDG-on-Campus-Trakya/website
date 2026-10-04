@@ -22,6 +22,7 @@ import { PageHeader, Section, EmptyState } from "@/components/ui/page";
 import { useLocale } from "next-intl";
 import { formatLocalizedDate, getLocalizedField } from "@/utils/localeUtils";
 import { useConfirm } from "@/components/ConfirmProvider";
+import { getEventStart } from "@/utils/eventTime";
 
 export default function AdminRegistrationsPage() {
   const confirm = useConfirm();
@@ -120,11 +121,15 @@ export default function AdminRegistrationsPage() {
     const fetchData = async () => {
       try {
         const eventsSnapshot = await getDocs(collection(db, "events"));
+        // Newest first, so the event being run today is at the top instead of in id order.
+        const startOf = (event) => getEventStart(event)?.getTime() ?? 0;
         setEvents(
-          eventsSnapshot.docs.map((doc) => ({
-            firestoreId: doc.id,
-            ...doc.data(),
-          }))
+          eventsSnapshot.docs
+            .map((doc) => ({
+              firestoreId: doc.id,
+              ...doc.data(),
+            }))
+            .sort((a, b) => startOf(b) - startOf(a))
         );
 
         const registrationsSnapshot = await getDocs(
@@ -216,9 +221,9 @@ export default function AdminRegistrationsPage() {
         ) : (
           <ul className="border-t border-rule">
             {events.map((event) => {
-              const registeredUsers = registrations.filter(
-                (reg) => reg.eventId === event.id
-              );
+              const registeredUsers = registrations
+                .filter((reg) => reg.eventId === event.id)
+                .sort((a, b) => (a.signedUpAt?.seconds ?? 0) - (b.signedUpAt?.seconds ?? 0));
               const registrationCount = registeredUsers.length;
               const isExpanded = !!expandedEvents[event.firestoreId];
 

@@ -12,23 +12,23 @@
 //   ...
 //   toast.error(a.accessDeniedToast);
 //   <button>{a.delete}</button>
-//   if (!confirm(a.confirmDelete(user.name))) return;
+//   if (!(await confirm(a.confirmDelete(user.name), { destructive: true }))) return;
 
 const STRINGS = {
   tr: {
     // Access / loading guards (every guarded admin page)
-    loading: "Yükleniyor...",
-    accessDenied: "Erişim Reddedildi",
-    accessDeniedToast: "Bu sayfaya erişim yetkiniz yok!",
-    loginRequired: "Giriş yapmalısınız!",
+    loading: "Yükleniyor…",
+    accessDenied: "Bu sayfaya erişimin yok.",
+    accessDeniedToast: "Bu sayfaya erişimin yok.",
+    loginRequired: "Önce giriş yap.",
 
     // Navigation
-    backToAdmin: "Admin Paneline Dön",
+    backToAdmin: "Yönetim paneline dön",
 
     // Generic action labels
     save: "Kaydet",
-    saving: "Kaydediliyor...",
-    cancel: "İptal",
+    saving: "Kaydediliyor…",
+    cancel: "Vazgeç",
     edit: "Düzenle",
     delete: "Sil",
     remove: "Kaldır",
@@ -41,18 +41,18 @@ const STRINGS = {
     passive: "Pasif",
 
     // Generic feedback
-    errorOccurred: "Bir hata oluştu!",
+    errorOccurred: "İşlem tamamlanamadı. Yeniden dene.",
   },
   en: {
-    loading: "Loading...",
-    accessDenied: "Access Denied",
-    accessDeniedToast: "You don't have permission to access this page!",
-    loginRequired: "You need to sign in!",
+    loading: "Loading…",
+    accessDenied: "You do not have access to this page.",
+    accessDeniedToast: "You do not have access to this page.",
+    loginRequired: "Sign in first.",
 
-    backToAdmin: "Back to Admin Panel",
+    backToAdmin: "Back to the admin panel",
 
     save: "Save",
-    saving: "Saving...",
+    saving: "Saving…",
     cancel: "Cancel",
     edit: "Edit",
     delete: "Delete",
@@ -65,7 +65,7 @@ const STRINGS = {
     active: "Active",
     passive: "Inactive",
 
-    errorOccurred: "An error occurred!",
+    errorOccurred: "That did not work. Try again.",
   },
 };
 
@@ -73,14 +73,14 @@ const HELPERS = {
   tr: {
     confirmDelete: (name) =>
       name
-        ? `"${name}" öğesini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`
-        : "Silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+        ? `"${name}" silinsin mi? Bu geri alınamaz.`
+        : "Silinsin mi? Bu geri alınamaz.",
   },
   en: {
     confirmDelete: (name) =>
       name
-        ? `Are you sure you want to delete "${name}"? This action cannot be undone.`
-        : "Are you sure you want to delete this? This action cannot be undone.",
+        ? `Delete "${name}"? This cannot be undone.`
+        : "Delete this? This cannot be undone.",
   },
 };
 

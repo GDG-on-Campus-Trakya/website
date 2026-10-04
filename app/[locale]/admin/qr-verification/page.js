@@ -15,11 +15,10 @@ import {
 } from "firebase/firestore";
 import { useRouter } from "@/i18n/navigation";
 import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
-import { Link } from "@/i18n/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLocale } from "next-intl";
-import { AlertCircle, ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page";
 
@@ -30,7 +29,6 @@ export default function AdminQRVerificationPage() {
       ? {
           loading: "Loading...",
           accessDenied: "Access denied",
-          backToAdmin: "Back to Admin Panel",
           title: "Admin QR Code Verification",
           scanStart: "Start Scanning",
           scanStop: "Stop Scanning",
@@ -53,7 +51,6 @@ export default function AdminQRVerificationPage() {
       : {
           loading: "Yükleniyor...",
           accessDenied: "Erişim engellendi",
-          backToAdmin: "Admin Paneline Geri Dön",
           title: "Admin QR Kodu Doğrulama",
           scanStart: "Tarama Başlat",
           scanStop: "Tarama Durdur",
@@ -291,17 +288,8 @@ export default function AdminQRVerificationPage() {
 
   return (
     <div>
-      <PageHeader
-        title={copy.title}
-        actions={
-          <Button asChild variant="outline">
-            <Link href="/admin">
-              <ArrowLeft aria-hidden="true" />
-              {copy.backToAdmin}
-            </Link>
-          </Button>
-        }
-      />
+      {/* The admin sidebar is right there; no separate "back" button. */}
+      <PageHeader title={copy.title} />
 
       <div className="max-w-md">
         {error && (
