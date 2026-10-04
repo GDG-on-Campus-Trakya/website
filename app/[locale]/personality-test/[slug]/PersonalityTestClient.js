@@ -5,7 +5,7 @@ import { generateSlug } from "@/lib/slug";
 import { Link } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { getLocalizedField } from "@/utils/localeUtils";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageContainer, PageHeader, EmptyState } from "@/components/ui/page";
@@ -34,57 +34,62 @@ export default function PersonalityTestClient({ slug, initialTestData = null }) 
   const copy =
     locale === "en"
       ? {
-          answerAll: "Please answer all questions.",
-          copied: "Link copied. You can share it on Instagram.",
-          loading: "Loading test...",
-          notFound: "Test not found",
-          backToTests: "Back to Tests",
-          resultReady: "Your Result Is Ready!",
+          copied: "Text copied; paste it into your Instagram story.",
+          copyFailed: "Could not copy; share the link in the address bar.",
+          loading: "Loading test…",
+          notFound: "This test does not exist or has been removed.",
+          backToTests: "All tests",
+          resultReady: "Your result",
+          share: "Share",
           whatsapp: "Share on WhatsApp",
           x: "Share on X",
           linkedin: "Share on LinkedIn",
-          instagram: "Share on Instagram",
-          retry: "Retake the Test",
-          browseMore: "Browse Other Tests",
+          instagram: "Copy text for Instagram",
+          retry: "Take it again",
+          browseMore: "Other tests",
           footer: "GDG on Campus Trakya University",
-          back: "Back",
-          answered: (count, total) => `${count} / ${total} questions answered`,
-          seeResult: "See Result",
-          remaining: (count) => `Answer ${count} more questions to see the result`,
+          back: "All tests",
+          answered: (count, total) => `${count} of ${total} answered`,
+          seeResult: "See your result",
+          remaining: (count) =>
+            count === 1 ? "1 question left" : `${count} questions left`,
           shareText: (resultTitle, testTitle) =>
-            `I am ${resultTitle}! Try the ${testTitle} test! GDG on Campus Trakya University`,
-          shareShort: (resultTitle, testTitle, url) =>
-            `I am ${resultTitle}! Try the ${testTitle} test: ${url}`,
+            `My result in the ${testTitle} test: ${resultTitle}. Take it too:`,
         }
       : {
-          answerAll: "Lütfen tüm soruları cevaplayın!",
-          copied: "Link kopyalandı! Instagram'da paylaşabilirsin.",
-          loading: "Test yükleniyor...",
-          notFound: "Test bulunamadı",
-          backToTests: "Testlere Dön",
-          resultReady: "Sonucun Hazır!",
-          whatsapp: "WhatsApp'ta Paylaş",
-          x: "X'te Paylaş",
-          linkedin: "LinkedIn'de Paylaş",
-          instagram: "Instagram'da Paylaş",
-          retry: "Testi Tekrar Çöz",
-          browseMore: "Diğer Testlere Bak",
+          copied: "Metin kopyalandı; Instagram hikâyene yapıştırabilirsin.",
+          copyFailed: "Kopyalanamadı; adres çubuğundaki bağlantıyı paylaş.",
+          loading: "Test yükleniyor…",
+          notFound: "Bu test yok ya da kaldırılmış.",
+          backToTests: "Tüm testler",
+          resultReady: "Sonucun",
+          share: "Paylaş",
+          whatsapp: "WhatsApp'ta paylaş",
+          x: "X'te paylaş",
+          linkedin: "LinkedIn'de paylaş",
+          instagram: "Instagram için metni kopyala",
+          retry: "Yeniden çöz",
+          browseMore: "Diğer testler",
           footer: "GDG on Campus Trakya Üniversitesi",
-          back: "Geri",
+          back: "Tüm testler",
           answered: (count, total) => `${count} / ${total} soru cevaplandı`,
-          seeResult: "Sonucu Gör",
-          remaining: (count) =>
-            `Sonucu görmek için ${count} soru daha cevaplayın`,
+          seeResult: "Sonucu gör",
+          remaining: (count) => `${count} soru kaldı`,
+          // No suffix after the result: "Ben Ronaldo'im" breaks Turkish vowel harmony.
           shareText: (resultTitle, testTitle) =>
-            `Ben ${resultTitle}'im! ${testTitle} testini dene! GDG on Campus Trakya Üniversitesi`,
-          shareShort: (resultTitle, testTitle, url) =>
-            `Ben ${resultTitle}'im! ${testTitle} testini dene: ${url}`,
+            `${testTitle} testindeki sonucum: ${resultTitle}. Sen de çöz:`,
         };
 
   const [testData, setTestData] = useState(initialTestData);
   const [answers, setAnswers] = useState({});
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(!initialTestData);
+  const [shareStatus, setShareStatus] = useState(null);
+  const [canNativeShare, setCanNativeShare] = useState(false);
+
+  useEffect(() => {
+    setCanNativeShare(typeof navigator.share === "function");
+  }, []);
 
   useEffect(() => {
     if (initialTestData) return;
@@ -127,8 +132,12 @@ export default function PersonalityTestClient({ slug, initialTestData = null }) 
   };
 
   const handleSubmit = () => {
-    if (Object.keys(answers).length < testData.questions.length) {
-      alert(copy.answerAll);
+    // With questions left, the button takes you to the first one you skipped.
+    const firstOpen = testData.questions.findIndex((_, index) => !answers[index]);
+    if (firstOpen !== -1) {
+      const question = document.getElementById(`question-${firstOpen}`);
+      question?.scrollIntoView({ behavior: "smooth", block: "start" });
+      question?.querySelector("input")?.focus({ preventScroll: true });
       return;
     }
     setShowResult(true);
@@ -160,6 +169,7 @@ export default function PersonalityTestClient({ slug, initialTestData = null }) 
   const resetTest = () => {
     setAnswers({});
     setShowResult(false);
+    setShareStatus(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -167,23 +177,25 @@ export default function PersonalityTestClient({ slug, initialTestData = null }) 
   const getTestDescription = () =>
     getLocalizedField(testData, "description", locale);
 
+  const resultShareText = () => copy.shareText(getResult().title, getTestTitle());
+
+  const shareNatively = async () => {
+    try {
+      await navigator.share({ text: resultShareText(), url: window.location.href });
+    } catch {
+      // Closing the share sheet rejects too; nothing to report.
+    }
+  };
+
   const shareOnTwitter = () => {
-    const result = getResult();
-    const text = copy.shareText(result.title, getTestTitle());
-    const url = window.location.href;
     window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+      `https://x.com/intent/post?text=${encodeURIComponent(resultShareText())}&url=${encodeURIComponent(window.location.href)}`,
       "_blank"
     );
   };
 
   const shareOnWhatsApp = () => {
-    const result = getResult();
-    const text = copy.shareShort(
-      result.title,
-      getTestTitle(),
-      window.location.href
-    );
+    const text = `${resultShareText()} ${window.location.href}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -195,15 +207,14 @@ export default function PersonalityTestClient({ slug, initialTestData = null }) 
     );
   };
 
+  // Instagram has no share link; copy the text so it can be pasted into a story.
   const shareOnInstagram = async () => {
-    const result = getResult();
-    const text = copy.shareShort(
-      result.title,
-      getTestTitle(),
-      window.location.href
-    );
-    await navigator.clipboard.writeText(text);
-    alert(copy.copied);
+    try {
+      await navigator.clipboard.writeText(`${resultShareText()} ${window.location.href}`);
+      setShareStatus("copied");
+    } catch {
+      setShareStatus("copyFailed");
+    }
   };
 
   if (loading) {
@@ -268,6 +279,12 @@ export default function PersonalityTestClient({ slug, initialTestData = null }) 
         </article>
 
         <div className="mt-8 flex flex-wrap gap-3 border-t border-rule pt-6">
+          {canNativeShare && (
+            <Button type="button" variant="outline" onClick={shareNatively} className="h-control">
+              <Share2 aria-hidden="true" />
+              {copy.share}
+            </Button>
+          )}
           <ShareButton
             background="#25D366"
             label={copy.whatsapp}
@@ -301,8 +318,11 @@ export default function PersonalityTestClient({ slug, initialTestData = null }) 
             </svg>
           </ShareButton>
         </div>
+        <p role="status" className="mt-2 min-h-[1lh] text-sm text-ink-2">
+          {shareStatus && copy[shareStatus]}
+        </p>
 
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-4 flex flex-wrap gap-3">
           <Button variant="outline" onClick={resetTest}>
             {copy.retry}
           </Button>
@@ -353,42 +373,52 @@ export default function PersonalityTestClient({ slug, initialTestData = null }) 
 
       <ol className="mt-8 space-y-10">
         {testData.questions.map((question, questionIndex) => (
-          <li key={questionIndex} className="border-t border-rule pt-5">
-            <h2 className="text-xl font-bold leading-tight md:text-2xl">
-              {questionIndex + 1}. {question.question}
-            </h2>
+          <li
+            key={questionIndex}
+            id={`question-${questionIndex}`}
+            className="scroll-mt-24 border-t border-rule pt-5"
+          >
+            <fieldset className="min-w-0">
+              <legend className="text-xl font-bold leading-tight md:text-2xl">
+                {questionIndex + 1}. {question.question}
+              </legend>
 
-            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-              {question.options.map((option, optionIndex) => {
-                const isSelected = answers[questionIndex] === option;
+              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                {question.options.map((option, optionIndex) => {
+                  const isSelected = answers[questionIndex] === option;
 
-                return (
-                  <button
-                    key={optionIndex}
-                    type="button"
-                    aria-pressed={isSelected}
-                    onClick={() => handleOptionSelect(questionIndex, option)}
-                    className={`flex min-h-control items-center gap-3 rounded border px-4 py-3 text-left transition-colors duration-micro ease-out hover:bg-paper-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
-                      isSelected
-                        ? "border-ink bg-paper-2"
-                        : "border-input bg-background"
-                    }`}
-                  >
-                    <span
-                      className={`h-2.5 w-2.5 shrink-0 rounded-full ${OPTION_MARKS[optionIndex] || "bg-rule"}`}
-                      aria-hidden="true"
-                    />
-                    <span className="min-w-0 flex-1 leading-snug">
-                      {option.text}
-                    </span>
-                    <Check
-                      className={`h-4 w-4 shrink-0 text-brand ${isSelected ? "" : "invisible"}`}
-                      aria-hidden="true"
-                    />
-                  </button>
-                );
-              })}
-            </div>
+                  return (
+                    <label
+                      key={optionIndex}
+                      className={`flex min-h-control cursor-pointer items-center gap-3 rounded border px-4 py-3 text-left transition-colors duration-micro ease-out hover:bg-paper-2 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring ${
+                        isSelected
+                          ? "border-ink bg-paper-2"
+                          : "border-input bg-background"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name={`question-${questionIndex}-answer`}
+                        checked={isSelected}
+                        onChange={() => handleOptionSelect(questionIndex, option)}
+                        className="sr-only"
+                      />
+                      <span
+                        className={`h-2.5 w-2.5 shrink-0 rounded-full ${OPTION_MARKS[optionIndex] || "bg-rule"}`}
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0 flex-1 leading-snug">
+                        {option.text}
+                      </span>
+                      <Check
+                        className={`h-4 w-4 shrink-0 text-brand ${isSelected ? "" : "invisible"}`}
+                        aria-hidden="true"
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
           </li>
         ))}
       </ol>
@@ -397,7 +427,7 @@ export default function PersonalityTestClient({ slug, initialTestData = null }) 
         <Button
           size="lg"
           onClick={handleSubmit}
-          disabled={answeredCount < testData.questions.length}
+          variant={answeredCount === testData.questions.length ? "default" : "outline"}
           className="w-full md:w-auto"
         >
           {answeredCount === testData.questions.length

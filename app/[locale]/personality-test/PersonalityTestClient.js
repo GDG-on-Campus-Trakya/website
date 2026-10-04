@@ -14,30 +14,30 @@ export default function PersonalityTestClient({ initialTests = [] }) {
   const copy =
     locale === "en"
       ? {
-          loading: "Loading tests...",
-          title: "Personality Tests",
-          subtitle: "Which test would you like to take?",
-          search: "Search tests...",
+          loading: "Loading tests…",
+          title: "Personality tests",
+          subtitle: "Short tests that take a few minutes; you can share your result with friends.",
+          search: "Search tests",
           clear: "Clear search",
           questionCount: (count) => `${count} questions`,
           start: "Start",
-          noResults: "No results found",
+          noResults: "Nothing matches",
           noTests: "No tests yet",
-          noResultsBody: (query) => `No test matched "${query}".`,
-          noTestsBody: "New tests will be added soon!",
+          noResultsBody: (query) => `No test matches "${query}".`,
+          noTestsBody: "New tests appear here when they are added.",
         }
       : {
-          loading: "Testler yükleniyor...",
-          title: "Kişilik Testleri",
-          subtitle: "Hangi teste katılmak istersin?",
-          search: "Test ara...",
+          loading: "Testler yükleniyor…",
+          title: "Kişilik testleri",
+          subtitle: "Birkaç dakikalık testler; sonucunu arkadaşlarınla paylaşabilirsin.",
+          search: "Test ara",
           clear: "Aramayı temizle",
           questionCount: (count) => `${count} soru`,
           start: "Başla",
-          noResults: "Sonuç bulunamadı",
+          noResults: "Eşleşen test yok",
           noTests: "Henüz test yok",
-          noResultsBody: (query) => `"${query}" ile eşleşen test bulunamadı.`,
-          noTestsBody: "Yakında yeni testler eklenecek!",
+          noResultsBody: (query) => `"${query}" ile eşleşen bir test bulunamadı.`,
+          noTestsBody: "Yeni testler eklendiğinde burada görünecek.",
         };
 
   const [tests, setTests] = useState(initialTests);
