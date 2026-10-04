@@ -9,11 +9,10 @@ import {
   getCookieConsent,
   clearNonNecessaryCookies
 } from '@/utils/cookieConsent';
-import { auth } from '../firebase';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import { useAccount } from '@/app/AuthProvider';
 
 export default function CookieConsent() {
-  const [user] = useAuthState(auth);
+  const { user } = useAccount();
   const [showBanner, setShowBanner] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const t = useTranslations('cookieConsent');

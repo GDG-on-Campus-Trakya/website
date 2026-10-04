@@ -1,16 +1,14 @@
 "use client";
 
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db } from "../firebase";
 import { signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import Image from "next/image";
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Menu, X } from "lucide-react";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { auth } from "@/lib/firebase/auth";
+import { useAccount } from "@/app/AuthProvider";
 import { logger } from "@/utils/logger";
-import { checkUserRole } from "../utils/roleUtils";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 
@@ -32,12 +30,10 @@ function NavLink({ href, active, className = "", children, onClick }) {
 }
 
 function NavbarContent() {
-  const [user, loading] = useAuthState(auth);
+  const { user, loading, profile, role: userRole } = useAccount();
   const [isMounted, setIsMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [userProfilePhoto, setUserProfilePhoto] = useState(null);
-  const [userRole, setUserRole] = useState(null);
   const [today, setToday] = useState("");
   const menuRef = useRef(null);
   const profileMenuRef = useRef(null);
@@ -45,6 +41,8 @@ function NavbarContent() {
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("nav");
+
+  const userProfilePhoto = profile?.photoURL || user?.photoURL || "/logo.svg";
 
   const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -95,34 +93,6 @@ function NavbarContent() {
       logger.error("Error during sign-out:", error);
     }
   };
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (user?.uid) {
-        try {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setUserProfilePhoto(userData.photoURL || user.photoURL || "/logo.svg");
-          } else {
-            setUserProfilePhoto(user.photoURL || "/logo.svg");
-          }
-
-          const role = await checkUserRole(user.email);
-          setUserRole(role);
-        } catch (error) {
-          logger.error("Error fetching user data:", error);
-          setUserProfilePhoto(user.photoURL || "/logo.svg");
-          setUserRole(null);
-        }
-      } else {
-        setUserProfilePhoto(null);
-        setUserRole(null);
-      }
-    };
-
-    fetchUserData();
-  }, [user, locale]);
 
   useEffect(() => {
     if (!menuOpen && !profileMenuOpen) return undefined;
@@ -230,7 +200,7 @@ function NavbarContent() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={userProfilePhoto || "/logo.svg"}
+                    src={userProfilePhoto}
                     alt=""
                     className="h-9 w-9 rounded-full border border-edge object-cover"
                   />

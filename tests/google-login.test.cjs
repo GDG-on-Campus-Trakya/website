@@ -17,14 +17,16 @@ function deferred() {
   return { promise, resolve, reject };
 }
 
-function setup(popup, profile = Promise.resolve({ exists: () => true })) {
-  const loading = [], errors = [], navigation = [];
+// `profile` is the write of a new account's profile document; null for a returning user.
+function setup(popup, profile = null) {
+  const loading = [], errors = [], navigation = [], writes = [];
   const context = {
     auth: {}, db: {}, locale: 'en',
     googleProvider: { setCustomParameters() {} },
     signInWithPopup: () => popup.promise,
     popupResolver: () => function PopupResolver() {},
-    doc: () => ({}), getDoc: () => profile, setDoc: async () => {},
+    getAdditionalUserInfo: () => ({ isNewUser: profile !== null }),
+    doc: () => ({}), setDoc: () => { writes.push('users'); return profile; },
     setLoading: value => loading.push(value),
     setError: value => errors.push(value),
     router: { push: value => navigation.push(value) },
@@ -33,7 +35,7 @@ function setup(popup, profile = Promise.resolve({ exists: () => true })) {
     process: { env: { NODE_ENV: 'test' } }
   };
   const login = vm.runInNewContext(`${handler}\nhandleGoogleLogin`, context);
-  return { login, loading, errors, navigation };
+  return { login, loading, errors, navigation, writes };
 }
 
 for (const code of ['auth/popup-closed-by-user', 'auth/cancelled-popup-request']) {
@@ -50,20 +52,33 @@ for (const code of ['auth/popup-closed-by-user', 'auth/cancelled-popup-request']
   });
 }
 
-test('successful sign-in locks only profile processing and then navigates', async () => {
+test('a returning user navigates without touching the profile document', async () => {
+  const popup = deferred();
+  const state = setup(popup);
+  const pending = state.login();
+  popup.resolve({ user: { uid: 'test-user' } });
+  await pending;
+  assert.deepEqual(state.writes, []);
+  assert.deepEqual(state.loading, [true, false]);
+  assert.deepEqual(state.navigation, ['/']);
+});
+
+test('a new user is locked while the profile is written, then navigates', async () => {
   const popup = deferred(), profile = deferred();
   const state = setup(popup, profile.promise);
   const pending = state.login();
   popup.resolve({ user: { uid: 'test-user' } });
   await new Promise(setImmediate);
   assert.deepEqual(state.loading, [true]);
-  profile.resolve({ exists: () => true });
+  assert.deepEqual(state.navigation, []);
+  profile.resolve();
   await pending;
+  assert.deepEqual(state.writes, ['users']);
   assert.deepEqual(state.loading, [true, false]);
   assert.deepEqual(state.navigation, ['/']);
 });
 
-test('profile failure releases the form and reports an error', async () => {
+test('a failed profile write releases the form and reports an error', async () => {
   const popup = deferred(), profile = deferred();
   const state = setup(popup, profile.promise);
   const pending = state.login();
@@ -97,7 +112,7 @@ test('a cancelled older popup cannot clear a newer sign-in loading state', async
   popup.reject({ code: 'auth/cancelled-popup-request' });
   await first;
   assert.deepEqual(state.loading, [true]);
-  profile.resolve({ exists: () => true });
+  profile.resolve();
   await second;
   assert.deepEqual(state.loading, [true, false]);
   assert.deepEqual(state.navigation, ['/']);
