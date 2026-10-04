@@ -42,6 +42,7 @@ import { EmptyState, PageContainer, PageHeader, Skeleton } from "@/components/ui
 import { canOptimizeImage } from "@/lib/images";
 import {
   formatLocalizedDate,
+  withYearIfNotCurrent,
   getLocalizedField,
   getLocaleCode,
 } from "@/utils/localeUtils";
@@ -53,23 +54,22 @@ const MarkdownRenderer = dynamic(() => import("@/components/MarkdownRenderer"));
 const COPY = {
   tr: {
     title: "Etkinlikler",
-    subtitle: "Katılmak istediğiniz etkinlikleri keşfedin ve kaydolun!",
+    subtitle: "Atölyeler, konuşmalar ve hackathon'lar. Bir etkinliği aç, ayrıntılarını gör, kayıt ol.",
     upcoming: "Yaklaşan",
     past: "Geçmiş",
     today: "Bugün",
     tomorrow: "Yarın",
-    noEvents: "Yaklaşan bir etkinlik yok. Takipte kalın!",
+    noEvents: "Şu an planlanmış etkinlik yok. Yenisi duyurulunca burada görünecek.",
     noEventsOnDate: "Bu günde etkinlik yok.",
     clearDate: "Tüm etkinlikler",
-    loading: "Yükleniyor...",
-    error: "Hata",
+    loading: "Yükleniyor…",
     category: "Kategori",
-    location: "Lokasyon",
-    sponsors: "Sponsorluk",
-    documents: "Etkinlik Dokümanları",
-    signedUp: "Kayıt Olundu",
-    signUp: "Kayıt Ol",
-    signInToSignUp: "Kayıt Olmak için Giriş Yapın",
+    location: "Yer",
+    sponsors: "Sponsorlar",
+    documents: "Etkinlik belgeleri",
+    signedUp: "Kayıtlısın",
+    signUp: "Kayıt ol",
+    signInToSignUp: "Kayıt olmak için giriş yap",
     eventEnded: "Bu etkinlik sona erdi.",
     close: "Kapat",
     previous: "Önceki etkinlik",
@@ -84,31 +84,30 @@ const COPY = {
     saveAndSignUp: "Kaydet ve kayıt ol",
     ticketReady: "Kaydın alındı. QR biletin profilinde; girişte onu göster.",
     viewTicket: "Biletime git",
-    signupError: "Kayıt olurken bir hata oluştu. Lütfen tekrar deneyin.",
-    qrEventMissing: "QR kod için etkinlik bulunamadı.",
-    invalidQr: "Geçersiz QR kod.",
-    qrError: "QR kod işlenirken bir hata oluştu.",
+    signupError: "Kayıt tamamlanamadı. Bağlantını kontrol edip yeniden dene.",
+    qrEventMissing: "Bu QR koduna ait etkinlik artık listede yok.",
+    invalidQr: "Bu QR kodu tanınmadı.",
+    qrError: "QR kodu açılamadı. Sayfayı yenileyip yeniden dene.",
     sponsorFallback: "Sponsor",
     eventPage: "Etkinlik sayfası",
     archive: "Geçmiş etkinlikler",
   },
   en: {
     title: "Events",
-    subtitle: "Discover the events you want to join and register easily.",
+    subtitle: "Workshops, talks and hackathons. Open an event to see the details and register.",
     upcoming: "Upcoming",
     past: "Past",
     today: "Today",
     tomorrow: "Tomorrow",
-    noEvents: "There are no upcoming events right now. Check back soon.",
+    noEvents: "Nothing is scheduled right now. New events appear here when they are announced.",
     noEventsOnDate: "No events on this day.",
     clearDate: "All events",
-    loading: "Loading...",
-    error: "Error",
+    loading: "Loading…",
     category: "Category",
     location: "Location",
     sponsors: "Sponsors",
-    documents: "Event Documents",
-    signedUp: "Registered",
+    documents: "Event documents",
+    signedUp: "You are registered",
     signUp: "Register",
     signInToSignUp: "Sign in to register",
     eventEnded: "This event has ended.",
@@ -125,10 +124,10 @@ const COPY = {
     saveAndSignUp: "Save and register",
     ticketReady: "You are registered. Your QR ticket is on your profile; show it at the door.",
     viewTicket: "Go to my ticket",
-    signupError: "An error occurred while registering. Please try again.",
-    qrEventMissing: "No event was found for this QR code.",
-    invalidQr: "Invalid QR code.",
-    qrError: "An error occurred while processing the QR code.",
+    signupError: "Registration did not go through. Check your connection and try again.",
+    qrEventMissing: "The event for this QR code is no longer listed.",
+    invalidQr: "This QR code was not recognised.",
+    qrError: "The QR code could not be opened. Reload the page and try again.",
     sponsorFallback: "Sponsor",
     eventPage: "Event page",
     archive: "Past events",
@@ -473,12 +472,14 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
   const getDayLabel = (date) => {
     const eventDate = new Date(date);
 
+    const dateOptions = withYearIfNotCurrent(eventDate, {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+    });
+
     if (!isClient) {
-      return formatLocalizedDate(eventDate, locale, {
-        weekday: "long",
-        month: "short",
-        day: "numeric",
-      });
+      return formatLocalizedDate(eventDate, locale, dateOptions);
     }
 
     const today = new Date();
@@ -495,11 +496,7 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
       return copy.tomorrow;
     }
 
-    return formatLocalizedDate(eventDate, locale, {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-    });
+    return formatLocalizedDate(eventDate, locale, dateOptions);
   };
 
   // The drawer waits briefly for its image; start the download when the visitor points at
@@ -759,9 +756,11 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
                         </span>
                         <span className="mt-3 flex flex-wrap gap-2">
                           <Badge>{getEventCategory(event)}</Badge>
-                          <Badge variant={expired ? "neutral" : "success"}>
-                            {expired ? copy.past : copy.upcoming}
-                          </Badge>
+                          {selectedDate && (
+                            <Badge variant={expired ? "neutral" : "success"}>
+                              {expired ? copy.past : copy.upcoming}
+                            </Badge>
+                          )}
                         </span>
                       </span>
                     </button>
@@ -1028,7 +1027,7 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
                 )
               ) : (
                 selectedEvent && (
-                  <p className="flex items-center gap-2 border border-error px-4 py-3 text-sm font-medium text-error">
+                  <p className="flex items-center gap-2 border border-rule px-4 py-3 text-sm font-medium text-ink-2">
                     <Clock aria-hidden="true" className="h-4 w-4 shrink-0" />
                     {copy.eventEnded}
                   </p>
