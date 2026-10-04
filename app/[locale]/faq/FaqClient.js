@@ -10,35 +10,33 @@ import { FAQ_DATA } from "./faq-data";
 
 const COPY = {
   tr: {
-    title: "Sıkça Sorulan Sorular",
-    description: "Platformumuz ve topluluğumuz hakkında merak ettiğiniz her şey",
-    tipTitle: "İpucu:",
-    tipBody:
-      "Aradığınızı bulamazsanız, destek bilet sistemimizden soru sorabilirsiniz!",
-    contactTitle: "Hala sorunuz mu var?",
+    title: "Sık sorulanlar",
+    description: "Topluluk, etkinlik kaydı, hesabın ve destek hakkında kısa cevaplar.",
+    tipTitle: "Cevabını bulamazsan",
+    tipBody: "destek sayfasından talep aç; birkaç gün içinde döneriz.",
+    contactTitle: "Sorun hâlâ duruyor mu?",
     contactBody:
-      "FAQ'da bulamadığınız sorular için destek sistemimizi kullanın veya sosyal medyadan ulaşın!",
-    ticketCta: "Destek Bileti Oluştur",
-    instagramCta: "Instagram'dan Ulaş",
+      "Burada cevabını bulamadığın bir şey varsa destek talebi aç ya da Instagram'dan yaz.",
+    ticketCta: "Destek talebi aç",
+    instagramCta: "Instagram'dan yaz",
     quickLinks: {
       about: "Hakkımızda",
       events: "Etkinlikler",
       privacy: "Gizlilik",
-      terms: "Kullanım Şartları",
+      terms: "Kullanım şartları",
     },
     faqData: FAQ_DATA.tr,
   },
   en: {
-    title: "Frequently Asked Questions",
-    description: "Everything you may want to know about our platform and community",
-    tipTitle: "Tip:",
-    tipBody:
-      "If you cannot find what you need, you can ask through our support ticket system.",
-    contactTitle: "Still have a question?",
+    title: "FAQ",
+    description: "Short answers about the community, event registration, your account and support.",
+    tipTitle: "Can't find your answer?",
+    tipBody: "Open a request on the support page; we reply within a few days.",
+    contactTitle: "Still stuck?",
     contactBody:
-      "Use the support system or contact us on social media if your question is not covered here.",
-    ticketCta: "Create Support Ticket",
-    instagramCta: "Message Us on Instagram",
+      "If your question is not answered here, open a support request or message us on Instagram.",
+    ticketCta: "Open a support request",
+    instagramCta: "Message us on Instagram",
     quickLinks: {
       about: "About",
       events: "Events",
