@@ -9,19 +9,12 @@ import { toast } from "react-toastify";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
-import { Label } from "@/components/ui/label";
-import { faculties, facultyDepartments } from "@/constants";
+import AcademicFields from "@/components/AcademicFields";
+import { useAccount } from "@/app/AuthProvider";
 import { logger } from "@/utils/logger";
 import { localizeAcademicValue } from "@/utils/localeUtils";
 import ProfileImageUpload from "./ProfileImageUpload";
 import { StoragePaths } from "../utils/storageUtils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const COPY = {
   tr: {
@@ -31,16 +24,14 @@ const COPY = {
     name: "İsim",
     faculty: "Fakülte",
     department: "Bölüm",
-    selectFaculty: "Fakülte seçin",
-    searchDepartment: "Bölüm ara...",
-    selectDepartment: "Bölüm seçin",
-    selectFacultyFirst: "Önce fakülte seçin",
     cancel: "İptal",
     saving: "Kaydediliyor...",
     save: "Kaydet",
     editProfile: "Profili Düzenle",
-    saveSuccess: "Profil bilgileri başarıyla güncellendi",
-    saveError: "Profil güncellenirken bir hata oluştu",
+    nameRequired: "Adını yaz.",
+    facultyRequired: "Fakülteni seç.",
+    departmentRequired: "Bölümünü seç ya da yaz.",
+    saveError: "Profil kaydedilemedi. Bağlantını kontrol edip tekrar dene.",
   },
   en: {
     unnamed: "No name provided",
@@ -48,16 +39,14 @@ const COPY = {
     name: "Name",
     faculty: "Faculty",
     department: "Department",
-    selectFaculty: "Select a faculty",
-    searchDepartment: "Search department...",
-    selectDepartment: "Select a department",
-    selectFacultyFirst: "Select a faculty first",
     cancel: "Cancel",
     saving: "Saving...",
     save: "Save",
     editProfile: "Edit Profile",
-    saveSuccess: "Profile information updated successfully",
-    saveError: "An error occurred while updating the profile",
+    nameRequired: "Enter your name.",
+    facultyRequired: "Choose your faculty.",
+    departmentRequired: "Choose or type your department.",
+    saveError: "Your profile was not saved. Check your connection and try again.",
   },
 };
 
@@ -73,7 +62,8 @@ const UserInfo = ({ user }) => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [departmentSearch, setDepartmentSearch] = useState("");
+  const [errors, setErrors] = useState({});
+  const { mergeProfile } = useAccount();
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -138,25 +128,36 @@ const UserInfo = ({ user }) => {
   };
 
   const handleSave = async () => {
+    const fields = {
+      name: profileData.name.trim(),
+      faculty: profileData.faculty.trim(),
+      department: profileData.department.trim(),
+    };
+    const nextErrors = {
+      name: fields.name ? undefined : copy.nameRequired,
+      faculty: fields.faculty ? undefined : copy.facultyRequired,
+      department: fields.department ? undefined : copy.departmentRequired,
+    };
+    setErrors(nextErrors);
+    if (nextErrors.name || nextErrors.faculty || nextErrors.department) return;
+
     setIsLoading(true);
     try {
       await setDoc(
         doc(db, "users", user.uid),
-        {
-          ...profileData,
-          email: user.email,
-        },
+        { ...profileData, ...fields, email: user.email },
         { merge: true }
       );
+      setProfileData((prev) => ({ ...prev, ...fields }));
+      mergeProfile({ ...fields, photoURL: profileData.photoURL });
 
       if (user) {
         await updateProfile(user, {
-          displayName: profileData.name,
+          displayName: fields.name,
           photoURL: profileData.photoURL,
         });
       }
-
-      toast.success(copy.saveSuccess);
+      // The form closing on the saved values is the confirmation.
       setIsEditing(false);
     } catch (saveError) {
       logger.error("Error updating profile:", saveError);
@@ -169,29 +170,6 @@ const UserInfo = ({ user }) => {
     ["name", "faculty", "department"].every(
       (field) => profileData[field]?.trim() !== ""
     );
-
-  const handleFacultyChange = (newFaculty) => {
-    setProfileData({
-      ...profileData,
-      faculty: newFaculty,
-      department: "",
-    });
-    setDepartmentSearch("");
-  };
-
-  const getFilteredDepartments = () => {
-    if (!profileData.faculty) return [];
-
-    const departments = facultyDepartments[profileData.faculty] || [];
-    if (!departmentSearch) return departments;
-
-    return departments.filter((department) =>
-      department.toLowerCase().includes(departmentSearch.toLowerCase()) ||
-      localizeAcademicValue(department, locale)
-        .toLowerCase()
-        .includes(departmentSearch.toLowerCase())
-    );
-  };
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -228,67 +206,28 @@ const UserInfo = ({ user }) => {
         {isEditing ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
-              <Field id="profile-name" label={copy.name} className="md:col-span-2">
+              <Field id="profile-name" label={copy.name} error={errors.name} className="md:col-span-2">
                 <Input
-                  placeholder={copy.name}
                   value={profileData.name}
-                  onChange={(event) =>
+                  onChange={(event) => {
                     setProfileData({
                       ...profileData,
                       name: event.target.value,
-                    })
-                  }
+                    });
+                    setErrors((prev) => ({ ...prev, name: undefined }));
+                  }}
+                  autoComplete="name"
                 />
               </Field>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="profile-faculty">{copy.faculty}</Label>
-                <Select value={profileData.faculty} onValueChange={handleFacultyChange}>
-                  <SelectTrigger id="profile-faculty">
-                    <SelectValue placeholder={copy.selectFaculty} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {faculties.map((faculty) => (
-                      <SelectItem key={faculty} value={faculty}>
-                        {localizeAcademicValue(faculty, locale)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="profile-department">{copy.department}</Label>
-                {profileData.faculty && (
-                  <Input
-                    placeholder={copy.searchDepartment}
-                    value={departmentSearch}
-                    onChange={(event) => setDepartmentSearch(event.target.value)}
-                  />
-                )}
-                <Select
-                  value={profileData.department}
-                  onValueChange={(value) =>
-                    setProfileData({ ...profileData, department: value })
-                  }
-                  disabled={!profileData.faculty}
-                >
-                  <SelectTrigger id="profile-department">
-                    <SelectValue
-                      placeholder={
-                        profileData.faculty
-                          ? copy.selectDepartment
-                          : copy.selectFacultyFirst
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getFilteredDepartments().map((department) => (
-                      <SelectItem key={department} value={department}>
-                        {localizeAcademicValue(department, locale)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <AcademicFields
+                faculty={profileData.faculty}
+                department={profileData.department}
+                errors={errors}
+                onChange={({ faculty, department }) => {
+                  setProfileData({ ...profileData, faculty, department });
+                  setErrors((prev) => ({ ...prev, faculty: undefined, department: undefined }));
+                }}
+              />
             </div>
             <div className="flex flex-wrap gap-2">
               <Button

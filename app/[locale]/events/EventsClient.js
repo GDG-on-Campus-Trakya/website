@@ -1,17 +1,17 @@
 "use client";
 
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db } from "@/firebase";
+import { useAccount } from "@/app/AuthProvider";
+import { db } from "@/firebase";
 import { logger } from "@/utils/logger";
 import {
-  addDoc,
   collection,
   query,
   where,
   getDocs,
   getDoc,
   doc,
-  updateDoc,
+  setDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
@@ -33,7 +33,10 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Check, ChevronLeft, ChevronRight, Clock, Download } from "lucide-react";
+import AcademicFields from "@/components/AcademicFields";
 import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, PageContainer, PageHeader, Skeleton } from "@/components/ui/page";
 import { canOptimizeImage } from "@/lib/images";
@@ -71,12 +74,16 @@ const COPY = {
     close: "Kapat",
     previous: "Önceki etkinlik",
     next: "Sonraki etkinlik",
-    loginRequired: "Kayıt olmak için giriş yapmalısınız.",
-    profileMissing: "Profil bilgileriniz bulunamadı.",
-    profileIncomplete:
-      "Etkinliğe kayıt olabilmek için profil bilgilerinizi tamamlamanız gerekmektedir.",
-    alreadySignedUp: "Bu etkinliğe zaten kayıt oldunuz.",
-    signupSuccess: "Etkinliğe başarıyla kayıt oldunuz!",
+    completeTitle: "Kayıttan önce birkaç bilgi",
+    completeBody:
+      "Katılımcıları tanımak için adını, fakülteni ve bölümünü bir kez soruyoruz. Profiline kaydedilir.",
+    fullName: "Ad soyad",
+    nameRequired: "Adını yaz.",
+    facultyRequired: "Fakülteni seç.",
+    departmentRequired: "Bölümünü seç ya da yaz.",
+    saveAndSignUp: "Kaydet ve kayıt ol",
+    ticketReady: "Kaydın alındı. QR biletin profilinde; girişte onu göster.",
+    viewTicket: "Biletime git",
     signupError: "Kayıt olurken bir hata oluştu. Lütfen tekrar deneyin.",
     qrEventMissing: "QR kod için etkinlik bulunamadı.",
     invalidQr: "Geçersiz QR kod.",
@@ -108,12 +115,16 @@ const COPY = {
     close: "Close",
     previous: "Previous event",
     next: "Next event",
-    loginRequired: "You need to sign in before registering.",
-    profileMissing: "Your profile information could not be found.",
-    profileIncomplete:
-      "You need to complete your profile information before registering for an event.",
-    alreadySignedUp: "You are already registered for this event.",
-    signupSuccess: "You have registered for the event successfully!",
+    completeTitle: "A few details before you register",
+    completeBody:
+      "We ask once for your name, faculty and department so we know who is coming. They are saved to your profile.",
+    fullName: "Full name",
+    nameRequired: "Enter your name.",
+    facultyRequired: "Choose your faculty.",
+    departmentRequired: "Choose or type your department.",
+    saveAndSignUp: "Save and register",
+    ticketReady: "You are registered. Your QR ticket is on your profile; show it at the door.",
+    viewTicket: "Go to my ticket",
     signupError: "An error occurred while registering. Please try again.",
     qrEventMissing: "No event was found for this QR code.",
     invalidQr: "Invalid QR code.",
@@ -173,7 +184,11 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(null);
   const [filterStatus, setFilterStatus] = useState("upcoming");
-  const [user, , authError] = useAuthState(auth);
+  const { user, profile, mergeProfile } = useAccount();
+  const [signingUp, setSigningUp] = useState(false);
+  const [justSignedUp, setJustSignedUp] = useState(false);
+  const [details, setDetails] = useState({ name: "", faculty: "", department: "" });
+  const [detailErrors, setDetailErrors] = useState({});
   const [isClient, setIsClient] = useState(false);
   const [hasSignedUp, setHasSignedUp] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
@@ -275,72 +290,96 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
     checkSignupStatus();
   }, [user, selectedEvent]);
 
+  // Registration needs name, faculty and department. Accounts made with Google have none of
+  // the last two, so the drawer asks for whatever is missing instead of sending people away.
+  const missingDetails = user
+    ? ["name", "faculty", "department"].filter((field) => !profile?.[field]?.trim())
+    : [];
+
+  useEffect(() => {
+    setDetails({
+      name: profile?.name || user?.displayName || "",
+      faculty: profile?.faculty || "",
+      department: profile?.department || "",
+    });
+    setDetailErrors({});
+  }, [profile, user]);
+
+  useEffect(() => {
+    setJustSignedUp(false);
+  }, [selectedEvent]);
+
   const handleSignup = async () => {
-    if (!user) {
-      toast.error(copy.loginRequired);
-      return;
+    if (!user || !selectedEvent || signingUp) return;
+
+    setSigningUp(true);
+
+    if (missingDetails.length > 0) {
+      const fields = {
+        name: details.name.trim(),
+        faculty: details.faculty.trim(),
+        department: details.department.trim(),
+      };
+      const errors = {
+        name: fields.name ? undefined : copy.nameRequired,
+        faculty: fields.faculty ? undefined : copy.facultyRequired,
+        department: fields.department ? undefined : copy.departmentRequired,
+      };
+      setDetailErrors(errors);
+      if (errors.name || errors.faculty || errors.department) {
+        setSigningUp(false);
+        return;
+      }
+
+      try {
+        await setDoc(doc(db, "users", user.uid), { ...fields, email: user.email }, { merge: true });
+        mergeProfile(fields);
+      } catch (saveError) {
+        logger.error("Error saving profile details:", saveError);
+        toast.error(copy.signupError);
+        setSigningUp(false);
+        return;
+      }
     }
 
     try {
-      const userRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userRef);
-
-      if (!userDoc.exists()) {
-        toast.error(copy.profileMissing);
-        router.push("/profile");
-        return;
-      }
-
-      const userData = userDoc.data();
-      if (!userData.name || !userData.faculty || !userData.department) {
-        toast.error(copy.profileIncomplete);
-        router.push("/profile");
-        return;
-      }
-
       const registrationsRef = collection(db, "registrations");
-      const signupQuery = query(
-        registrationsRef,
-        where("eventId", "==", selectedEvent.id),
-        where("userId", "==", user.uid)
+      const existing = await getDocs(
+        query(
+          registrationsRef,
+          where("eventId", "==", selectedEvent.id),
+          where("userId", "==", user.uid)
+        )
       );
 
-      const querySnapshot = await getDocs(signupQuery);
-
-      if (!querySnapshot.empty) {
-        toast.info(copy.alreadySignedUp);
-        setHasSignedUp(true);
-        return;
+      if (existing.empty) {
+        // The registration and its QR code are written together, so a failure never leaves a
+        // registration without a ticket.
+        const registrationRef = doc(registrationsRef);
+        const qrCodeRef = doc(collection(db, "qrCodes"));
+        const batch = writeBatch(db);
+        batch.set(registrationRef, {
+          eventId: selectedEvent.id,
+          userId: user.uid,
+          signedUpAt: new Date(),
+          didJoinEvent: false,
+          qrCodeId: qrCodeRef.id,
+        });
+        batch.set(qrCodeRef, {
+          registrationId: registrationRef.id,
+          createdAt: new Date(),
+          code: `qrCode=${qrCodeRef.id}`,
+        });
+        await batch.commit();
       }
 
-      const newRegistration = await addDoc(registrationsRef, {
-        eventId: selectedEvent.id,
-        userId: user.uid,
-        signedUpAt: new Date(),
-        didJoinEvent: false,
-      });
-
-      const qrCodeRef = collection(db, "qrCodes");
-      const newQrCode = await addDoc(qrCodeRef, {
-        registrationId: newRegistration.id,
-        createdAt: new Date(),
-      });
-
-      const qrCodeData = `qrCode=${newQrCode.id}`;
-
-      await updateDoc(doc(qrCodeRef, newQrCode.id), {
-        code: qrCodeData,
-      });
-
-      await updateDoc(doc(registrationsRef, newRegistration.id), {
-        qrCodeId: newQrCode.id,
-      });
-
-      toast.success(copy.signupSuccess);
       setHasSignedUp(true);
+      setJustSignedUp(true);
     } catch (signupError) {
       logger.error("Error signing up for event:", signupError);
       toast.error(copy.signupError);
+    } finally {
+      setSigningUp(false);
     }
   };
 
@@ -598,13 +637,6 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
   return (
     <PageContainer>
       <PageHeader title={copy.title} description={copy.subtitle} />
-
-      {/* The list is server-rendered and does not wait for the auth check; only a failure is shown. */}
-      {authError && (
-        <p role="alert" className="mb-8 rounded border border-error px-4 py-3 text-sm text-error">
-          {copy.error}: {authError.message}
-        </p>
-      )}
 
       <Suspense fallback={null}>
         <SearchParamsHandler
@@ -914,12 +946,70 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
               {selectedEvent && !isExpired(selectedEvent) ? (
                 user ? (
                   hasSignedUp ? (
-                    <Button type="button" variant="secondary" className="w-full" disabled>
-                      <Check aria-hidden="true" />
-                      {copy.signedUp}
-                    </Button>
+                    <div className="space-y-3">
+                      <Button type="button" variant="secondary" className="w-full" disabled>
+                        <Check aria-hidden="true" />
+                        {copy.signedUp}
+                      </Button>
+                      {justSignedUp && (
+                        <p role="status" className="text-sm text-ink-2">
+                          {copy.ticketReady}{" "}
+                          <Link
+                            href="/profile"
+                            className="font-medium text-brand underline underline-offset-4 decoration-1 hover:decoration-2"
+                          >
+                            {copy.viewTicket}
+                          </Link>
+                        </p>
+                      )}
+                    </div>
+                  ) : missingDetails.length > 0 ? (
+                    <div className="border-t border-rule pt-4">
+                      <p className="font-display text-lg font-bold">{copy.completeTitle}</p>
+                      <p className="mt-1 text-sm text-ink-2">{copy.completeBody}</p>
+                      <div className="mt-4 flex flex-col gap-2">
+                        {missingDetails.includes("name") && (
+                          <Field id="event-signup-name" label={copy.fullName} error={detailErrors.name}>
+                            <Input
+                              value={details.name}
+                              onChange={(event) => {
+                                setDetails((prev) => ({ ...prev, name: event.target.value }));
+                                setDetailErrors((prev) => ({ ...prev, name: undefined }));
+                              }}
+                              autoComplete="name"
+                            />
+                          </Field>
+                        )}
+                        <AcademicFields
+                          faculty={details.faculty}
+                          department={details.department}
+                          errors={detailErrors}
+                          onChange={({ faculty, department }) => {
+                            setDetails((prev) => ({ ...prev, faculty, department }));
+                            setDetailErrors((prev) => ({
+                              ...prev,
+                              faculty: undefined,
+                              department: undefined,
+                            }));
+                          }}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        className="mt-2 w-full"
+                        loading={signingUp}
+                        onClick={handleSignup}
+                      >
+                        {copy.saveAndSignUp}
+                      </Button>
+                    </div>
                   ) : (
-                    <Button type="button" className="w-full" onClick={handleSignup}>
+                    <Button
+                      type="button"
+                      className="w-full"
+                      loading={signingUp}
+                      onClick={handleSignup}
+                    >
                       {copy.signUp}
                     </Button>
                   )
