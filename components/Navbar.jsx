@@ -3,7 +3,7 @@
 import { signOut } from "firebase/auth";
 import Image from "next/image";
 import { useEffect, useState, useRef, Suspense } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Menu, X } from "lucide-react";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { auth } from "@/lib/firebase/auth";
@@ -34,12 +34,10 @@ function NavbarContent() {
   const [isMounted, setIsMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [today, setToday] = useState("");
   const menuRef = useRef(null);
   const profileMenuRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
-  const locale = useLocale();
   const t = useTranslations("nav");
 
   const userProfilePhoto = profile?.photoURL || user?.photoURL || "/logo.svg";
@@ -63,19 +61,6 @@ function NavbarContent() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  // Set after mount so statically rendered pages never show a stale date
-  useEffect(() => {
-    setToday(
-      new Intl.DateTimeFormat(locale, {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        timeZone: "Europe/Istanbul"
-      }).format(new Date())
-    );
-  }, [locale]);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -120,27 +105,22 @@ function NavbarContent() {
     };
   }, [menuOpen, profileMenuOpen]);
 
+  // One compact lockup everywhere: the old centred masthead took 212px above every page.
   const wordmark = (
-    <Link
-      href="/"
-      aria-label={t("homeAlt")}
-      className="inline-flex items-center gap-3 rounded-sm"
-    >
+    <Link href="/" aria-label={t("homeAlt")} className="inline-flex shrink-0 items-center gap-2.5 rounded-sm">
       <Image
         src="/logo.svg"
         alt=""
-        width={48}
-        height={48}
-        className="h-9 w-9 md:h-12 md:w-12"
+        width={36}
+        height={36}
+        className="h-8 w-8"
         priority
         // An SVG gains nothing from the image optimizer; serve the file as it is.
         unoptimized
       />
       <span className="flex flex-col text-left">
-        <span className="font-display text-xl font-extrabold leading-none tracking-tight md:text-4xl">
-          GDG on Campus
-        </span>
-        <span className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground md:text-sm">
+        <span className="font-display text-lg font-extrabold leading-none tracking-tight">GDG on Campus</span>
+        <span className="mt-1 text-[0.6875rem] font-medium uppercase leading-none tracking-[0.14em] text-muted-foreground">
           {t("university")}
         </span>
       </span>
@@ -158,41 +138,27 @@ function NavbarContent() {
     setMenuOpen((prev) => !prev);
   };
 
+  const menuItemClass = "flex min-h-11 items-center px-4 text-sm hover:bg-secondary aria-[current=page]:font-semibold";
+
   return (
     <header
-      className="sticky top-0 z-sticky border-b border-rule bg-paper md:static md:border-b-0"
+      className="sticky top-0 z-sticky border-b border-rule bg-paper lg:static"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="mx-auto w-full max-w-page px-gutter">
-        {/* Utility row (md and up): date on the left, account and language on the right */}
-        <div className="hidden min-h-11 items-center justify-between border-b border-rule text-sm text-muted-foreground md:flex">
-          <p className="min-h-5 font-outlier text-xs capitalize lg:text-sm">
-            {today && <time>{today}</time>}
-            {today && <span aria-hidden="true"> · </span>}
-            {today && <span>Edirne</span>}
-          </p>
+        {/* One row from lg up: wordmark, the pages, then language and account */}
+        <div className="hidden h-16 items-center gap-8 lg:flex">
+          {wordmark}
 
-          <div className="flex items-center gap-4 lg:gap-6">
-            {showAuth && user && (
-              <nav aria-label={t("account")} className="flex items-center gap-4 lg:gap-6">
-                {authenticatedItems.map((item) => (
-                  <NavLink
-                    key={item.href}
-                    href={item.href}
-                    active={isActive(item.href)}
-                    className="py-2 text-sm"
-                  >
-                    {item.label}
-                  </NavLink>
-                ))}
-                {userRole && (
-                  <NavLink href="/admin" active={isActive("/admin")} className="py-2 text-sm">
-                    {t("admin")}
-                  </NavLink>
-                )}
-              </nav>
-            )}
+          <nav aria-label={t("primaryNavigation")} className="flex items-center gap-6 text-sm text-ink-2 xl:gap-8">
+            {navItems.map((item) => (
+              <NavLink key={item.href} href={item.href} active={isActive(item.href)} className="py-2">
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
 
+          <div className="ml-auto flex items-center gap-5">
             <LanguageSwitcher />
 
             {!showAuth ? (
@@ -204,7 +170,7 @@ function NavbarContent() {
                   onClick={() => setProfileMenuOpen((prev) => !prev)}
                   aria-haspopup="menu"
                   aria-expanded={profileMenuOpen}
-                  aria-label={t("viewProfile")}
+                  aria-label={t("account")}
                   className="flex h-11 w-11 items-center justify-center rounded-full"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -221,23 +187,27 @@ function NavbarContent() {
                   >
                     <div className="border-b border-rule px-4 py-3">
                       <p className="truncate text-sm font-semibold text-ink">
-                        {user.displayName || t("defaultUser")}
+                        {profile?.name || user.displayName || t("defaultUser")}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">{user.email}</p>
                     </div>
-                    <Link
-                      href="/profile"
-                      role="menuitem"
-                      className="flex min-h-11 items-center px-4 text-sm hover:bg-secondary"
-                    >
+                    <Link href="/profile" role="menuitem" className={menuItemClass}>
                       {t("viewProfile")}
                     </Link>
-                    {userRole && (
+                    {/* Signed-in pages live here, so the bar stays one row */}
+                    {authenticatedItems.map((item) => (
                       <Link
-                        href="/admin"
+                        key={item.href}
+                        href={item.href}
                         role="menuitem"
-                        className="flex min-h-11 items-center px-4 text-sm hover:bg-secondary"
+                        aria-current={isActive(item.href) ? "page" : undefined}
+                        className={menuItemClass}
                       >
+                        {item.label}
+                      </Link>
+                    ))}
+                    {userRole && (
+                      <Link href="/admin" role="menuitem" className={`${menuItemClass} border-t border-rule`}>
                         {t("admin")}
                       </Link>
                     )}
@@ -245,7 +215,7 @@ function NavbarContent() {
                       type="button"
                       role="menuitem"
                       onClick={handleSignOut}
-                      className="flex min-h-11 w-full items-center px-4 text-left text-sm hover:bg-secondary"
+                      className="flex min-h-11 w-full items-center border-t border-rule px-4 text-left text-sm hover:bg-secondary"
                     >
                       {t("logout")}
                     </button>
@@ -262,28 +232,8 @@ function NavbarContent() {
           </div>
         </div>
 
-        {/* Masthead (md and up) */}
-        <div className="hidden justify-center py-6 md:flex">{wordmark}</div>
-
-        {/* Primary links (md and up), closed by a double rule */}
-        <nav
-          aria-label={t("primaryNavigation")}
-          className="hidden items-center justify-center gap-6 pb-3 text-sm text-ink-2 md:flex lg:gap-10 lg:text-base"
-        >
-          {navItems.map((item) => (
-            <NavLink
-              key={item.href}
-              href={item.href}
-              active={isActive(item.href)}
-              className="py-2"
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* Compact bar (below md) */}
-        <div className="flex h-14 items-center justify-between md:hidden" ref={menuRef}>
+        {/* Compact bar below lg */}
+        <div className="flex h-14 items-center justify-between lg:hidden" ref={menuRef}>
           {wordmark}
           <button
             type="button"
@@ -346,18 +296,13 @@ function NavbarContent() {
           )}
         </div>
       </div>
-
-      {/* Double rule under the masthead */}
-      <div className="mx-auto hidden w-full max-w-page px-gutter md:block" aria-hidden="true">
-        <div className="h-1 border-y border-rule" />
-      </div>
     </header>
   );
 }
 
 export default function Navbar() {
   return (
-    <Suspense fallback={<div className="h-14 md:h-56" aria-hidden="true" />}>
+    <Suspense fallback={<div className="h-14 lg:h-16" aria-hidden="true" />}>
       <NavbarContent />
     </Suspense>
   );

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 function PageContainer({ className, as: Comp = "div", ...props }) {
   return (
     <Comp
-      className={cn("mx-auto w-full max-w-page px-gutter py-8 md:py-12", className)}
+      className={cn("mx-auto w-full max-w-page px-gutter py-6 md:py-8", className)}
       {...props}
     />
   )
@@ -16,14 +16,14 @@ function PageHeader({ title, description, actions, className, children }) {
   return (
     <header
       className={cn(
-        "mb-8 flex flex-col gap-4 border-b border-rule pb-6 md:mb-10 md:flex-row md:items-end md:justify-between md:pb-8",
+        "mb-6 flex flex-col gap-4 border-b border-rule pb-5 md:mb-8 md:flex-row md:items-end md:justify-between md:pb-6",
         className
       )}
     >
       <div className="min-w-0">
-        <h1 className="font-display text-4xl font-extrabold md:text-5xl">{title}</h1>
+        <h1 className="font-display text-3xl font-extrabold leading-tight md:text-4xl">{title}</h1>
         {description && (
-          <p className="mt-3 max-w-measure text-md text-ink-2">{description}</p>
+          <p className="mt-2 max-w-measure text-ink-2 md:text-md">{description}</p>
         )}
         {children}
       </div>

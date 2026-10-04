@@ -281,14 +281,12 @@ function EventsPageContent({ initialEvents, serverNow }) {
           )}
         </section>
       ) : (
-        <section
-          aria-labelledby="events-next"
-          className="flex flex-col gap-2 border-b border-rule pb-6 md:flex-row md:items-baseline md:justify-between md:gap-10"
-        >
-          <h2 id="events-next" className="font-display text-xl font-bold leading-tight md:text-2xl">
+        // Nothing scheduled: one line under the title, so the posters stay on the first screen
+        <section aria-labelledby="events-next" className="border-b border-rule pb-5 text-ink-2">
+          <h2 id="events-next" className="inline font-display text-lg font-bold text-ink">
             {copy.noneTitle}
-          </h2>
-          <p className="max-w-md text-ink-2">
+          </h2>{" "}
+          <p className="inline">
             {copy.noneBefore}
             <a
               href={INSTAGRAM_URL}
@@ -304,7 +302,7 @@ function EventsPageContent({ initialEvents, serverNow }) {
       )}
 
       {past.length > 0 && (
-        <section aria-labelledby="events-archive" className="mt-14 md:mt-20">
+        <section aria-labelledby="events-archive" className="mt-8 md:mt-10">
           <div className="flex flex-col gap-4 border-t-2 border-ink pt-3 md:flex-row md:items-end md:justify-between">
             <div>
               <h2 id="events-archive" className="font-display text-2xl font-bold">
