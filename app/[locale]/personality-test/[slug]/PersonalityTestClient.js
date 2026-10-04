@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/firebase";
 import { generateSlug } from "@/lib/slug";
 import { Link } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
@@ -97,6 +95,11 @@ export default function PersonalityTestClient({ slug, initialTestData = null }) 
 
     const fetchTest = async () => {
       try {
+        // Only without server data, so Firestore is not part of the page's bundle.
+        const [{ db }, { collection, getDocs }] = await Promise.all([
+          import("@/firebase"),
+          import("firebase/firestore"),
+        ]);
         const snapshot = await getDocs(collection(db, "personality_tests"));
         const matchingDoc = snapshot.docs.find(
           (doc) => generateSlug(doc.data().title || "") === slug

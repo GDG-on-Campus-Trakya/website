@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
-import { announcementsUtils } from '@/utils/announcementsUtils';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Calendar, User, Clock, Share2, Linkedin, ChevronRight, Instagram } from 'lucide-react';
@@ -68,6 +67,8 @@ export default function AnnouncementDetailClient({
 
   const loadAnnouncement = async () => {
     setIsLoading(true);
+    // Only without server data, so Firestore is not part of the page's bundle.
+    const { announcementsUtils } = await import('@/utils/announcementsUtils');
     const result = await announcementsUtils.getAnnouncementById(params.id);
     if (result.success) {
       if (!result.announcement.isPublished) {
@@ -84,6 +85,7 @@ export default function AnnouncementDetailClient({
   };
 
   const loadRecentAnnouncements = async () => {
+    const { announcementsUtils } = await import('@/utils/announcementsUtils');
     const result = await announcementsUtils.getAnnouncements({ isPublished: true }, { limitCount: 5 });
     if (result.success) {
       setRecentAnnouncements(result.announcements.filter(item => item.id !== params.id));

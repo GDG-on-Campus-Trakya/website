@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { announcementsUtils } from "@/utils/announcementsUtils";
 import AnnouncementPostCard from "@/components/AnnouncementPostCard";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -74,6 +73,9 @@ export default function AnnouncementsClient({
   const loadAnnouncements = async (loadMore = false) => {
     if (!loadMore) setIsLoading(true);
 
+    // Loaded on demand: the first page comes from the server, so most visits never need
+    // Firestore (or the Storage SDK that announcementsUtils also brings).
+    const { announcementsUtils } = await import("@/utils/announcementsUtils");
     const result = await announcementsUtils.getAnnouncements(
       { isPublished: true },
       { limitCount: 12, startAfterDoc: loadMore ? lastDoc : null }
