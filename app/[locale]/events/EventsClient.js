@@ -1,832 +1,466 @@
 "use client";
 
-import { db } from "@/firebase";
-import { logger } from "@/utils/logger";
-import { collection, getDocs, getDoc, doc } from "firebase/firestore";
+/* Hallmark · genre: editorial · macrostructure: Catalogue (next event, then a poster wall
+ * banded by academic term) · design-system: design.md · designed-as-app
+ * pre-emit critique: P4 H5 E4 S5 R5 V4
+ */
+
 import { useEffect, useMemo, useRef, useState, Suspense } from "react";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
-import { Link } from "@/i18n/navigation";
-import Calendar from "@/components/Calendar";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { ArrowRight } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { ChevronLeft, ChevronRight, Clock, Download } from "lucide-react";
+import { Link, useRouter } from "@/i18n/navigation";
 import EventSignup from "@/components/EventSignup";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { EmptyState, PageContainer, PageHeader, Skeleton } from "@/components/ui/page";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 import { canOptimizeImage } from "@/lib/images";
-import {
-  formatLocalizedDate,
-  withYearIfNotCurrent,
-  getLocalizedField,
-  getLocaleCode,
-} from "@/utils/localeUtils";
+import { logger } from "@/utils/logger";
+import { formatLocalizedDate, getLocalizedField, withYearIfNotCurrent } from "@/utils/localeUtils";
 import { getEventStart } from "@/utils/eventTime";
+import { academicTerm, relativeDay, termLabel, termLabelParts } from "@/utils/eventCalendar";
 
-// Only the drawer shows descriptions; the Markdown parser (about 45 KB) loads when it opens.
-const MarkdownRenderer = dynamic(() => import("@/components/MarkdownRenderer"));
+const INSTAGRAM_URL = "https://www.instagram.com/gdgoncampustu/";
 
 const COPY = {
   tr: {
     title: "Etkinlikler",
-    subtitle: "Atölyeler, konuşmalar ve hackathon'lar. Bir etkinliği aç, ayrıntılarını gör, kayıt ol.",
-    upcoming: "Yaklaşan",
-    past: "Geçmiş",
-    today: "Bugün",
-    tomorrow: "Yarın",
-    noEvents: "Şu an planlanmış etkinlik yok. Yenisi duyurulunca burada görünecek.",
-    noEventsOnDate: "Bu günde etkinlik yok.",
-    clearDate: "Tüm etkinlikler",
-    loading: "Yükleniyor…",
-    category: "Kategori",
-    location: "Yer",
-    sponsors: "Sponsorlar",
-    documents: "Etkinlik belgeleri",
-    eventEnded: "Bu etkinlik sona erdi.",
-    close: "Kapat",
-    previous: "Önceki etkinlik",
-    next: "Sonraki etkinlik",
+    subtitle:
+      "Atölyeler, konuşmalar ve hackathon'lar. Kayıt bu sayfadan; QR biletin profiline düşer.",
+    next: "Sıradaki etkinlik",
+    later: "Daha sonra",
+    noneTitle: "Sıradaki etkinlik henüz açıklanmadı.",
+    noneBefore: "Açıklandığında burada olacak. Haberdar olmak için ",
+    noneLink: "Instagram'dan takip et",
+    noneAfter: ".",
+    details: "Ayrıntılar",
+    archive: "Geçmiş etkinlikler",
+    count: (n) => `${n} etkinlik`,
+    all: "Tümü",
+    filterLabel: "Türe göre süz",
+    noImage: "Afiş yok",
     qrEventMissing: "Bu QR koduna ait etkinlik artık listede yok.",
     invalidQr: "Bu QR kodu tanınmadı.",
     qrError: "QR kodu açılamadı. Sayfayı yenileyip yeniden dene.",
-    sponsorFallback: "Sponsor",
-    eventPage: "Etkinlik sayfası",
-    archive: "Geçmiş etkinlikler",
   },
   en: {
     title: "Events",
-    subtitle: "Workshops, talks and hackathons. Open an event to see the details and register.",
-    upcoming: "Upcoming",
-    past: "Past",
-    today: "Today",
-    tomorrow: "Tomorrow",
-    noEvents: "Nothing is scheduled right now. New events appear here when they are announced.",
-    noEventsOnDate: "No events on this day.",
-    clearDate: "All events",
-    loading: "Loading…",
-    category: "Category",
-    location: "Location",
-    sponsors: "Sponsors",
-    documents: "Event documents",
-    eventEnded: "This event has ended.",
-    close: "Close",
-    previous: "Previous event",
+    subtitle:
+      "Workshops, talks and hackathons. Register here; your QR ticket appears on your profile.",
     next: "Next event",
+    later: "Later",
+    noneTitle: "The next event has not been announced yet.",
+    noneBefore: "It will be here once it is. To hear about it first, ",
+    noneLink: "follow us on Instagram",
+    noneAfter: ".",
+    details: "Details",
+    archive: "Past events",
+    count: (n) => (n === 1 ? "1 event" : `${n} events`),
+    all: "All",
+    filterLabel: "Filter by type",
+    noImage: "No poster",
     qrEventMissing: "The event for this QR code is no longer listed.",
     invalidQr: "This QR code was not recognised.",
     qrError: "The QR code could not be opened. Reload the page and try again.",
-    sponsorFallback: "Sponsor",
-    eventPage: "Event page",
-    archive: "Past events",
   },
 };
 
-function SearchParamsHandler({ onQRCodeRedirect, onEventParam, events }) {
+const textLink =
+  "inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-sm font-medium text-brand underline underline-offset-4 decoration-1 transition-colors duration-micro ease-out hover:decoration-2";
+
+const eventHref = (event) => `/events/${event.docId ?? event.id}`;
+
+// Old links (/events?event=<id>, a login return path) and event QR codes (/events?qrCode=)
+// used to open a drawer here; the event now has one page, so they go straight to it.
+function LegacyLinkRedirect({ events, onQrError }) {
   const searchParams = useSearchParams();
-  const processedQRCodes = useRef(new Set());
-  const processedEventParam = useRef(null);
+  const router = useRouter();
+  const handled = useRef(false);
 
-  // /events?event=<id> (linked from the event's own page) opens that event's drawer
   useEffect(() => {
+    if (handled.current || events.length === 0) return;
     const eventId = searchParams.get("event");
+    const qrCodeId = searchParams.get("qrCode");
+    if (!eventId && !qrCodeId) return;
+    handled.current = true;
 
-    if (eventId && events.length > 0 && processedEventParam.current !== eventId) {
-      processedEventParam.current = eventId;
-      onEventParam(eventId);
+    if (eventId) {
+      const event = events.find((entry) => (entry.docId ?? entry.id) === eventId || entry.id === eventId);
+      router.replace(event ? eventHref(event) : "/events");
+      return;
     }
-  }, [searchParams, events, onEventParam]);
 
-  useEffect(() => {
-    const handleQRCodeRedirect = async () => {
-      const qrCodeId = searchParams.get("qrCode");
-
-      if (
-        qrCodeId &&
-        events.length > 0 &&
-        !processedQRCodes.current.has(qrCodeId)
-      ) {
-        processedQRCodes.current.add(qrCodeId);
-        onQRCodeRedirect(qrCodeId);
+    (async () => {
+      try {
+        const { db } = await import("@/firebase");
+        const { doc, getDoc } = await import("firebase/firestore");
+        const snapshot = await getDoc(doc(db, "eventQrCodes", qrCodeId));
+        if (!snapshot.exists()) {
+          onQrError("invalidQr");
+          router.replace("/events");
+          return;
+        }
+        const event = events.find((entry) => entry.id === snapshot.data().eventId);
+        if (event) router.replace(eventHref(event));
+        else {
+          onQrError("qrEventMissing");
+          router.replace("/events");
+        }
+      } catch (error) {
+        logger.error("Error handling QR code redirect:", error);
+        onQrError("qrError");
       }
-    };
-
-    if (events.length > 0) {
-      handleQRCodeRedirect();
-    }
-  }, [searchParams, events, onQRCodeRedirect]);
+    })();
+  }, [events, searchParams, router, onQrError]);
 
   return null;
 }
 
-function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
+// Posters are mostly A-series portrait; square and landscape ones sit on the same mat
+// (object-contain), so the wall keeps one rhythm without cropping anyone's text.
+function Poster({ event, name, sizes, priority = false, className = "" }) {
+  return (
+    <span
+      className={`relative block aspect-[5/7] overflow-hidden rounded-sm bg-paper-2 ring-1 ring-inset ring-rule transition-shadow duration-micro ease-out group-hover:ring-ink ${className}`}
+    >
+      {event.imageUrl ? (
+        <Image
+          src={event.imageUrl}
+          alt=""
+          fill
+          sizes={sizes}
+          priority={priority}
+          unoptimized={!canOptimizeImage(event.imageUrl)}
+          className="object-contain"
+        />
+      ) : (
+        <span className="absolute inset-0 flex items-center justify-center p-4 text-center font-display text-lg font-bold text-muted-foreground">
+          {name}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function EventsPageContent({ initialEvents, serverNow }) {
   const locale = useLocale() === "en" ? "en" : "tr";
   const copy = COPY[locale];
   const [events, setEvents] = useState(initialEvents);
-  const [sponsors, setSponsors] = useState(initialSponsors);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  // Below lg the calendar sits under the list; picking a day scrolls back up to the results.
-  const listRef = useRef(null);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [currentMonth, setCurrentMonth] = useState(null);
-  const [filterStatus, setFilterStatus] = useState("upcoming");
   const [isClient, setIsClient] = useState(false);
-  const [drawerLoading, setDrawerLoading] = useState(false);
-  const [imageCache, setImageCache] = useState(new Map());
+  const [category, setCategory] = useState("all");
+
+  useEffect(() => setIsClient(true), []);
 
   useEffect(() => {
-    setIsClient(true);
-    setCurrentMonth(new Date());
-  }, []);
-
-  useEffect(() => {
-    if (selectedEvent) {
-      document.body.classList.add("modal-open");
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.classList.remove("modal-open");
-      document.body.style.overflow = "unset";
-    }
-
-    return () => {
-      document.body.classList.remove("modal-open");
-      document.body.style.overflow = "unset";
-    };
-  }, [selectedEvent]);
-
-  const loadImageOptimized = (imageUrl, isMobile = false) =>
-    new Promise((resolve) => {
-      if (imageCache.has(imageUrl)) {
-        resolve(true);
-        return;
-      }
-
-      const img = new window.Image();
-      const timeout = setTimeout(() => resolve(false), isMobile ? 150 : 500);
-
-      img.onload = () => {
-        clearTimeout(timeout);
-        setImageCache((prev) => new Map(prev.set(imageUrl, true)));
-        resolve(true);
-      };
-
-      img.onerror = () => {
-        clearTimeout(timeout);
-        resolve(false);
-      };
-
-      img.src = imageUrl;
-    });
-
-  const formatDateKey = (date) => {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = `${d.getMonth() + 1}`.padStart(2, "0");
-    const day = `${d.getDate()}`.padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const getEventName = (event) => getLocalizedField(event, "name", locale);
-  const getEventDescription = (event) =>
-    getLocalizedField(event, "description", locale);
-  const getEventLocation = (event) =>
-    getLocalizedField(event, "location", locale);
-  const getEventCategory = (event) =>
-    getLocalizedField(event, "category", locale);
-  const getSponsorName = (sponsor) =>
-    getLocalizedField(sponsor, "name", locale) || copy.sponsorFallback;
-
-  // Before hydration "now" is the moment the page was rendered on the server, so the
-  // server HTML and the first client render agree.
-  const getNow = () => (isClient ? new Date() : new Date(serverNow));
-
-  const isExpired = (event) => {
-    const start = getEventStart(event);
-    return start ? getNow() > start : false;
-  };
-
-  const handleEventParam = (eventId) => {
-    const event = events.find((entry) => (entry.docId ?? entry.id) === eventId);
-    if (event) handleEventClick(event);
-
-    if (isClient) {
-      const url = new URL(window.location);
-      url.searchParams.delete("event");
-      window.history.replaceState(null, "", url.toString());
-    }
-  };
-
-  const handleQRCodeRedirect = async (qrCodeId) => {
-    if (qrCodeId && !selectedEvent && events.length > 0) {
-      try {
-        if (isClient) {
-          const url = new URL(window.location);
-          if (url.searchParams.has("qrCode")) {
-            url.searchParams.delete("qrCode");
-            window.history.replaceState(null, "", url.toString());
-          }
-        }
-
-        const qrCodeRef = doc(db, "eventQrCodes", qrCodeId);
-        const qrCodeSnap = await getDoc(qrCodeRef);
-
-        if (qrCodeSnap.exists()) {
-          const eventId = qrCodeSnap.data().eventId;
-          const event = events.find((entry) => entry.id === eventId);
-
-          if (event) {
-            setSelectedEvent(event);
-          } else {
-            toast.error(copy.qrEventMissing);
-          }
-        } else {
-          toast.error(copy.invalidQr);
-        }
-      } catch (qrError) {
-        logger.error("Error handling QR code redirect:", qrError);
-        toast.error(copy.qrError);
-      }
-    }
-  };
-
-  useEffect(() => {
-    // The server already sent the events; fall back to Firestore only when it could not
+    // The server sends the events; read Firestore only when it could not.
     if (initialEvents.length > 0) return;
-
-    const fetchData = async () => {
+    (async () => {
       try {
-        const eventsSnapshot = await getDocs(collection(db, "events"));
-        if (!eventsSnapshot.empty) {
-          const eventsData = eventsSnapshot.docs.map((entry) => ({
-            id: entry.id,
-            ...entry.data(),
-          }));
-          eventsData.sort((a, b) => new Date(a.date) - new Date(b.date));
-          setEvents(eventsData);
-        } else {
-          setEvents([]);
-        }
-
-        const sponsorsSnapshot = await getDocs(collection(db, "sponsors"));
-        if (!sponsorsSnapshot.empty) {
-          const sponsorsData = sponsorsSnapshot.docs.map((entry) => ({
-            id: entry.id,
-            ...entry.data(),
-          }));
-          setSponsors(sponsorsData);
-        } else {
-          setSponsors([]);
-        }
-      } catch (fetchError) {
-        logger.error("Error fetching data:", fetchError);
-        setEvents([]);
-        setSponsors([]);
+        const { db } = await import("@/firebase");
+        const { collection, getDocs } = await import("firebase/firestore");
+        const snapshot = await getDocs(collection(db, "events"));
+        setEvents(snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data(), docId: entry.id })));
+      } catch (error) {
+        logger.error("Error fetching events:", error);
       }
-    };
-
-    fetchData();
+    })();
   }, [initialEvents.length]);
 
-  const eventDates = useMemo(
-    () => new Set(events.map((event) => formatDateKey(event.date))),
+  // Before hydration "now" is when the server rendered the page, so both renders agree.
+  const now = isClient ? new Date() : new Date(serverNow);
+
+  const name = (event) => getLocalizedField(event, "name", locale);
+  const place = (event) => getLocalizedField(event, "location", locale);
+  const categoryLabel = (event) =>
+    getLocalizedField(event, "category", locale, { translateFallback: true, labelType: "eventCategory" });
+
+  const dated = useMemo(
+    () =>
+      events
+        .map((event) => ({ event, start: getEventStart(event) }))
+        .filter((entry) => entry.start),
     [events]
   );
 
-  const getDayLabel = (date) => {
-    const eventDate = new Date(date);
+  const upcoming = dated
+    .filter((entry) => entry.start >= now)
+    .sort((a, b) => a.start - b.start);
+  const past = dated
+    .filter((entry) => entry.start < now)
+    .sort((a, b) => b.start - a.start);
 
-    const dateOptions = withYearIfNotCurrent(eventDate, {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
+  // Filter chips: only the categories past events actually have, with real counts.
+  const categories = useMemo(() => {
+    const counts = new Map();
+    past.forEach(({ event }) => {
+      const key = event.category || "";
+      if (!key) return;
+      const entry = counts.get(key) || { key, label: categoryLabel(event), count: 0 };
+      entry.count += 1;
+      counts.set(key, entry);
     });
-
-    if (!isClient) {
-      return formatLocalizedDate(eventDate, locale, dateOptions);
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (eventDate.toDateString() === today.toDateString()) {
-      return copy.today;
-    }
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    if (eventDate.toDateString() === tomorrow.toDateString()) {
-      return copy.tomorrow;
-    }
-
-    return formatLocalizedDate(eventDate, locale, dateOptions);
-  };
-
-  // The drawer waits briefly for its image; start the download when the visitor points at
-  // or touches an event, so it is usually there by the click.
-  const warmEventImage = (event) => {
-    if (event.imageUrl) loadImageOptimized(event.imageUrl);
-  };
-
-  const handleEventClick = async (event) => {
-    setDrawerLoading(true);
-    setSelectedEvent(event);
-
-    const isMobile = isClient ? window.innerWidth <= 768 : false;
-
-    if (event.imageUrl) {
-      await loadImageOptimized(event.imageUrl, isMobile);
-    }
-
-    setDrawerLoading(false);
-  };
-
-  const closeDrawer = () => {
-    setSelectedEvent(null);
-
-    if (isClient) {
-      setTimeout(() => {
-        document.body.style.removeProperty("overflow");
-        document.body.style.removeProperty("overflow-x");
-        document.body.style.removeProperty("overflow-y");
-        document.body.style.removeProperty("pointer-events");
-        document.body.style.removeProperty("touch-action");
-        document.body.classList.remove("overflow-hidden");
-        document.documentElement.style.removeProperty("overflow");
-        document.documentElement.style.removeProperty("touch-action");
-        document.body.style.touchAction = "auto";
-        document.documentElement.style.touchAction = "auto";
-      }, 100);
-    }
-  };
-
-  const showRelativeEvent = async (offset) => {
-    if (!selectedEvent || filteredEvents.length === 0) return;
-
-    const currentIndex = filteredEvents.findIndex(
-      (event) => event.id === selectedEvent.id
-    );
-    const nextIndex =
-      (currentIndex + offset + filteredEvents.length) % filteredEvents.length;
-    const nextEvent = filteredEvents[nextIndex];
-
-    setDrawerLoading(true);
-    setSelectedEvent(nextEvent);
-
-    const isMobile = isClient ? window.innerWidth <= 768 : false;
-
-    if (nextEvent.imageUrl) {
-      await loadImageOptimized(nextEvent.imageUrl, isMobile);
-    }
-
-    setDrawerLoading(false);
-  };
-
-  const handleDateClick = (day) => {
-    const clickedDate = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      day
-    );
-
-    if (
-      selectedDate &&
-      clickedDate.toDateString() === selectedDate.toDateString()
-    ) {
-      setSelectedDate(null);
-      setFilterStatus("upcoming");
-    } else {
-      setSelectedDate(clickedDate);
-      setFilterStatus(null);
-
-      if (window.matchMedia("(max-width: 1023px)").matches) {
-        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        requestAnimationFrame(() =>
-          listRef.current?.scrollIntoView({
-            behavior: reduceMotion ? "auto" : "smooth",
-            block: "start"
-          })
-        );
-      }
-    }
-  };
-
-  const filteredEvents = useMemo(() => {
-    let filtered = [...events];
-
-    if (selectedDate) {
-      const selectedDateStr = formatDateKey(selectedDate);
-      filtered = filtered.filter(
-        (event) => formatDateKey(event.date) === selectedDateStr
-      );
-    } else if (filterStatus === "upcoming") {
-      const now = getNow();
-      filtered = filtered.filter((event) => {
-        const start = getEventStart(event);
-        return start ? start >= now : false;
-      });
-      filtered.sort((a, b) => getEventStart(a) - getEventStart(b));
-    } else if (filterStatus === "past") {
-      const now = getNow();
-      filtered = filtered.filter((event) => {
-        const start = getEventStart(event);
-        return start ? start < now : false;
-      });
-      filtered.sort((a, b) => getEventStart(b) - getEventStart(a));
-    }
-
-    return filtered;
-  }, [events, selectedDate, filterStatus, isClient, serverNow]);
-
-  // Past events stay reachable as plain links even while the "upcoming" tab is empty
-  const archiveEvents = useMemo(() => {
-    const now = getNow();
-    return events
-      .filter((event) => {
-        const start = getEventStart(event);
-        return start ? start < now : false;
-      })
-      .sort((a, b) => getEventStart(b) - getEventStart(a))
-      .slice(0, 12);
+    return [...counts.values()].sort((a, b) => b.count - a.count);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events, isClient, serverNow]);
+  }, [past.length, locale]);
 
-  const getSponsorsDetails = (sponsorIds) =>
-    sponsors.filter((sponsor) => sponsorIds.includes(sponsor.id));
+  const shownPast = category === "all" ? past : past.filter(({ event }) => event.category === category);
+  const terms = [];
+  shownPast.forEach((entry) => {
+    const term = academicTerm(entry.start);
+    let group = terms.find((item) => item.key === term.key);
+    if (!group) {
+      group = { ...term, entries: [] };
+      terms.push(group);
+    }
+    group.entries.push(entry);
+  });
+  terms.sort((a, b) => b.order - a.order);
+
+  const shortDate = (date) =>
+    formatLocalizedDate(
+      date,
+      locale,
+      withYearIfNotCurrent(date, { timeZone: "Europe/Istanbul", day: "numeric", month: "short" })
+    );
+
+  const [nextEntry, ...laterEntries] = upcoming;
 
   return (
     <PageContainer>
       <PageHeader title={copy.title} description={copy.subtitle} />
 
       <Suspense fallback={null}>
-        <SearchParamsHandler
-          onQRCodeRedirect={handleQRCodeRedirect}
-          onEventParam={handleEventParam}
+        <LegacyLinkRedirect
           events={events}
+          onQrError={(key) => toast.error(copy[key])}
         />
       </Suspense>
 
-      <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
-        <aside className="order-2 min-w-0 lg:sticky lg:top-6 lg:col-span-4 lg:self-start">
-          {currentMonth && (
-            <Calendar
-              currentMonth={currentMonth}
-              setCurrentMonth={setCurrentMonth}
-              selectedDate={selectedDate}
-              handleDateClick={handleDateClick}
-              eventDates={eventDates}
-            />
-          )}
-        </aside>
+      {/* What is next comes first; with nothing scheduled it is one honest line, not a box. */}
+      {nextEntry ? (
+        <section aria-labelledby="events-next" className="border-t-2 border-ink pt-3">
+          <h2 id="events-next" className="text-sm font-semibold text-ink">
+            {copy.next}
+          </h2>
+          <NextEvent
+            entry={nextEntry}
+            name={name(nextEntry.event)}
+            place={place(nextEntry.event)}
+            category={categoryLabel(nextEntry.event)}
+            relative={isClient ? relativeDay(nextEntry.start, locale) : null}
+            locale={locale}
+            copy={copy}
+          />
 
-        <section ref={listRef} className="order-1 min-w-0 scroll-mt-20 lg:col-span-8">
-          {!selectedDate && (
-            <div role="group" className="flex gap-6 border-b border-rule">
-              <button
-                type="button"
-                aria-pressed={filterStatus === "upcoming"}
-                className={`-mb-px min-h-11 whitespace-nowrap border-b-2 text-sm font-medium transition-colors duration-micro ease-out ${
-                  filterStatus === "upcoming"
-                    ? "border-ink text-ink"
-                    : "border-transparent text-muted-foreground hover:text-ink"
-                }`}
-                onClick={() => {
-                  setFilterStatus("upcoming");
-                  setSelectedDate(null);
-                }}
-              >
-                {copy.upcoming}
-              </button>
-              <button
-                type="button"
-                aria-pressed={filterStatus === "past"}
-                className={`-mb-px min-h-11 whitespace-nowrap border-b-2 text-sm font-medium transition-colors duration-micro ease-out ${
-                  filterStatus === "past"
-                    ? "border-ink text-ink"
-                    : "border-transparent text-muted-foreground hover:text-ink"
-                }`}
-                onClick={() => {
-                  setFilterStatus("past");
-                  setSelectedDate(null);
-                }}
-              >
-                {copy.past}
-              </button>
-            </div>
-          )}
-
-          {selectedDate && (
-            <div className="flex flex-wrap items-center justify-between gap-x-4 border-b border-rule">
-              <p className="font-outlier text-sm capitalize text-ink">
-                {formatLocalizedDate(selectedDate, locale, {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedDate(null);
-                  setFilterStatus("upcoming");
-                }}
-                className="min-h-11 rounded-sm text-sm font-medium text-brand underline decoration-1 underline-offset-4 hover:decoration-2"
-              >
-                {copy.clearDate}
-              </button>
-            </div>
-          )}
-
-          {filteredEvents.length > 0 ? (
-            <ul>
-              {filteredEvents.map((event) => {
-                const expired = isExpired(event);
-
-                return (
-                  <li key={event.id} className="border-b border-rule">
-                    <button
-                      type="button"
-                      className="group grid w-full gap-x-6 gap-y-3 pt-5 pb-3 text-left transition-colors duration-micro ease-out hover:bg-paper-2 focus-visible:outline-offset-[-2px] sm:grid-cols-[minmax(0,1fr)_10rem]"
-                      onClick={() => handleEventClick(event)}
-                      onMouseEnter={() => warmEventImage(event)}
-                      onTouchStart={() => warmEventImage(event)}
-                      onFocus={() => warmEventImage(event)}
-                    >
-                      {event.imageUrl && (
-                        <span className="relative block aspect-[16/9] overflow-hidden rounded bg-paper-2 sm:order-2 sm:aspect-[4/3]">
-                          {/* 160px wide from sm up; the original is about 800px */}
-                          <Image
-                            src={event.imageUrl}
-                            alt={getEventName(event)}
-                            fill
-                            sizes="(min-width: 640px) 160px, 100vw"
-                            unoptimized={!canOptimizeImage(event.imageUrl)}
-                            className="object-cover"
-                          />
-                        </span>
-                      )}
-
-                      <span className="block min-w-0 sm:order-1">
-                        <span className="block font-outlier text-sm capitalize text-muted-foreground">
-                          {getDayLabel(event.date)} · {event.time}
-                        </span>
-                        <span className="mt-1 block font-display text-xl font-bold leading-tight tracking-tight group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4 md:text-2xl">
-                          {getEventName(event)}
-                        </span>
-                        <span className="mt-1 block text-ink-2">
-                          {getEventLocation(event)}
-                        </span>
-                        <span className="mt-3 flex flex-wrap gap-2">
-                          <Badge>{getEventCategory(event)}</Badge>
-                          {selectedDate && (
-                            <Badge variant={expired ? "neutral" : "success"}>
-                              {expired ? copy.past : copy.upcoming}
-                            </Badge>
-                          )}
-                        </span>
-                      </span>
-                    </button>
-                    <Link
-                      href={`/events/${event.docId ?? event.id}`}
-                      className="mb-4 inline-flex min-h-11 items-center text-sm font-medium text-brand underline underline-offset-4 decoration-1 transition-colors duration-micro ease-out hover:decoration-2"
-                    >
-                      {copy.eventPage} →
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <EmptyState
-              title={selectedDate ? copy.noEventsOnDate : copy.noEvents}
-              className="mt-6"
-            />
-          )}
-
-          {filterStatus === "upcoming" && !selectedDate && archiveEvents.length > 0 && (
-            <nav aria-labelledby="events-archive" className="mt-12">
-              <h2
-                id="events-archive"
-                className="border-t-2 border-ink pt-3 font-display text-xl font-bold"
-              >
-                {copy.archive}
-              </h2>
+          {laterEntries.length > 0 && (
+            <div className="mt-10">
+              <h3 className="border-b border-rule pb-2 text-sm font-semibold text-ink">{copy.later}</h3>
               <ul>
-                {archiveEvents.map((event) => (
-                  <li key={event.id}>
+                {laterEntries.map(({ event, start }) => (
+                  <li key={event.docId ?? event.id}>
                     <Link
-                      href={`/events/${event.docId ?? event.id}`}
-                      className="group grid grid-cols-[7.5rem_1fr] items-baseline gap-x-4 border-b border-rule py-3 transition-colors duration-micro ease-out hover:bg-paper-2"
+                      href={eventHref(event)}
+                      className="group grid grid-cols-[4rem_minmax(0,1fr)] items-center gap-x-5 border-b border-rule py-4 transition-colors duration-micro ease-out hover:bg-paper-2 sm:grid-cols-[4rem_minmax(0,1fr)_auto]"
                     >
-                      <time
-                        dateTime={event.startsAt}
-                        className="font-outlier text-sm text-muted-foreground"
-                      >
-                        {formatLocalizedDate(getEventStart(event), locale, {
-                          timeZone: "Europe/Istanbul",
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </time>
-                      <span className="font-medium text-ink group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
-                        {getEventName(event)}
+                      <DateBlock date={start} locale={locale} compact />
+                      <span className="min-w-0">
+                        <span className="block font-display text-lg font-bold leading-tight group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
+                          {name(event)}
+                        </span>
+                        <span className="mt-0.5 block truncate text-sm text-muted-foreground">
+                          {[event.time, place(event)].filter(Boolean).join(" · ")}
+                        </span>
                       </span>
+                      <ArrowRight className="hidden h-4 w-4 text-muted-foreground group-hover:text-ink sm:block" aria-hidden="true" />
                     </Link>
                   </li>
                 ))}
               </ul>
-            </nav>
+            </div>
           )}
         </section>
-      </div>
+      ) : (
+        <section
+          aria-labelledby="events-next"
+          className="flex flex-col gap-2 border-b border-rule pb-6 md:flex-row md:items-baseline md:justify-between md:gap-10"
+        >
+          <h2 id="events-next" className="font-display text-xl font-bold leading-tight md:text-2xl">
+            {copy.noneTitle}
+          </h2>
+          <p className="max-w-md text-ink-2">
+            {copy.noneBefore}
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-brand underline underline-offset-4 decoration-1 hover:decoration-2"
+            >
+              {copy.noneLink}
+            </a>
+            {copy.noneAfter}
+          </p>
+        </section>
+      )}
 
-      <Drawer open={!!selectedEvent} onOpenChange={(open) => !open && closeDrawer()}>
-        <DrawerContent className="max-md:inset-x-0 max-md:bottom-0 max-md:h-[85vh] max-md:border-t md:bottom-0 md:left-auto md:right-0 md:top-0 md:h-screen md:w-[400px] md:rounded-none md:border-l">
-          <div className="h-full touch-pan-y overflow-y-auto overscroll-contain p-6">
-            <DrawerHeader className="p-0 text-left sm:text-left">
-              <div className="mb-6 flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  aria-label={copy.previous}
-                  onClick={() => showRelativeEvent(-1)}
-                >
-                  <ChevronLeft aria-hidden="true" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  aria-label={copy.next}
-                  onClick={() => showRelativeEvent(1)}
-                >
-                  <ChevronRight aria-hidden="true" />
-                </Button>
-              </div>
-              {selectedEvent && (
-                <>
-                  {selectedEvent.imageUrl && (
-                    <div className="mb-6 w-full">
-                      <img
-                        src={selectedEvent.imageUrl}
-                        alt={getEventName(selectedEvent)}
-                        className="pointer-events-none h-auto w-full select-none rounded"
-                        draggable="false"
-                        loading="eager"
-                        decoding="async"
-                      />
-                    </div>
-                  )}
+      {past.length > 0 && (
+        <section aria-labelledby="events-archive" className="mt-14 md:mt-20">
+          <div className="flex flex-col gap-4 border-t-2 border-ink pt-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 id="events-archive" className="font-display text-2xl font-bold">
+                {copy.archive}
+              </h2>
+              <p className="mt-1 font-outlier text-sm text-muted-foreground">{copy.count(past.length)}</p>
+            </div>
 
-                  <DrawerTitle className="mb-3 text-2xl font-bold">
-                    {drawerLoading ? copy.loading : getEventName(selectedEvent)}
-                  </DrawerTitle>
-
-                  {drawerLoading && (
-                    <div className="space-y-4">
-                      <Skeleton className="h-4 w-1/2" />
-                      <Skeleton className="h-4 w-2/3" />
-                    </div>
-                  )}
-
-                  <DrawerDescription asChild>
-                    {drawerLoading ? (
-                      <div className="space-y-3">
-                        <Skeleton className="h-4 w-2/3" />
-                        <Skeleton className="h-4 w-1/2" />
-                        <Skeleton className="h-4 w-3/5" />
-                      </div>
-                    ) : (
-                      <div className="space-y-2 text-base text-ink-2">
-                        <div className="font-outlier text-sm capitalize text-muted-foreground">
-                          {getDayLabel(selectedEvent.date)}, {selectedEvent.time}
-                        </div>
-                        <div>
-                          <strong className="font-medium text-ink">{copy.category}:</strong>{" "}
-                          {getEventCategory(selectedEvent)}
-                        </div>
-                        <div>
-                          <strong className="font-medium text-ink">{copy.location}:</strong>{" "}
-                          {getEventLocation(selectedEvent)}
-                        </div>
-                      </div>
-                    )}
-                  </DrawerDescription>
-                </>
-              )}
-            </DrawerHeader>
-
-            {selectedEvent && !drawerLoading && (
-              <div className="mt-6 border-t border-rule pt-4">
-                <MarkdownRenderer content={getEventDescription(selectedEvent)} />
-              </div>
-            )}
-
-            {selectedEvent && !drawerLoading && (
-              <div className="mt-6 space-y-6">
-                {selectedEvent.sponsors && selectedEvent.sponsors.length > 0 && (
-                  <div>
-                    <h3 className="mb-3 border-t-2 border-ink pt-3 font-display text-lg font-bold">
-                      {copy.sponsors}
-                    </h3>
-                    <div className="flex flex-wrap gap-4">
-                      {getSponsorsDetails(selectedEvent.sponsors).map((sponsor) => (
-                        <div key={sponsor.id} className="flex items-center gap-2">
-                          <img
-                            src={sponsor.img_url}
-                            alt={getSponsorName(sponsor)}
-                            className="h-10 w-10 object-contain"
-                            loading="lazy"
-                            decoding="async"
-                          />
-                          <span className="text-base">{getSponsorName(sponsor)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedEvent.file_url && (
-                  <Button asChild variant="outline" className="w-full">
-                    <a
-                      href={selectedEvent.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+            {categories.length > 1 && (
+              <div role="group" aria-label={copy.filterLabel} className="flex flex-wrap gap-2">
+                {[{ key: "all", label: copy.all, count: past.length }, ...categories].map((item) => {
+                  const active = category === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setCategory(item.key)}
+                      className={`inline-flex h-11 items-center gap-2 rounded-sm border px-3 text-sm font-medium md:h-9 transition-colors duration-micro ease-out ${
+                        active
+                          ? "border-ink bg-ink text-paper"
+                          : "border-rule text-ink-2 hover:border-ink hover:text-ink"
+                      }`}
                     >
-                      <Download aria-hidden="true" />
-                      {copy.documents}
-                    </a>
-                  </Button>
-                )}
+                      {item.label}
+                      <span className={`font-outlier text-xs tabular-nums ${active ? "text-paper/70" : "text-muted-foreground"}`}>
+                        {item.count}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             )}
-
-            <DrawerFooter className="mt-6 p-0">
-              {selectedEvent && !isExpired(selectedEvent) ? (
-                <EventSignup
-                  event={selectedEvent}
-                  returnPath={`/events?event=${selectedEvent.docId ?? selectedEvent.id}`}
-                />
-              ) : (
-                selectedEvent && (
-                  <p className="flex items-center gap-2 border border-rule px-4 py-3 text-sm font-medium text-ink-2">
-                    <Clock aria-hidden="true" className="h-4 w-4 shrink-0" />
-                    {copy.eventEnded}
-                  </p>
-                )
-              )}
-              <DrawerClose asChild>
-                <Button type="button" variant="outline" className="mt-3 w-full">
-                  {copy.close}
-                </Button>
-              </DrawerClose>
-            </DrawerFooter>
           </div>
-        </DrawerContent>
-      </Drawer>
 
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={getLocaleCode(locale).startsWith("ar")}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+          {/* One continuous wall, newest first. Each term opens with a label tile in the same
+              grid, so a term with one or two events does not leave a half-empty row. */}
+          <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {terms.flatMap((term, termIndex) => {
+              const label = termLabelParts(term, locale);
+              return [
+                <li key={term.key} className="min-w-0">
+                  <h3
+                    aria-label={`${termLabel(term, locale)}, ${copy.count(term.entries.length)}`}
+                    className="flex aspect-[5/7] flex-col border-t-2 border-ink pt-3"
+                  >
+                    <span className="font-display text-3xl font-extrabold leading-none tracking-tight tabular-nums md:text-4xl">
+                      {label.big}
+                    </span>
+                    <span className="mt-2 font-display text-lg font-bold leading-tight text-ink-2">
+                      {label.small}
+                    </span>
+                    <span className="mt-auto font-outlier text-xs tabular-nums text-muted-foreground">
+                      {copy.count(term.entries.length)}
+                    </span>
+                  </h3>
+                </li>,
+                ...term.entries.map(({ event, start }, index) => (
+                  <li key={event.docId ?? event.id} className="min-w-0">
+                    <Link href={eventHref(event)} className="group block rounded-sm focus-visible:outline-offset-4">
+                      <Poster
+                        event={event}
+                        name={name(event)}
+                        priority={termIndex === 0 && index < 4}
+                        sizes="(min-width: 1280px) 210px, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                      />
+                      <span className="mt-3 block font-outlier text-xs capitalize text-muted-foreground">
+                        <time dateTime={start.toISOString()}>{shortDate(start)}</time>
+                        {event.category && <span> · {categoryLabel(event)}</span>}
+                      </span>
+                      <span className="mt-1 block font-medium leading-snug text-ink group-hover:underline group-hover:decoration-brand group-hover:decoration-2 group-hover:underline-offset-4">
+                        {name(event)}
+                      </span>
+                      {place(event) && (
+                        <span className="mt-0.5 block truncate text-sm text-muted-foreground">{place(event)}</span>
+                      )}
+                    </Link>
+                  </li>
+                )),
+              ];
+            })}
+          </ul>
+        </section>
+      )}
+
+      <ToastContainer position="top-right" autoClose={4000} newestOnTop closeOnClick pauseOnHover theme="light" />
     </PageContainer>
   );
 }
 
-export default function EventsClient({
-  initialEvents = [],
-  initialSponsors = [],
-  serverNow,
-}) {
-  // No Suspense around the page: only SearchParamsHandler reads the URL (in its own
-  // boundary), so the event list stays in the server-rendered HTML.
-  return (
-    <EventsPageContent
-      initialEvents={initialEvents}
-      initialSponsors={initialSponsors}
-      serverNow={serverNow}
-    />
+/** The day number large, month and weekday small: how a date reads on a poster. */
+function DateBlock({ date, locale, compact = false, time }) {
+  const day = formatLocalizedDate(date, locale, { timeZone: "Europe/Istanbul", day: "numeric" });
+  const month = formatLocalizedDate(
+    date,
+    locale,
+    withYearIfNotCurrent(date, { timeZone: "Europe/Istanbul", month: compact ? "short" : "long" })
   );
+  const weekday = formatLocalizedDate(date, locale, { timeZone: "Europe/Istanbul", weekday: "long" });
+
+  if (compact) {
+    return (
+      <time dateTime={date.toISOString()} className="flex flex-col leading-none">
+        <span className="font-display text-3xl font-extrabold tabular-nums">{day}</span>
+        <span className="mt-1 font-outlier text-xs capitalize text-muted-foreground">{month}</span>
+      </time>
+    );
+  }
+
+  return (
+    <time dateTime={date.toISOString()} className="flex items-end gap-4">
+      <span className="font-display text-7xl font-extrabold leading-[0.8] tabular-nums tracking-tight md:text-8xl">
+        {day}
+      </span>
+      <span className="pb-1 font-outlier text-sm capitalize leading-snug text-ink-2">
+        {month}
+        <br />
+        {weekday}
+        {time && ` · ${time}`}
+      </span>
+    </time>
+  );
+}
+
+function NextEvent({ entry, name, place, category, relative, locale, copy }) {
+  const { event, start } = entry;
+  return (
+    <article className="mt-5 grid gap-x-10 gap-y-6 md:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
+      <div className="min-w-0 md:order-2">
+        <p className="min-h-[1lh] font-outlier text-sm font-medium text-brand">{relative}</p>
+        <div className="mt-2">
+          <DateBlock date={start} locale={locale} time={event.time} />
+        </div>
+        <h3 className="mt-6 max-w-2xl font-display text-3xl font-extrabold leading-tight md:text-4xl">
+          <Link href={eventHref(event)} className="rounded-sm hover:underline hover:decoration-brand hover:decoration-2 hover:underline-offset-4">
+            {name}
+          </Link>
+        </h3>
+        <p className="mt-2 text-ink-2">{[place, category].filter(Boolean).join(" · ")}</p>
+
+        <div className="mt-6 max-w-sm">
+          <EventSignup event={event} returnPath={eventHref(event)} />
+        </div>
+        <Link href={eventHref(event)} className={`${textLink} mt-2 text-sm`}>
+          {copy.details}
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </div>
+
+      <Link href={eventHref(event)} className="group block max-w-[16rem] rounded-sm md:order-1" tabIndex={-1} aria-hidden="true">
+        <Poster event={event} name={name} priority sizes="256px" />
+      </Link>
+    </article>
+  );
+}
+
+export default function EventsClient({ initialEvents = [], serverNow }) {
+  return <EventsPageContent initialEvents={initialEvents} serverNow={serverNow} />;
 }

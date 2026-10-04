@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { pageMetadata } from "@/lib/page-meta";
-import { getAllEvents, getSponsors } from "@/lib/content-data";
+import { getAllEvents } from "@/lib/content-data";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 import EventsClient from "./EventsClient";
@@ -17,7 +17,7 @@ export default async function EventsPage({ params }) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const [events, sponsors] = await Promise.all([getAllEvents(), getSponsors()]);
+  const events = await getAllEvents();
 
   return (
     <>
@@ -26,11 +26,7 @@ export default async function EventsPage({ params }) {
           { name: locale === "en" ? "Events" : "Etkinlikler", path: "/events" },
         ])}
       />
-      <EventsClient
-        initialEvents={events}
-        initialSponsors={sponsors}
-        serverNow={Date.now()}
-      />
+      <EventsClient initialEvents={events} serverNow={Date.now()} />
     </>
   );
 }
