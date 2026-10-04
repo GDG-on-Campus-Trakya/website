@@ -21,11 +21,14 @@ const plex = IBM_Plex_Sans({
   display: 'swap'
 });
 
+// Dates and counts only, never the largest text on screen: not preloaded, so its four files
+// do not compete with the display and body fonts on the first visit.
 const plexMono = IBM_Plex_Mono({
   subsets: ['latin', 'latin-ext'],
   weight: ['400', '500'],
   variable: '--font-plex-mono',
-  display: 'swap'
+  display: 'swap',
+  preload: false
 });
 
 // Canonical, hreflang and per-page OG/Twitter come from buildMetadata (lib/seo.js).
