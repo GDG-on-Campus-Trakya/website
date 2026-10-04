@@ -14,6 +14,8 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { useEffect, useMemo, useRef, useState, Suspense } from "react";
+import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -34,13 +36,16 @@ import { Check, ChevronLeft, ChevronRight, Clock, Download } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, PageContainer, PageHeader, Skeleton } from "@/components/ui/page";
-import MarkdownRenderer from "@/components/MarkdownRenderer";
+import { canOptimizeImage } from "@/lib/images";
 import {
   formatLocalizedDate,
   getLocalizedField,
   getLocaleCode,
 } from "@/utils/localeUtils";
 import { getEventStart } from "@/utils/eventTime";
+
+// Only the drawer shows descriptions; the Markdown parser (about 45 KB) loads when it opens.
+const MarkdownRenderer = dynamic(() => import("@/components/MarkdownRenderer"));
 
 const COPY = {
   tr: {
@@ -201,7 +206,7 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
         return;
       }
 
-      const img = new Image();
+      const img = new window.Image();
       const timeout = setTimeout(() => resolve(false), isMobile ? 150 : 500);
 
       img.onload = () => {
@@ -458,6 +463,12 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
     });
   };
 
+  // The drawer waits briefly for its image; start the download when the visitor points at
+  // or touches an event, so it is usually there by the click.
+  const warmEventImage = (event) => {
+    if (event.imageUrl) loadImageOptimized(event.imageUrl);
+  };
+
   const handleEventClick = async (event) => {
     setDrawerLoading(true);
     setSelectedEvent(event);
@@ -686,15 +697,20 @@ function EventsPageContent({ initialEvents, initialSponsors, serverNow }) {
                       type="button"
                       className="group grid w-full gap-x-6 gap-y-3 pt-5 pb-3 text-left transition-colors duration-micro ease-out hover:bg-paper-2 focus-visible:outline-offset-[-2px] sm:grid-cols-[minmax(0,1fr)_10rem]"
                       onClick={() => handleEventClick(event)}
+                      onMouseEnter={() => warmEventImage(event)}
+                      onTouchStart={() => warmEventImage(event)}
+                      onFocus={() => warmEventImage(event)}
                     >
                       {event.imageUrl && (
-                        <span className="block aspect-[16/9] overflow-hidden rounded bg-paper-2 sm:order-2 sm:aspect-[4/3]">
-                          <img
+                        <span className="relative block aspect-[16/9] overflow-hidden rounded bg-paper-2 sm:order-2 sm:aspect-[4/3]">
+                          {/* 160px wide from sm up; the original is about 800px */}
+                          <Image
                             src={event.imageUrl}
                             alt={getEventName(event)}
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                            decoding="async"
+                            fill
+                            sizes="(min-width: 640px) 160px, 100vw"
+                            unoptimized={!canOptimizeImage(event.imageUrl)}
+                            className="object-cover"
                           />
                         </span>
                       )}
