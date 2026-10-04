@@ -115,14 +115,15 @@ const COPY = {
     reset: "Sıfırla",
     endlessMode: "Sınırsız Mod",
     endlessHelp: "(Yazdıkça yeni metin gelir)",
-    wpm: "KDK",
+    wpm: "Kelime/dk",
     accuracy: "Doğruluk",
     time: "Süre",
-    rawWpm: "Ham KDK",
-    wordsPerMinute: "KDK (Kelime/Dk)",
+    rawWpm: "Ham kelime/dk",
+    wordsPerMinute: "Kelime/dk",
     correctChars: "Doğru Karakter",
     errors: "Hata",
-    clickToStart: "Yazmaya başlamak için yukarıdaki metin kutusuna tıklayın",
+    clickToStart: "Metne dokun ya da tıkla, sonra yazmaya başla.",
+    inputLabel: "Metni buraya yaz",
     results: "Test Sonuçları",
     tryAgain: "Tekrar Dene",
   },
@@ -141,7 +142,8 @@ const COPY = {
     wordsPerMinute: "WPM (Words/Min)",
     correctChars: "Correct Characters",
     errors: "Errors",
-    clickToStart: "Click the text box above to start typing",
+    clickToStart: "Tap or click the text, then start typing.",
+    inputLabel: "Type the text here",
     results: "Test Results",
     tryAgain: "Try Again",
   },
@@ -158,7 +160,7 @@ export default function TypingTest() {
   const [isActive, setIsActive] = useState(false);
   const [stats, setStats] = useState(null);
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
-  const containerRef = useRef(null);
+  const inputRef = useRef(null);
 
   const generateText = useCallback(() => {
     if (mode === "normal") {
@@ -184,7 +186,7 @@ export default function TypingTest() {
     setStartTime(null);
     setIsActive(false);
     setStats(null);
-    setTimeout(() => containerRef.current?.focus(), 100);
+    setTimeout(() => inputRef.current?.focus(), 100);
   }, [generateText]);
 
   useEffect(() => {
@@ -192,7 +194,7 @@ export default function TypingTest() {
   }, [mode, locale, resetTest]);
 
   useEffect(() => {
-    containerRef.current?.focus();
+    inputRef.current?.focus();
   }, []);
 
   const finishTest = (finalInput, currentText, currentStartTime) => {
@@ -221,107 +223,73 @@ export default function TypingTest() {
     });
   };
 
-  const handleInput = (char) => {
-    setInput((prev) => {
-      const newInput = prev + char;
-      setCurrentCharIndex(newInput.length);
-
-      if (newInput.length >= text.length) {
-        if (isEndless) {
-          const newText = generateText();
-          setText(newText);
-          setTimeout(() => {
-            setInput("");
-            setCurrentCharIndex(0);
-          }, 0);
-          return newInput;
-        }
-
-        finishTest(newInput, text, startTime);
-      }
-      return newInput;
-    });
-  };
-
-  const handleKeyDown = (event) => {
+  // The typed text is the value of a real <textarea>: phones only open their keyboard for a
+  // text field, and keyboards that compose words (Gboard, iOS predictions) report no usable
+  // key events, only the changed value.
+  const applyInput = (next) => {
     if (stats) return;
 
-    if (!startTime && !isActive) {
-      setStartTime(Date.now());
+    let start = startTime;
+    if (!start) {
+      start = Date.now();
+      setStartTime(start);
       setIsActive(true);
     }
 
+    if (next.length >= text.length) {
+      if (isEndless) {
+        setText(generateText());
+        setInput("");
+        setCurrentCharIndex(0);
+        return;
+      }
+      setInput(next);
+      setCurrentCharIndex(next.length);
+      finishTest(next, text, start);
+      return;
+    }
+
+    setInput(next);
+    setCurrentCharIndex(next.length);
+  };
+
+  // Tab and Enter keep their old shortcuts: skip spaces (or indent in code), jump to the next line.
+  const handleKeyDown = (event) => {
+    if (stats) return;
+
     if (event.key === "Tab") {
       event.preventDefault();
-
       if (mode === "code") {
-        handleInput("    ");
-      } else {
-        setInput((prev) => {
-          setCurrentCharIndex((current) => {
-            let skipTo = current;
-            while (
-              skipTo < text.length &&
-              (text[skipTo] === " " || text[skipTo] === "\t")
-            ) {
-              skipTo += 1;
-            }
-            if (skipTo > current) {
-              const skippedText = text.substring(current, skipTo);
-              const newInput = prev + skippedText;
-              setInput(newInput);
-              setCurrentCharIndex(newInput.length);
-              return newInput.length;
-            }
-            return current;
-          });
-          return prev;
-        });
+        applyInput(input + "    ");
+        return;
       }
+      let skipTo = input.length;
+      while (skipTo < text.length && (text[skipTo] === " " || text[skipTo] === "\t")) {
+        skipTo += 1;
+      }
+      if (skipTo > input.length) applyInput(input + text.substring(input.length, skipTo));
       return;
     }
 
     if (event.key === "Enter") {
       event.preventDefault();
-      setInput((prev) => {
-        setCurrentCharIndex((current) => {
-          let skipTo = current;
-          while (skipTo < text.length && text[skipTo] !== "\n") {
-            skipTo += 1;
-          }
-          if (skipTo < text.length && text[skipTo] === "\n") {
-            skipTo += 1;
-          }
-          if (skipTo > current) {
-            const skippedText = text.substring(current, skipTo);
-            const newInput = prev + skippedText;
-            setInput(newInput);
-            setCurrentCharIndex(newInput.length);
-            return newInput.length;
-          }
-          return current;
-        });
-        return prev;
-      });
-      return;
+      let skipTo = input.length;
+      while (skipTo < text.length && text[skipTo] !== "\n") {
+        skipTo += 1;
+      }
+      if (skipTo < text.length && text[skipTo] === "\n") {
+        skipTo += 1;
+      }
+      if (skipTo > input.length) applyInput(input + text.substring(input.length, skipTo));
     }
+  };
 
-    if (event.key === "Backspace") {
-      event.preventDefault();
-      setInput((prev) => {
-        if (prev.length > 0) {
-          const newInput = prev.slice(0, -1);
-          setCurrentCharIndex(newInput.length);
-          return newInput;
-        }
-        return prev;
-      });
-      return;
-    }
-
-    if (event.key.length === 1) {
-      event.preventDefault();
-      handleInput(event.key);
+  // Typing always continues at the end, wherever the caret was tapped.
+  const keepCaretAtEnd = (event) => {
+    const field = event.currentTarget;
+    const end = field.value.length;
+    if (field.selectionStart !== end || field.selectionEnd !== end) {
+      field.setSelectionRange(end, end);
     }
   };
 
@@ -454,11 +422,24 @@ export default function TypingTest() {
           )}
 
           <div
-            ref={containerRef}
-            tabIndex={0}
-            onKeyDown={handleKeyDown}
-            className="mt-6 cursor-text overflow-hidden rounded-lg border border-input bg-background p-5 focus-visible:border-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:p-8"
+            onClick={() => inputRef.current?.focus()}
+            className="relative mt-6 cursor-text overflow-hidden rounded-lg border border-input bg-background p-5 focus-within:border-ink focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring md:p-8"
           >
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(event) => applyInput(event.target.value)}
+              onKeyDown={handleKeyDown}
+              onSelect={keepCaretAtEnd}
+              onPaste={(event) => event.preventDefault()}
+              aria-label={copy.inputLabel}
+              autoCapitalize="off"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              disabled={Boolean(stats)}
+              className="absolute inset-0 h-full w-full resize-none cursor-text bg-transparent text-base text-transparent caret-transparent opacity-0 outline-none"
+            />
             <div
               className={`leading-relaxed ${
                 mode === "code"
