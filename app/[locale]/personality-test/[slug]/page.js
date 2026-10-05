@@ -52,8 +52,15 @@ export default async function PersonalityTestPage({ params }) {
   const { locale, slug } = await params;
   setRequestLocale(locale);
   const isEnglish = locale === "en";
-  const test = await getTestBySlug(slug);
+  const [test, allTests] = await Promise.all([getTestBySlug(slug), getAllTests()]);
   const pageUrl = absoluteUrl(locale, `/personality-test/${slug}`);
+  // The next three tests in the list's order, wrapping round, for "try another test"
+  const position = allTests.findIndex((entry) => entry.slug === slug);
+  const moreTests = allTests.length > 1
+    ? [1, 2, 3]
+        .map((step) => allTests[(position + step + allTests.length) % allTests.length])
+        .filter((entry, index, list) => entry.slug !== slug && list.indexOf(entry) === index)
+    : [];
   const listUrl = absoluteUrl(locale, "/personality-test");
 
   const title = test ? getLocalizedField(test, "title", locale) : null;
@@ -121,6 +128,7 @@ export default async function PersonalityTestPage({ params }) {
       <PersonalityTestClient
         slug={slug}
         initialTestData={test ? JSON.parse(JSON.stringify(test)) : null}
+        moreTests={moreTests}
       />
     </>
   );

@@ -1,5 +1,16 @@
 [
   {
+    "date": "2026-10-05",
+    "scope": "page",
+    "page": "/personality-test",
+    "macrostructure": "Catalogue grid -> cover intro -> one question per screen -> result card + share images",
+    "theme": "custom",
+    "theme_axes": "light / geometric-sans / cool",
+    "vibe": "home page exception: big type, mark colours, quiz A-D tiles",
+    "enrichment": "generated share images (1080x1920 story, 1200x630 preview)",
+    "brief": "GDG on Campus Trakya · personality tests redesign: list, test flow, shareable result pages"
+  },
+  {
     "date": "2026-10-04",
     "scope": "page",
     "page": "/",

@@ -19,7 +19,7 @@ Editorial, campus notice board. Paper, blue ink, plain and specific copy. Left-b
 
 Naming trap: shadcn's `accent` class means "subtle hover surface" (paper-2). The blue accent is `brand`.
 
-Rules: accent covers under 5% of a view; no gradients, no glass, no glow; no raw hex/oklch outside `tokens.css` (exceptions: third-party brand colours in share buttons, user-chosen raffle colours).
+Rules: accent covers under 5% of a view; no gradients, no glass, no glow; no raw hex/oklch outside `tokens.css` (exceptions: third-party brand colours in share buttons, user-chosen raffle colours, admin-chosen personality result colours, and the hex mirror of the tokens in share images, since satori cannot read oklch).
 
 ## Type
 - Display: Bricolage Grotesque (`font-display`), headings, wordmark. Weight 700 to 800, tight tracking, `text-wrap: balance`.
@@ -43,12 +43,13 @@ Concrete over promotional. No "seamless", "empower", "next-generation". Pages ke
 ## Auth flow
 Pages that need an account send signed-out visitors to `loginHref(path)` (`utils/redirect.js`), never to the home page; the login page returns them to that path after sign-in. Only same-site paths are accepted. The login page is a split layout: intro and "what an account is for" on the left, the form panel on the right (stacked on mobile, form first). Google sign-in comes before email. `Field` takes an `action` for a link on the label row (e.g. "Forgot password?").
 
-## Home page (the one exception)
-The home page (`components/landing/Landing.jsx`) is the front door for new students, so it turns the system up; every other page stays on the rules above.
+## Home page and personality tests (the exception)
+The home page (`components/landing/Landing.jsx`) is the front door for new students, so it turns the system up. The personality tests (`/personality-test`, `components/personality/cards.jsx`) are the playful corner and share it. Every other page stays on the rules above.
 - Google mark colours may fill blocks there: stat tiles, the top rule of the kind tiles, the dots in the event-name band. Small text never sits in a mark colour.
 - The headline runs above the type scale (`clamp(2.75rem, 7vw, 6.5rem)`).
 - Two strips loop sideways: event posters under the headline, event names on an ink band. They pause on hover and focus and never show a scrollbar; with reduced motion they run slower, since Windows reports it whenever its animation effects are off.
 - No member photos on the home page. Posters and event names carry it; shared photos stay on /social.
+- Tests: big headlines, cover cards with a mark-colour top rule, one question per screen with the quiz's A–D tiles (red, blue, yellow, green), and a result card whose top band is the result's own colour (admin-chosen, like the raffle colours). Share images are drawn in `app/api/personality-test/[slug]/[result]` with the paper/ink hex values.
 
 ## Preserve (meaning lives in the colour)
 Quiz answer colours and order (red, blue, yellow, green); correct green and wrong red; timer thresholds; raffle wheel stored colours; social share brand colours; winner gold.
