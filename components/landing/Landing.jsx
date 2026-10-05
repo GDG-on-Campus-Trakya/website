@@ -121,14 +121,15 @@ function Poster({ event, sizes, className = "", priority = false }) {
 }
 
 /**
- * A row that drifts sideways and loops. The second copy only closes the loop, so it is kept out
- * of the accessibility tree and the tab order. Hover or focus pauses it; with reduced motion it
- * stands still and scrolls by hand. `spacing` holds the gap and the matching end padding.
+ * A row that drifts sideways and loops, with no scrollbar. The second copy only closes the loop,
+ * so it is kept out of the accessibility tree and the tab order. Hover or focus pauses it; with
+ * reduced motion it runs slower (see globals.css). `spacing` holds the gap and the matching end
+ * padding.
  */
 function Strip({ items, renderItem, label, reverse = false, secondsPerItem = 7, spacing = "gap-3 pr-3" }) {
   const style = { "--strip-duration": `${Math.max(items.length, 4) * secondsPerItem}s` };
   return (
-    <div role="region" aria-label={label} className="landing-strip overflow-x-auto motion-safe:overflow-hidden">
+    <div role="region" aria-label={label} className="landing-strip overflow-hidden">
       <div style={style} className={`landing-strip-track flex w-max ${reverse ? "landing-strip-reverse" : ""}`}>
         <ul className={`flex shrink-0 items-center ${spacing}`}>
           {items.map((item, index) => (
@@ -137,7 +138,7 @@ function Strip({ items, renderItem, label, reverse = false, secondsPerItem = 7, 
             </li>
           ))}
         </ul>
-        <div aria-hidden="true" className={`flex shrink-0 items-center motion-reduce:hidden ${spacing}`}>
+        <div aria-hidden="true" className={`flex shrink-0 items-center ${spacing}`}>
           {items.map((item, index) => (
             <div key={index} className="shrink-0">
               {renderItem(item, index, true)}
