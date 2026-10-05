@@ -47,7 +47,7 @@ Pages that need an account send signed-out visitors to `loginHref(path)` (`utils
 The home page (`components/landing/Landing.jsx`) is the front door for new students, so it turns the system up; every other page stays on the rules above.
 - Google mark colours may fill blocks there: stat tiles, the top rule of the kind tiles, the dots in the event-name band. Small text never sits in a mark colour.
 - The headline runs above the type scale (`clamp(2.75rem, 7vw, 6.5rem)`).
-- Two strips loop sideways: event posters under the headline, event names on an ink band. They pause on hover and focus; with reduced motion they stand still and scroll by hand.
+- Two strips loop sideways: event posters under the headline, event names on an ink band. They pause on hover and focus and never show a scrollbar; with reduced motion they run slower, since Windows reports it whenever its animation effects are off.
 - No member photos on the home page. Posters and event names carry it; shared photos stay on /social.
 
 ## Preserve (meaning lives in the colour)
